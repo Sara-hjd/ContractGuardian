@@ -1,0 +1,114 @@
+# ContractGuardian
+
+Outil d'aide à la lecture de **contrats commerciaux en anglais** : extraction des clauses clés
+(durée, résiliation, responsabilité, confidentialité), détection prudente d'incohérences entre
+clauses, et questions-réponses avec **citation exacte** du contrat ou **abstention**.
+
+Projet de fin d'année (PFA), EMSI.
+
+> ⚠️ **Avertissement** : ContractGuardian est un **outil d'aide à la lecture**.
+> Il ne fournit **pas d'avis juridique** et ne remplace pas un professionnel du droit.
+> Chaque résultat renvoie au passage exact du contrat pour être vérifié par un humain.
+
+## Fonctionnalités
+
+| ID | Fonctionnalité | Description | Statut |
+|---|---|---|---|
+| F1 | Ingestion PDF et provenance | Lire un contrat PDF et le découper en segments, chacun avec sa page et ses positions. | À faire |
+| F2 | Extraction de clauses | Repérer les clauses (durée, résiliation, responsabilité, confidentialité) : d'abord une baseline classique, puis un modèle Transformer. | À faire |
+| F3 | Comparaison de paires de clauses | Comparer deux clauses pour signaler, avec prudence, une incohérence possible. | À faire |
+| F4 | NLI | Inférence en langage naturel (implication / contradiction / neutre), évaluée sur ContractNLI. | À faire |
+| F5 | Recherche hybride et RAG avec abstention | Recherche par mots-clés + recherche vectorielle, puis réponse citant le texte exact, ou abstention. | À faire |
+| F6 | Interface analyste | Interface web (React) pour importer un contrat, consulter les clauses et poser des questions. | À faire |
+| F7 | Traçabilité | Chaque sortie renvoie au segment source (page, positions) ; chaque expérience est suivie dans MLflow. | À faire |
+
+## Architecture (prévue)
+
+```
+               ┌──────────────────────────┐
+               │  Interface React (F6)    │
+               └────────────┬─────────────┘
+                            │ HTTP (JSON)
+               ┌────────────▼─────────────┐
+               │       API FastAPI        │
+               └────────────┬─────────────┘
+                            │
+   ┌────────────┬───────────┼────────────┬──────────────────┐
+   ▼            ▼           ▼            ▼                  ▼
+┌────────┐ ┌──────────┐ ┌──────────┐ ┌────────┐ ┌────────────────────┐
+│Ingest. │ │Extraction│ │Comparais.│ │  NLI   │ │ Recherche + RAG    │
+│PDF (F1)│ │clauses   │ │clauses   │ │  (F4)  │ │ avec abstention    │
+│PyMuPDF │ │  (F2)    │ │  (F3)    │ │        │ │       (F5)         │
+└───┬────┘ └────┬─────┘ └────┬─────┘ └───┬────┘ └─────────┬──────────┘
+    │           │            │           │                │
+    └───────────┴────────────┴─────┬─────┴────────────────┘
+                                   ▼
+               ┌──────────────────────────────────────┐
+               │ PostgreSQL + pgvector (Docker)       │
+               │ contrats, segments + provenance (F7),│
+               │ résultats, vecteurs                  │
+               └──────────────────────────────────────┘
+
+  Hors application : entraînement et évaluation des modèles
+  (scikit-learn, PyTorch/Transformers), suivis dans MLflow.
+```
+
+## Données : deux mondes séparés
+
+| | Données d'entraînement et d'évaluation | Base de l'application |
+|---|---|---|
+| **Contenu** | CUAD, ContractNLI, annotations humaines sur contrats réels | Contrats importés par l'utilisateur, segments, résultats d'analyse, vecteurs |
+| **Stockage** | Fichiers dans `data/` (non versionnés) | PostgreSQL + pgvector, dans Docker |
+| **Usage** | Entraîner et évaluer les modèles (découpage entraînement / validation / test) | Faire fonctionner l'outil |
+| **Règle** | Le jeu de test ne sert **jamais** à régler un modèle. Aucune donnée synthétique. | Chaque résultat garde sa provenance (page, positions). |
+
+## Structure du dépôt (prévue, susceptible d'évoluer)
+
+```
+ContractGuardian/
+├── CLAUDE.md             # Règles de travail lues par Claude Code
+├── README.md             # Ce fichier
+├── .gitignore
+├── docs/                 # Documentation du projet
+│   ├── CONVENTIONS.md
+│   ├── PROGRESS.md
+│   └── decisions.md
+├── src/cg/               # Code Python (un README.md par sous-dossier)
+│   ├── ingestion/        # F1
+│   ├── extraction/       # F2
+│   ├── comparison/       # F3
+│   ├── nli/              # F4
+│   ├── retrieval/        # F5
+│   └── api/              # API FastAPI
+├── frontend/             # Interface React (F6)
+├── tests/                # Tests automatisés (pytest)
+├── notebooks/            # Explorations
+├── data/                 # Données (non versionnées)
+├── models/               # Modèles entraînés (non versionnés)
+└── docker-compose.yml    # PostgreSQL + pgvector
+```
+
+## Installation (macOS)
+
+*À compléter.*
+
+Prérequis déjà identifiés : Homebrew, Python 3.11, Git, Docker Desktop, Node.js.
+
+## Résultats
+
+| Fonctionnalité | Jeu d'évaluation | Métrique | Baseline | Modèle final | Date |
+|---|---|---|---|---|---|
+| | | | | | |
+
+## Documentation
+
+- [CLAUDE.md](CLAUDE.md) : règles de travail du projet.
+- [docs/CONVENTIONS.md](docs/CONVENTIONS.md) : conventions de code et de Git, définition de « terminé ».
+- [docs/PROGRESS.md](docs/PROGRESS.md) : journal des séances et bilans hebdomadaires.
+- [docs/decisions.md](docs/decisions.md) : registre des décisions techniques.
+
+## Équipe
+
+- **Sara-hjd**
+- **ILyas394**
+- **Encadrant** : *à compléter*

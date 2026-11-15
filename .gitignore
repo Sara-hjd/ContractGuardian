@@ -1,0 +1,61 @@
+# =============================================================================
+# .gitignore — ContractGuardian
+# Liste des fichiers et dossiers que Git doit ignorer (jamais suivis, jamais commités).
+# Le dépôt est PUBLIC : tout ce qui est poussé est visible par tout le monde.
+# =============================================================================
+
+# --- Données -----------------------------------------------------------------
+# Les contrats et jeux de données (CUAD, ContractNLI, contrats réels) sont lourds,
+# soumis à leurs propres licences, et peuvent contenir des informations confidentielles.
+# On les télécharge ou on les régénère localement, on ne les versionne pas.
+data/raw/
+data/processed/
+
+# Fichiers déposés par l'application (PDF importés, index, exports).
+storage/
+
+# --- Modèles entraînés ---------------------------------------------------------
+# Les poids de modèles pèsent de quelques Mo à plusieurs Go : GitHub les refuse
+# au-delà de 100 Mo, et ils se reproduisent à partir du code + des données.
+models/
+*.bin
+*.safetensors
+*.pt
+*.ckpt
+
+# --- Suivi des expériences (MLflow) -------------------------------------------
+# MLflow écrit ses runs, métriques et artefacts (parfois des modèles) ici.
+# Ce sont des résultats locaux, régénérables, souvent volumineux.
+mlruns/
+
+# --- Secrets -------------------------------------------------------------------
+# Les fichiers .env contiennent mots de passe, clés et tokens : JAMAIS sur GitHub.
+# Exception : .env.example, un modèle SANS vraies valeurs, qui montre quelles
+# variables définir. Le "!" annule l'exclusion pour ce fichier précis.
+.env
+.env.*
+!.env.example
+
+# --- Environnement Python --------------------------------------------------------
+# Le .venv contient des milliers de fichiers propres à chaque machine.
+# Chacun le recrée avec "python3.11 -m venv .venv" puis "pip install".
+.venv/
+
+# Fichiers compilés que Python génère automatiquement pour aller plus vite.
+__pycache__/
+*.pyc
+
+# Cache de pytest (mémorise les tests échoués entre deux lancements).
+.pytest_cache/
+
+# Sauvegardes automatiques de Jupyter.
+.ipynb_checkpoints/
+
+# --- Frontend (React / Node.js) -----------------------------------------------
+# Dépendances JavaScript installées par "npm install" : très lourdes, recréables
+# à partir de package.json et package-lock.json (qui, eux, sont commités).
+node_modules/
+
+# --- macOS ----------------------------------------------------------------------
+# Fichier caché créé par le Finder dans chaque dossier ouvert ; inutile au projet.
+.DS_Store
