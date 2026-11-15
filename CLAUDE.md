@@ -126,6 +126,11 @@ Ces règles ne se négocient pas. Si une demande semble les contredire, s'arrêt
    outils gratuits ou en local.
 5. **Ne jamais commiter** de données, de modèles entraînés ou de secrets (`.env`, clés,
    tokens). Le dépôt GitHub est **public**.
+   - **Seule exception : `data/annotations/`** (décision D-003). Nos propres annotations
+     sont versionnées, mais elles ne contiennent **jamais le texte des contrats**, seulement
+     des références : identifiant du contrat (CUAD ou document), positions de début et de fin,
+     étiquette, annotateur, date. Avant chaque commit touchant ce dossier, vérifier qu'aucun
+     extrait de texte n'y figure.
 
 ## Git
 

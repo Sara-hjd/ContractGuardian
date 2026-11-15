@@ -107,6 +107,8 @@ par exemple `docs: initialiser la documentation du projet`.
 ### Jamais commité
 
 - **Données** : `data/raw/`, `data/processed/`, `storage/`, contrats PDF.
+  Seule exception : `data/annotations/`, qui est versionné mais ne contient **jamais** le texte
+  des contrats, uniquement des références (voir D-003).
 - **Modèles entraînés** : `models/`, `*.bin`, `*.safetensors`, `*.pt`, `*.ckpt`.
 - **Résultats MLflow** : `mlruns/`.
 - **Secrets** : `.env`, `.env.*` (seul `.env.example`, sans vraies valeurs, est autorisé).

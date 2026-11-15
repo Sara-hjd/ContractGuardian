@@ -58,7 +58,7 @@ Projet de fin d'année (PFA), EMSI.
 | | Données d'entraînement et d'évaluation | Base de l'application |
 |---|---|---|
 | **Contenu** | CUAD, ContractNLI, annotations humaines sur contrats réels | Contrats importés par l'utilisateur, segments, résultats d'analyse, vecteurs |
-| **Stockage** | Fichiers dans `data/` (non versionnés) | PostgreSQL + pgvector, dans Docker |
+| **Stockage** | Fichiers dans `data/`, non versionnés, sauf `data/annotations/` (références sans texte, D-003) | PostgreSQL + pgvector, dans Docker |
 | **Usage** | Entraîner et évaluer les modèles (découpage entraînement / validation / test) | Faire fonctionner l'outil |
 | **Règle** | Le jeu de test ne sert **jamais** à régler un modèle. Aucune donnée synthétique. | Chaque résultat garde sa provenance (page, positions). |
 
@@ -81,9 +81,14 @@ ContractGuardian/
 │   ├── retrieval/        # F5
 │   └── api/              # API FastAPI
 ├── frontend/             # Interface React (F6)
+├── training/             # Scripts d'entraînement des modèles
+├── evaluation/           # Scripts d'évaluation (métriques, rapports)
 ├── tests/                # Tests automatisés (pytest)
 ├── notebooks/            # Explorations
-├── data/                 # Données (non versionnées)
+├── data/
+│   ├── raw/              # Données brutes : CUAD, ContractNLI, PDF (non versionnées)
+│   ├── processed/        # Données préparées (non versionnées)
+│   └── annotations/      # Nos annotations : références seulement, sans texte (versionnées, D-003)
 ├── models/               # Modèles entraînés (non versionnés)
 └── docker-compose.yml    # PostgreSQL + pgvector
 ```
