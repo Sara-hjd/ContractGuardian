@@ -81,11 +81,27 @@ jusqu'à la fin du projet :
 Si le résultat est une **erreur**, Claude explique l'erreur et propose une correction,
 que Sara exécute à son tour.
 
+**Exception : les commandes en lecture seule.** Claude peut lancer lui-même, sans demander,
+les commandes qui servent à se documenter ou à vérifier un état **sans rien modifier** :
+
+- `git status`, `git log`, `git diff`, `git branch` (sans option de création ni de suppression) ;
+- `gh repo view`, `gh pr view`, `gh api` en lecture (requêtes GET uniquement) ;
+- `ls`, `cat`, `head`, `md5`, `du`, `wc`, et autres consultations de fichiers ;
+- la consultation de pages web.
+
+Claude dit alors simplement ce qu'il a lancé et ce qu'il a trouvé.
+
+**Tout ce qui modifie quelque chose reste à Sara** : installations, téléchargements,
+création ou suppression de fichiers par commande, `git add` / `commit` / `push` / `merge` /
+`branch` (création ou suppression), Docker, lancement de scripts, de tests ou de l'API.
+En cas de doute sur le caractère « lecture seule » d'une commande, la donner à Sara.
+
 **Fichiers :**
 
 - Claude **peut créer et modifier des fichiers** (code, documentation). Il doit d'abord
   dire quel fichier il va créer ou modifier et pourquoi, puis en expliquer le contenu après.
-- Claude **peut lire les fichiers du projet** pour comprendre leur état, sans rien exécuter.
+- Claude **peut lire les fichiers du projet** pour comprendre leur état (voir l'exception
+  « lecture seule » ci-dessus).
 
 ## Documentation du code
 

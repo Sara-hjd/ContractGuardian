@@ -73,6 +73,148 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 
 ## Séances
 
+## 2026-11-16 — Fusion de la PR #1, puis début de l'étape 1 (données CUAD)
+
+- **Qui** : Sara-hjd (avec Claude Code)
+- **Durée** : *à compléter*
+- **Branche** : `exp/exploration-cuad` (créée depuis `main` à jour, `2a558c8`)
+- **Objectif** : clore l'étape 0 (fusion de la PR #1), puis préparer les données de l'étape 1 :
+  comprendre CUAD, le télécharger et documenter sa provenance.
+
+### Fait
+- Vérifications de début de séance :
+  - `git status` : propre ;
+  - `git log --graph --all` : historique linéaire, `main` n'a pas bougé ;
+  - `gh pr view 1` : PR ouverte, sans relecture ;
+  - collaborateurs du dépôt : ILyas394 n'a pas encore accepté l'invitation.
+- Barre d'état VS Code **confirmée** : `Python 3.11.18 ('.venv': venv)`.
+- **Décision : fusionner la PR #1 avant la relecture d'Ilyas**, car l'étape 1 a besoin de la
+  structure de dossiers. Ilyas relira la PR **a posteriori** quand il aura accès : une PR
+  fusionnée reste consultable et commentable. L'invitation est toujours en attente
+  (envoyée le 2026-11-15, elle expire au bout de 7 jours, vers le 2026-11-22).
+- PR #1 fusionnée avec `gh pr merge 1 --merge` : commit de fusion **`2a558c8`**, qui conserve `63c067f`.
+  Lien : https://github.com/Sara-hjd/ContractGuardian/pull/1
+- Premier `git pull` sur `main` : *fast-forward* de `5cf0cb5` à `2a558c8`.
+- Branche `chore/structure-projet` supprimée en local (`git branch -d`) et sur GitHub
+  (`git push origin --delete`). `git branch -a` confirme : seule `main` reste.
+- **Étape 0 terminée.**
+- Création de la branche `exp/exploration-cuad` pour l'étape 1.
+- Recherche des sources officielles de CUAD (Zenodo, site de l'Atticus Project, article
+  NeurIPS 2021).
+- Règle précisée dans `CLAUDE.md` : Claude peut lancer seul les commandes **en lecture seule**
+  (status, log, diff, ls, md5, gh api GET, pages web…). Tout ce qui modifie quelque chose
+  reste à Sara.
+- **CUAD v1 téléchargé** depuis Zenodo dans `data/raw/cuad/CUAD_v1.zip` (105,9 Mo).
+  **Empreinte MD5 vérifiée** et conforme à Zenodo. Décompressé dans `data/raw/cuad/CUAD_v1/` :
+  1 051 fichiers (1 JSON, 1 CSV, 1 README, 510 PDF, 510 TXT, 28 XLSX), 173,7 Mo.
+- `git check-ignore` confirme que les fichiers CUAD sont ignorés par la règle `data/raw/*`.
+- Création de `docs/data_provenance.md` : identification, téléchargement, licence CC BY 4.0
+  et citation, contenu, usage dans le projet, et 9 limites connues (dont l'absence de
+  catégorie confidentialité, « annotation ≠ risque », et `answer_start` calculé sur le texte
+  de CUAD et non sur notre extraction PDF).
+
+### Avancement
+
+| Fonctionnalité | Statut | Commentaire |
+|---|---|---|
+| F1 Ingestion PDF et provenance | À faire | |
+| F2 Extraction de clauses | À faire | CUAD en préparation (étape 1). |
+| F3 Comparaison de paires de clauses | À faire | |
+| F4 NLI (ContractNLI) | À faire | |
+| F5 Recherche hybride et RAG avec abstention | À faire | |
+| F6 Interface analyste | À faire | |
+| F7 Traçabilité | À faire | |
+
+- **Étape du planning** : étape 0 **terminée** ; étape 1 (données) **en cours**.
+  Le planning détaillé reste à établir avec l'encadrant.
+
+### Ce que j'ai compris
+*Relu par Sara : à faire*
+
+**1. Lire le graphe Git** (`git log --oneline --graph --all --decorate`)
+- Chaque ligne est un commit, le plus récent en haut. On le lit de bas en haut pour suivre l'histoire.
+- Une **branche est une étiquette** collée sur un commit. `HEAD -> main` veut dire
+  « tu es sur `main` ». `origin/…` est la dernière image de GitHub connue du Mac.
+  `origin/HEAD` indique la branche par défaut de GitHub (`main`).
+- Une branche **contient** un commit si on l'atteint en suivant les lignes vers le bas.
+  Ici, `63c067f` est atteignable depuis `main` (`2a558c8`), donc il est dans `main`.
+
+**2. Fusionner et pull request**
+- **Fusionner**, c'est faire entrer le travail d'une branche dans une autre. Ça permet de
+  travailler séparément, puis de rassembler le travail dans `main`. Si deux personnes ont
+  modifié les mêmes lignes, Git signale un **conflit** à résoudre à la main.
+- La **pull request** est la demande de fusion sur GitHub. Elle permet de relire les changements
+  ligne par ligne, de commenter et d'approuver **avant** que ça entre dans `main`, et elle en
+  garde la trace. Ici, la relecture est une règle du binôme, que GitHub n'impose pas.
+- Trois méthodes de fusion sur GitHub :
+  - `--merge` crée un **commit de fusion** à deux parents et garde les commits d'origine ;
+  - `--squash` regroupe tout en **un nouveau commit**, avec un nouvel identifiant ;
+  - `--rebase` **recopie** les commits au bout de `main`, avec de nouveaux identifiants.
+
+  On a choisi `--merge` pour garder `63c067f` et la trace « PR #1 ».
+- Une fusion faite **par GitHub** via une PR crée toujours un nouveau commit (ici `2a558c8`).
+  Le **fast-forward** (simple avance de l'étiquette) a eu lieu **sur le Mac**, au moment du `git pull`.
+
+**3. Le premier `git pull`**
+- `origin/main` n'est pas GitHub en direct : c'est une **image** qui n'est rafraîchie que
+  quand on communique avec GitHub. D'où le message trompeur « up to date » juste après le
+  `git switch main`.
+- `git pull` = **`fetch`** (télécharger les nouveaux commits et rafraîchir `origin/main`)
+  + **`merge`** (faire avancer la `main` locale). Ici, la `main` locale était un ancêtre
+  direct, donc un simple *fast-forward*, sans conflit possible.
+- Bonne habitude : `git pull` sur `main` **avant** de créer une nouvelle branche.
+
+**4. Supprimer une branche fusionnée**
+- Supprimer une branche enlève seulement **l'étiquette** : les commits restent dans `main`.
+- `git branch -d` est **prudent** : il refuse si la branche contient du travail non fusionné.
+  `git branch -D` force la suppression, à éviter.
+- `git push origin --delete <branche>` supprime la branche sur GitHub. La PR reste consultable.
+- `git branch -a` liste les branches locales et l'image de celles de GitHub ;
+  `git ls-remote --heads origin` interroge GitHub en direct.
+
+**Comment tout s'enchaîne** : vérifier l'état (status, graphe, PR, collaborateurs) →
+fusionner la PR sur GitHub → rapatrier la fusion avec `git pull` → supprimer la branche
+terminée → repartir de `main` à jour sur une nouvelle branche pour l'étape suivante.
+
+### Problèmes et solutions
+- Claude avait annoncé un *fast-forward* pour la fusion de la PR. Inexact : via GitHub,
+  `--merge` crée toujours un commit de fusion. Le *fast-forward* a eu lieu lors du `git pull` local.
+- Après `git switch main`, certains fichiers et dossiers ont semblé « disparaître » ou revenir
+  en arrière (par exemple `.venv*/` redevenu `.venv/`). C'est normal : les fichiers reflètent
+  le commit de la branche courante (`5cf0cb5`). Le `git pull` a tout ramené.
+- Claude a tenté une commande `gh api` de lecture alors que la règle ne l'autorisait pas encore
+  (bloquée, sans effet). Résolu par la précision « lecture seule » ajoutée dans `CLAUDE.md`.
+- Pour vérifier les comptages, Claude a lancé un court `python3 -c` en lecture seule sur
+  `CUAD_v1.json`. C'est un écart à deux règles (ne jamais utiliser `python3`, et le lancement
+  de scripts est réservé à Sara). Il ne se reproduira pas : les comptages se feront dans le
+  notebook d'exploration, lancé par Sara avec le `.venv`.
+
+### Décisions
+- Fusion de la PR #1 avant relecture, avec relecture d'Ilyas a posteriori (voir « Fait »).
+
+### Preuves
+- `gh pr merge 1 --merge` : `✓ Merged pull request Sara-hjd/ContractGuardian#1`.
+- `git pull` : `5cf0cb5..2a558c8  main -> origin/main`, `Fast-forward`,
+  `15 files changed, 314 insertions(+), 9 deletions(-)`.
+- `git branch -d` : `Deleted branch chore/structure-projet (was 63c067f).`
+- `git push origin --delete` : `- [deleted]  chore/structure-projet`.
+- `git branch -a` : `* main`, `remotes/origin/HEAD -> origin/main`, `remotes/origin/main`.
+- `curl` : 100 % de 100 Mio en 3 min 46. `ls -l` : 105 883 672 octets.
+- `md5` : `c38f490a984420b8a62600db401fafd5` (identique à Zenodo).
+- `find … -type f | wc -l` : 1 051 fichiers extraits (510 PDF, 510 TXT, 28 XLSX).
+- `git check-ignore -v` : `.gitignore:15:data/raw/*` pour le zip et le JSON.
+
+### Prochaine étape
+- Commiter `CLAUDE.md`, `docs/PROGRESS.md` et `docs/data_provenance.md` sur
+  `exp/exploration-cuad`, sans push.
+- Exploration de CUAD dans un notebook : répartition des catégories, longueur des contrats,
+  comparaison `context` / `full_contract_txt`, réconciliation des comptages.
+- Décision à préparer (D-004) : quel découpage entraînement/test utiliser (celui de l'article ?).
+- Suivre l'invitation d'Ilyas (expiration vers le 2026-11-22), puis lui demander de relire
+  la PR #1 a posteriori.
+
+---
+
 ## 2026-11-15 — Structure du projet et environnement Python
 
 - **Qui** : Sara-hjd (avec Claude Code)
