@@ -73,11 +73,166 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 
 ## Séances
 
+## 2026-11-15 — Structure du projet et environnement Python
+
+- **Qui** : Sara-hjd (avec Claude Code)
+- **Durée** : *à compléter*
+- **Branche** : `chore/structure-projet` (commit, push et pull request vers `main` en fin de
+  séance ; pas de fusion avant relecture par Ilyas)
+- **Objectif** : créer l'arborescence du projet et un environnement Python 3.11 isolé,
+  prêt pour l'exploration des données.
+
+### Fait
+- Création de la branche `chore/structure-projet` (`git switch -c`).
+- Décision **D-003 acceptée** : `data/annotations/` est versionné, mais les annotations
+  ne contiennent que des références (identifiant du contrat, positions, étiquette,
+  annotateur, date), jamais le texte. Exception ajoutée à la règle 5 de `CLAUDE.md`,
+  ainsi que dans `README.md` et `docs/CONVENTIONS.md`.
+- Environnement virtuel créé (`python3.11 -m venv .venv`), activé, et vérifié : Python 3.11.18.
+- Arborescence créée : `data/raw/`, `data/processed/`, `data/annotations/`, `src/cg/`,
+  `training/`, `evaluation/`, `notebooks/`, `tests/`, avec des `.gitkeep` et `src/cg/README.md`.
+- `.gitignore` corrigé : `data/raw/*` et `data/processed/*` (le contenu) au lieu des dossiers,
+  pour pouvoir garder leurs `.gitkeep`.
+- `requirements.txt` créé (pandas, jupyter, matplotlib), puis installé avec
+  `python -m pip install -r requirements.txt`.
+- Configuration de VS Code : `./.venv/bin/python` sélectionné comme interpréteur
+  (après suppression d'un `.venv-1/` créé par erreur, voir « Problèmes et solutions »).
+  Barre d'état **non confirmée** : sa valeur n'a pas été transmise.
+- README : structure du dépôt mise à jour (`training/`, `evaluation/`, sous-dossiers de `data/`).
+
+### Avancement
+
+| Fonctionnalité | Statut | Commentaire |
+|---|---|---|
+| F1 Ingestion PDF et provenance | À faire | |
+| F2 Extraction de clauses | À faire | Les annotations par références (D-003) serviront à l'évaluation. |
+| F3 Comparaison de paires de clauses | À faire | |
+| F4 NLI (ContractNLI) | À faire | |
+| F5 Recherche hybride et RAG avec abstention | À faire | |
+| F6 Interface analyste | À faire | |
+| F7 Traçabilité | À faire | D-003 applique la provenance aux annotations. |
+
+- **Étape du planning** : étape 0, mise en place, **terminée** (environnement Python prêt).
+  Prochaine étape : étape 1, exploration des données. Le planning détaillé reste à
+  établir avec l'encadrant.
+
+### Ce que j'ai compris
+*Relu par Sara : à faire*
+
+**1. Les branches Git**
+- Une **branche** est une ligne de travail parallèle. Elle part de `main` et enregistre
+  ses commits à part, sans toucher à `main`.
+- On n'écrit plus directement sur `main`, pour trois raisons :
+  - `main` reste la version propre de référence ;
+  - une tâche ratée s'abandonne sans dégât ;
+  - on peut relire avant de fusionner (`merge`).
+
+  En binôme, chacun avance sur sa branche sans écraser l'autre.
+- `git switch -c nom` **crée** la branche et bascule dessus ; `git switch nom` bascule sur
+  une branche **existante**. Relancer `-c` sur une branche qui existe donne une erreur sans gravité.
+- Les fichiers modifiés et non commités **suivent** quand on change de branche : la
+  modification de `PROGRESS.md` faite sur `main` part dans le commit de cette branche.
+
+**2. L'environnement virtuel**
+- Un `.venv` est un dossier qui contient un Python et **ses propres bibliothèques**,
+  séparées de celles du système et des autres projets.
+- `source .venv/bin/activate` place `.venv/bin` en tête du `PATH`. `python` et `pip` désignent
+  alors ceux du projet, et le préfixe `(.venv)` le signale. L'activation ne vaut que pour
+  le terminal en cours.
+- On écrit `python -m pip` plutôt que `pip` : on est sûr d'installer dans le Python qu'on utilise.
+- **`.venv/` n'est pas commité, `requirements.txt` l'est** : on versionne la recette
+  (quelques lignes, portable), pas le résultat (des centaines de Mo, propre à la machine).
+  Ilyas recrée le même environnement avec `pip install -r requirements.txt`.
+- **Dépendances transitives** : on a demandé 3 bibliothèques, pip en a installé une centaine,
+  car jupyter et matplotlib dépendent elles-mêmes d'autres paquets (numpy, tornado…).
+- `>=` fixe une version minimale, `==` une version exacte. On figera les versions quand
+  l'environnement sera stable, pour que le binôme ait exactement les mêmes.
+
+**3. Git et les dossiers**
+- Git suit des **fichiers**, pas des dossiers : un dossier vide n'existe pas pour lui.
+  Le fichier vide `.gitkeep` (une convention, pas une fonction de Git) le rend visible.
+- Dans `.gitignore`, `data/raw/` ignore le **dossier** : Git ne regarde plus à l'intérieur,
+  et aucune exception `!` n'est possible. `data/raw/*` ignore seulement le **contenu**,
+  ce qui permet d'écrire `!data/raw/.gitkeep`.
+- Le motif `.venv*/` utilise un **joker** : `*` remplace « n'importe quelle suite de
+  caractères ». Il couvre `.venv/`, `.venv-1/`, etc. Le `/` final limite la règle aux dossiers.
+- Avant un `rm -rf` (suppression définitive, sans corbeille), on **regarde d'abord** ce
+  qu'on va supprimer (`ls -a`).
+
+**4. Les annotations par références (D-003)**
+- Une annotation désigne un passage par son **adresse** (contrat, début, fin) au lieu de
+  le recopier. Le dépôt public ne publie donc aucun texte de contrat, et le binôme partage
+  et historise ses annotations pour mesurer son accord.
+- C'est la même logique que la règle de traçabilité : toujours pointer vers la source.
+
+**5. Les outils d'exploration**
+- **pandas** manipule des tableaux (*DataFrame*) ; **jupyter** permet d'explorer pas à pas
+  dans des notebooks ; **matplotlib** trace les graphiques.
+- **VS Code** doit savoir quel Python utiliser (« Python: Select Interpreter ») : sinon,
+  il signale des bibliothèques introuvables alors qu'elles sont installées dans `.venv`.
+
+**6. La pull request**
+- Une **pull request** (PR) est une demande, sur GitHub, de fusionner une branche dans `main`.
+  Elle montre toutes les différences, et permet de commenter ligne par ligne et d'approuver.
+- On ne fusionne pas tout de suite : **Ilyas relit d'abord**. Un second regard attrape
+  les erreurs, et chacun du binôme connaît tout le code. La fusion se fait après approbation.
+- `git push -u origin <branche>` publie la branche sur GitHub (ce qu'il faut avant d'ouvrir
+  la PR). `-u` relie la branche locale à sa copie distante.
+
+**Comment tout s'enchaîne** : branche dédiée → environnement isolé en 3.11 → arborescence
+prête et `.gitignore` adapté → bibliothèques d'exploration installées → commit sur la branche
+→ push → pull request → relecture par Ilyas → fusion dans `main`.
+L'étape suivante peut commencer : télécharger CUAD dans `data/raw/` (non versionné)
+et l'explorer dans un notebook.
+
+### Problèmes et solutions
+- `git switch -c` lancé deux fois : la seconde fois, « a branch named … already exists ».
+  Sans conséquence, on était déjà sur la branche.
+- La ligne `M docs/PROGRESS.md` annoncée par Claude après `git switch -c` ne s'est pas affichée :
+  la prévision était inexacte. À vérifier avec `git status` (le fichier apparaît bien comme modifié).
+- `data/raw/` et `data/processed/` étaient ignorés en tant que dossiers, ce qui aurait masqué
+  leurs `.gitkeep`. Corrigé avec le motif `dossier/*` suivi d'une exception `!dossier/.gitkeep`.
+- **Incident VS Code** : en configurant l'interpréteur, VS Code a créé un second environnement
+  `.venv-1/`, et une commande lancée par VS Code a échoué avec « No module named python ».
+  Solution appliquée par Sara :
+  1. vérifier le contenu du dossier avec `ls -a` avant toute suppression ;
+  2. supprimer `.venv-1/` avec `rm -rf .venv-1` ;
+  3. sélectionner explicitement `./.venv/bin/python` comme interpréteur.
+
+  Prévention : dans `.gitignore`, `.venv/` remplacé par `.venv*/`, pour qu'aucun dossier
+  d'environnement, quel que soit son suffixe, ne puisse être commité.
+
+### Décisions
+- D-003 (acceptée) : versionner les annotations, sans le texte des contrats.
+
+### Preuves
+- `python --version` (avec `.venv` actif) : `Python 3.11.18`.
+- `pip install -r requirements.txt` : `Successfully installed …` avec notamment
+  pandas-3.1.1, matplotlib-3.11.2, jupyter-1.1.1, numpy-2.4.6.
+- Notice pip : version 26.2.2 installée, 26.3 disponible (mise à jour non urgente).
+
+### Prochaine étape
+- **Fin de séance** :
+  1. commit `chore: créer la structure du projet et l'environnement Python` ;
+  2. push de la branche (`git push -u origin chore/structure-projet`) ;
+  3. pull request de `chore/structure-projet` vers `main` (`gh pr create`).
+- Fusionner la pull request **seulement après relecture et approbation par Ilyas**
+  (il doit d'abord accepter l'invitation au dépôt).
+- Confirmer la barre d'état de VS Code : `3.11.18 ('.venv': venv)` attendu.
+- Figer les versions dans `requirements.txt` une fois l'environnement stabilisé.
+- Étape 1 : télécharger CUAD dans `data/raw/`, premier notebook d'exploration.
+  Attention : pandas 3 a changé certains comportements par rapport à pandas 2,
+  donc préférer la documentation de pandas 3 aux tutoriels anciens.
+- Toujours en attente : acceptation de l'invitation par ILyas394, validation de D-001 et
+  D-002 par l'encadrant.
+
+---
+
 ## 2026-11-15 — Mise en place du projet
 
 - **Qui** : Sara-hjd (avec Claude Code)
 - **Durée** : *à compléter*
-- **Branche** : `main` (aucun commit pour l'instant)
+- **Branche** : `main` (premier commit, qui crée la branche)
 - **Objectif** : préparer l'environnement, le dépôt Git et la documentation de base.
 
 ### Fait
@@ -93,6 +248,13 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
   les commandes », règles absolues, conventions Git.
 - Création de la documentation de base : `.gitignore`, `README.md`, `docs/CONVENTIONS.md`,
   `docs/PROGRESS.md`, `docs/decisions.md`.
+- Changement de règle : Claude remplit désormais `docs/PROGRESS.md` en fin de séance,
+  y compris « Ce que j'ai compris » (relu par Sara) ; `CLAUDE.md` mis à jour.
+- Configuration de l'identité Git (`user.name`, `user.email` avec l'adresse
+  noreply de GitHub pour ne pas exposer d'e-mail personnel dans un dépôt public).
+- Premier commit `5cf0cb5` « docs: initialiser la documentation du projet »
+  (6 fichiers), exécuté par Sara étape par étape : `git status` → `git add` → `git status`
+  → `git commit` → `git push -u origin main`. Push réussi.
 
 ### Avancement
 
@@ -106,8 +268,8 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 | F6 Interface analyste | À faire | |
 | F7 Traçabilité | À faire | Règle de provenance inscrite dans CLAUDE.md. |
 
-- **Étape du planning** : étape 0, mise en place (environnement, dépôt, documentation).
-  Le planning détaillé reste à établir avec l'encadrant.
+- **Étape du planning** : étape 0, mise en place (environnement, dépôt, documentation),
+  **terminée**, hors création du `.venv`. Le planning détaillé reste à établir avec l'encadrant.
 
 ### Ce que j'ai compris
 *Relu par Sara : à faire*
@@ -138,6 +300,20 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
   **public** : les données, les modèles et les secrets ne doivent jamais partir.
 - **`gh`** pilote GitHub depuis le terminal. On l'a utilisé pour inviter ILyas394 :
   l'invitation doit être acceptée avant de donner accès.
+- **L'index** (*staging area*) est la salle d'attente du commit : `git add` y place
+  des fichiers, `git status` montre ce qu'il contient, et seul son contenu part dans le commit.
+  On le vérifie toujours avant de commiter, car c'est le dernier moment pour attraper
+  un fichier interdit.
+- **Un commit** est un instantané du projet, avec un auteur, un message et un identifiant
+  unique (le *hash*, ici `5cf0cb5`). Le tout premier s'appelle *root-commit*, car il n'a pas de parent.
+- **L'identité Git** (`user.name`, `user.email`) est obligatoire : chaque commit dit qui l'a fait.
+  Avec `--global`, elle vaut pour tous les dépôts du Mac. L'adresse
+  `…@users.noreply.github.com` relie les commits au compte GitHub sans rendre public
+  l'e-mail personnel.
+- **`git push -u origin main`** envoie les commits sur GitHub. `-u` relie la branche locale
+  à `origin/main` : ensuite, `git push` et `git pull` suffisent.
+- **Commit ≠ push** : le commit reste sur l'ordinateur, et seul le push le rend visible
+  sur GitHub (et au binôme).
 
 **3. La documentation comme outil de travail**
 - **`CLAUDE.md`** : la « mémoire » du projet pour Claude (règles, stack, façon de travailler).
@@ -165,6 +341,8 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 - `python3` n'est pas en 3.11 : utiliser `python3.11 -m venv .venv`.
 - Rien à commiter tant que les fichiers de documentation n'existaient pas : le commit
   a été reporté après leur création.
+- `git commit` a échoué avec « Author identity unknown » : identité Git jamais configurée
+  sur ce Mac. Solution : `git config --global user.name` et `user.email`, puis relancer le commit.
 
 ### Décisions
 - D-001 (proposée) : le segment comme unité de base.
@@ -173,8 +351,11 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 ### Preuves
 - `git ls-remote origin` : code de sortie 0, sortie vide (dépôt vide accessible).
 - Invitation GitHub créée le 2026-11-15 pour ILyas394, permission `write`.
+- Commit `5cf0cb5` sur `main` : 6 fichiers, 752 lignes ajoutées.
+- `git push -u origin main` : réussi (d'après Sara ; sortie non recopiée).
 
 ### Prochaine étape
-- Premier commit `docs: initialiser la documentation du projet` et push sur `main`.
+- Commiter cette mise à jour de `docs/PROGRESS.md` (sur une branche, selon les conventions).
 - Vérifier que ILyas394 a accepté l'invitation.
 - Créer le `.venv` en Python 3.11.
+- Préparer avec l'encadrant : planning détaillé, validation de D-001 et D-002, nom de l'encadrant dans le README.

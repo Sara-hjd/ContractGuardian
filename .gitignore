@@ -8,8 +8,17 @@
 # Les contrats et jeux de données (CUAD, ContractNLI, contrats réels) sont lourds,
 # soumis à leurs propres licences, et peuvent contenir des informations confidentielles.
 # On les télécharge ou on les régénère localement, on ne les versionne pas.
-data/raw/
-data/processed/
+#
+# On écrit "data/raw/*" (le CONTENU) et pas "data/raw/" (le DOSSIER) : si le dossier
+# entier est ignoré, Git ne regarde plus à l'intérieur, et le "!" ci-dessous ne peut
+# pas ré-autoriser le .gitkeep. Le .gitkeep garde le dossier vide dans le dépôt.
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# data/annotations/ n'est PAS ignoré : nos annotations sont versionnées (décision D-003),
+# mais ne contiennent JAMAIS le texte des contrats, seulement des références.
 
 # Fichiers déposés par l'application (PDF importés, index, exports).
 storage/
@@ -39,7 +48,9 @@ mlruns/
 # --- Environnement Python --------------------------------------------------------
 # Le .venv contient des milliers de fichiers propres à chaque machine.
 # Chacun le recrée avec "python3.11 -m venv .venv" puis "pip install".
-.venv/
+# ".venv*/" ignore .venv/ mais aussi tout autre dossier qui commence par ".venv"
+# (.venv-1/, .venv2/...), comme celui que VS Code a créé par erreur le 2026-11-15.
+.venv*/
 
 # Fichiers compilés que Python génère automatiquement pour aller plus vite.
 __pycache__/

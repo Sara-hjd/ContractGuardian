@@ -1,0 +1,18 @@
+# Dépendances Python de ContractGuardian.
+# Installation (avec le .venv activé) : python -m pip install -r requirements.txt
+#
+# Étape actuelle : exploration des données uniquement (CUAD, ContractNLI).
+# Les autres bibliothèques de la stack (PyMuPDF, scikit-learn, PyTorch, Transformers,
+# FastAPI, MLflow...) seront ajoutées à l'étape où elles servent.
+#
+# ">=" fixe une version minimale. On figera les versions exactes ("==") une fois
+# l'environnement stabilisé, pour que le binôme obtienne exactement le même résultat.
+
+# Tableaux de données : charger, filtrer, compter, regrouper.
+pandas>=2.2
+
+# Carnets interactifs (notebooks) : code, résultats et explications dans un même document.
+jupyter>=1.0
+
+# Graphiques : histogrammes, diagrammes en barres...
+matplotlib>=3.9
