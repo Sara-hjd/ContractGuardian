@@ -569,3 +569,96 @@ est appliqué.
 
 Ces paragraphes E2 (résultat) à E5 ne sont **pas commités** par Claude (l'autorisation couvrait un
 seul commit et un seul push). Sara les commitera elle-même. La règle habituelle reprend.
+
+---
+
+## Séance du 2026-11-22 (suite 4) — fusions directes, puis mode « Claude exécute tout » (séance 1/3)
+
+**Consignes de Sara** : (1) fusionner directement les PR #2 et #3 sans attendre l'approbation
+d'Ilyas (relecture a posteriori), avec un commentaire pour lui ; (2) inscrire dans `CLAUDE.md` un
+mode temporaire de 3 séances où Claude exécute toutes les commandes (interdits listés dans
+`CLAUDE.md`) ; cette suite de séance compte comme séance 1/3 ; (3) après la séance 3/3, rédiger un
+diagnostic total depuis le 16/11.
+
+### F1 — 23:32 — Commit et push du journal (E2 à E5)
+
+- **Commandes** : `git add docs/JOURNAL_ACTIONS.md` ;
+  `git commit -m "docs(journal): tracer la création des PR #2 et #3"` ; `git push`.
+- **Résultat** : commit `6ce6d6f`, poussé sur `exp/baseline-extraction` ; la PR #3 compte 3 commits.
+
+### F2 — 23:32 — Commentaire pour Ilyas et fusion de la PR #2
+
+- **Commandes** :
+  ```bash
+  gh pr comment 2 --body "Fusionnée par Sara… sans attendre ta relecture… règle 5 / D-005…"
+  gh pr merge 2 --merge --delete-branch
+  ```
+- **Explication** : `gh pr comment` ajoute un commentaire sur la PR ; `gh pr merge --merge` crée
+  un commit de fusion (on garde les commits d'origine) ; `--delete-branch` supprime la branche
+  `exp/exploration-cuad` sur GitHub et en local.
+- **Résultat** : PR #2 **fusionnée**, commit de fusion `060de9d`.
+
+### F3 — 23:32 — Incident : la PR #3 a été fermée au lieu de basculer vers `main`
+
+- **Constat** : `gh pr view 3` → `base=exp/exploration-cuad état=CLOSED`. Quand la branche de base
+  d'une PR est supprimée **par `gh pr merge --delete-branch`**, GitHub a **fermé** la PR empilée
+  au lieu de la rebasculer vers `main`, contrairement à ce que Claude avait annoncé à Sara.
+- **Leçon** : pour des PR empilées, fusionner la première **sans** `--delete-branch`, changer la
+  base de la seconde vers `main` (`gh pr edit <n> --base main`), puis seulement supprimer la branche.
+
+### F4 — 23:33 — Réparation (réversible)
+
+- **Commandes** :
+  ```bash
+  git push origin 18e219e:refs/heads/exp/exploration-cuad   # recréer la branche sur GitHub
+  gh pr reopen 3
+  gh pr edit 3 --base main
+  ```
+- **Explication** : `git push origin <commit>:refs/heads/<nom>` crée sur GitHub une branche qui
+  pointe sur ce commit (le dernier de `exp/exploration-cuad`), sans rien réécrire ; une PR fermée
+  ne peut être rouverte que si sa branche de base existe ; `gh pr edit --base` change la base.
+- **Résultat** : PR #3 `OPEN`, `base=main`, `MERGEABLE`, 3 commits.
+
+### F5 — 23:33 — Commentaire pour Ilyas et fusion de la PR #3, nettoyage
+
+- **Commandes** :
+  ```bash
+  gh pr comment 3 --body "Fusionnée par Sara… D-006, D-002… note technique…"
+  gh pr merge 3 --merge --delete-branch
+  git push origin --delete exp/exploration-cuad     # supprimer la branche recréée en F4
+  git fetch --prune
+  git pull
+  ```
+- **Explication** : `gh pr merge` a aussi basculé le dépôt local sur `main` et l'a mis à jour ;
+  `git push origin --delete` supprime une branche sur GitHub ; `git fetch --prune` efface les
+  images locales de branches qui n'existent plus sur GitHub.
+- **Résultat** : PR #3 **fusionnée**, commit de fusion `0f9b683`. Plus aucune branche que `main`,
+  en local comme sur GitHub. `main` à jour.
+
+### F6 — 23:34 — Tests et graphe sur `main`
+
+- **Commandes** : `.venv/bin/python -m pytest -q` ; `git log --oneline --graph -16`.
+- **Résultat** : **13 passed** ; graphe : `5cf0cb5` → PR #1 (`2a558c8`) → PR #2 (`060de9d`,
+  7 commits) → PR #3 (`0f9b683`, 3 commits).
+
+### F7 — 23:35 — Mode temporaire dans `CLAUDE.md`
+
+- **Commande** : `git switch -c docs/mode-temporaire` (une branche par tâche).
+- **Action** : section « ⚠️ Mode temporaire : « Claude exécute tout » (3 séances) » ajoutée en tête
+  de « Qui exécute les commandes » : date, compteur 1/3 à 3/3, fin automatique, interdits,
+  obligations (plan, journal, fin de séance, diagnostic total).
+- **Fichiers touchés** : `CLAUDE.md`, ce journal, `docs/PROGRESS.md`.
+- **Commit, push, PR, fusion** : F8.
+
+### F8 — Commit, PR et fusion de `docs/mode-temporaire` (mode actif, séance 1/3)
+
+- **Commandes** :
+  ```bash
+  git add CLAUDE.md docs/JOURNAL_ACTIONS.md docs/PROGRESS.md
+  git commit -m "docs(claude): mode temporaire « Claude exécute tout » pendant 3 séances"
+  git push -u origin docs/mode-temporaire
+  gh pr create --base main --head docs/mode-temporaire --title … --body …
+  gh pr merge <n> --merge --delete-branch
+  git pull
+  ```
+- **Résultat** : voir la PR et `git log` (ce paragraphe est écrit avant le commit).
