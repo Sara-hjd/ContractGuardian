@@ -538,3 +538,34 @@ est appliqué.
   ```
 - **Explication** : `git push` sans argument envoie la branche courante vers la branche suivie
   (`origin/exp/baseline-extraction`, reliée en D14 avec `-u`).
+- **Résultat** : commit **`daf93eb`**, poussé (`0de4008..daf93eb`).
+
+### E3 — Créer la PR A (#2)
+
+- **Commande** :
+  ```bash
+  gh pr create --base main --head exp/exploration-cuad \
+    --title "exp(data): étape 1 — exploration de CUAD, splits D-004/D-005, segmentation v1 et traçabilité" \
+    --body-file <description rédigée dans un fichier temporaire> --reviewer ILyas394
+  ```
+- **Explication** : `--base` = branche qui reçoit, `--head` = branche proposée ; `--body-file`
+  lit la description dans un fichier ; `--reviewer` demande la relecture d'Ilyas.
+- **Résultat** : https://github.com/Sara-hjd/ContractGuardian/pull/2 (7 commits, relecteur ILyas394).
+
+### E4 — Créer la PR B (#3), empilée sur la PR A
+
+- **Commande** : même forme, avec `--base exp/exploration-cuad --head exp/baseline-extraction`.
+- **Pourquoi cette base** : la PR ne montre que les 2 commits nouveaux ; elle basculera vers `main`
+  quand la PR #2 sera fusionnée et sa branche supprimée.
+- **Résultat** : https://github.com/Sara-hjd/ContractGuardian/pull/3 (2 commits, relecteur ILyas394).
+
+### E5 — Relecteur de la PR #1 (relecture a posteriori)
+
+- **Commande** : `gh pr edit 1 --add-reviewer ILyas394`
+- **Vérification** : `gh pr view <n> --json …` pour #1, #2, #3 → relecteur ILyas394 sur les trois ;
+  #1 MERGED, #2 et #3 OPEN. **Rien n'a été fusionné.**
+
+### Fin de l'exception
+
+Ces paragraphes E2 (résultat) à E5 ne sont **pas commités** par Claude (l'autorisation couvrait un
+seul commit et un seul push). Sara les commitera elle-même. La règle habituelle reprend.
