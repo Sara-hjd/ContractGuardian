@@ -14,13 +14,13 @@ Projet de fin d'année (PFA), EMSI.
 
 | ID | Fonctionnalité | Description | Statut |
 |---|---|---|---|
-| F1 | Ingestion PDF et provenance | Lire un contrat PDF et le découper en segments, chacun avec sa page et ses positions. | À faire |
-| F2 | Extraction de clauses | Repérer les clauses (durée, résiliation, responsabilité, confidentialité) : d'abord une baseline classique, puis un modèle Transformer. | À faire |
+| F1 | Ingestion PDF et provenance | Lire un contrat PDF et le découper en segments, chacun avec sa page et ses positions. | En cours (segmentation v1 du texte CUAD) |
+| F2 | Extraction de clauses | Repérer les clauses (durée, résiliation, responsabilité, confidentialité) : d'abord une baseline classique, puis un modèle Transformer. | En cours (données prêtes, baseline à faire) |
 | F3 | Comparaison de paires de clauses | Comparer deux clauses pour signaler, avec prudence, une incohérence possible. | À faire |
 | F4 | NLI | Inférence en langage naturel (implication / contradiction / neutre), évaluée sur ContractNLI. | À faire |
 | F5 | Recherche hybride et RAG avec abstention | Recherche par mots-clés + recherche vectorielle, puis réponse citant le texte exact, ou abstention. | À faire |
 | F6 | Interface analyste | Interface web (React) pour importer un contrat, consulter les clauses et poser des questions. | À faire |
-| F7 | Traçabilité | Chaque sortie renvoie au segment source (page, positions) ; chaque expérience est suivie dans MLflow. | À faire |
+| F7 | Traçabilité | Chaque sortie renvoie au segment source (page, positions) ; chaque expérience est suivie dans MLflow. | En cours (test de traçabilité des segments) |
 
 ## Architecture (prévue)
 

@@ -73,6 +73,350 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 
 ## Séances
 
+## 2026-11-22 (suite) — Fin de l'étape 1 : splits, segmentation v1, traçabilité
+
+- **Qui** : Sara-hjd (avec Claude Code)
+- **Branche** : `exp/exploration-cuad`
+- **Objectif** : avoir des données prêtes pour la baseline de F2.
+
+> ⚠️ **Même exception que plus haut**, reconduite par Sara pour la suite de la séance : Claude Code
+> exécute et note chaque action dans [JOURNAL_ACTIONS.md](JOURNAL_ACTIONS.md) (actions B1 et
+> suivantes). Accord de Sara requis pour push, fusion, suppression, installation.
+> **Règle habituelle dès la prochaine séance.**
+
+### Fait
+- **D-004 acceptée provisoirement** (à confirmer par l'encadrant) : test officiel CUAD + validation
+  de 15 % du train officiel, par contrat, graine 42 ; limite de comparabilité avec l'article notée.
+- **Découpage officiel récupéré** : `data.zip` du dépôt GitHub de CUAD (commit `7aad649`), empreinte
+  vérifiée ; train 408 / test 102, sans recouvrement, union = les 510 contrats.
+  `docs/data_provenance.md` complété (nouvelle section, limites 3, 8, 9, 10).
+- **Fichier des splits** `data/splits/cuad_v1_splits.json` (titres seulement) : train 347, val 61,
+  test 102 ; nos 9 catégories présentes dans chaque jeu. **D-005** proposée (le commiter ?).
+- **Code** : `src/cg/ingestion/segmentation.py` (segmentation v1), `src/cg/datasets/`
+  (chargement CUAD, splits, projection des annotations, 2 scripts), README de chaque sous-dossier.
+- **Données prêtes** : `data/processed/cuad_segments_v1.jsonl` (non commité), 79 510 segments
+  étiquetés par famille.
+- **Tests** : `tests/test_tracabilite.py` (4 tests), lancés à la main : **tous passent**, dont
+  la traçabilité des 79 510 segments. Puis, avec l'accord de Sara : pytest installé, `tests/test_splits.py`
+  ajouté (D-005), `python -m pytest` → **6 tests passent sur 6**.
+
+### Résultats clés
+
+| Jeu | Contrats | Segments | % durée | % résiliation | % responsabilité | % aucune |
+|---|---|---|---|---|---|---|
+| train | 347 | 58 000 | 1,35 | 0,88 | 0,81 | 97,08 |
+| val | 61 | 8 253 | 1,73 | 1,13 | 1,07 | 96,23 |
+| test | 102 | 13 257 | 1,61 | 0,83 | 0,83 | 96,82 |
+
+- Longueur des segments : médiane 154 caractères, 90 % sous 1 037 ; **15 % font moins de
+  20 caractères** (titres, numéros, lignes isolées) ; 6,9 % sont au plafond ou presque.
+- Sur 3 257 annotations de nos 9 catégories, **une seule** n'étiquette aucun segment.
+
+### Avancement
+
+| Fonctionnalité | Statut | Commentaire |
+|---|---|---|
+| F1 Ingestion PDF et provenance | En cours | Segmentation v1 du texte CUAD avec positions ; lecture PDF (PyMuPDF) à faire. |
+| F2 Extraction de clauses | En cours | Données prêtes (splits + segments étiquetés) ; baseline à faire. |
+| F3 Comparaison de paires de clauses | À faire | |
+| F4 NLI (ContractNLI) | À faire | |
+| F5 Recherche hybride et RAG avec abstention | À faire | |
+| F6 Interface analyste | À faire | |
+| F7 Traçabilité | En cours | Test automatique : 79 510 segments traçables. |
+
+- **Étape du planning** : étape 1 (données CUAD) **terminée**, sous réserve de D-004 (encadrant)
+  (encadrant). D-005 acceptée. Prochaine étape : à choisir (voir le récapitulatif de fin de séance).
+
+### Ce que j'ai compris
+<!-- Rédigé par Claude en fin de séance, relu et corrigé par Sara. -->
+- **Train, validation, test** : le train sert à apprendre, la validation à régler (choisir un
+  modèle, un seuil), le test à mesurer **une seule fois** à la fin. Si on règle sur le test, le
+  score final devient optimiste : on a « appris » le test sans le vouloir.
+- **Découper par contrat** : les segments d'un même contrat se ressemblent ; s'ils étaient
+  répartis entre train et test, le modèle serait testé sur du « presque déjà vu ».
+- **Graine aléatoire** : un tirage « au hasard » avec une graine fixée (42) donne toujours le même
+  résultat ; on la fixe **avant** de tirer, pour ne pas être tenté de relancer jusqu'à un tirage
+  qui nous arrange.
+- **Empreinte d'un fichier** (MD5, SHA-1) : une « signature » calculée sur son contenu. Deux
+  fichiers de même empreinte sont identiques : c'est ainsi qu'on a prouvé que le `CUADv1.json` du
+  dépôt GitHub est le même que celui de Zenodo.
+- **Segment et positions** : un segment, c'est un morceau de texte et ses positions `[debut, fin)`
+  dans le texte source. Python découpe avec `texte[debut:fin]`, fin exclue. Retirer les espaces
+  aux bords en **décalant les positions** garde la garantie `texte[debut:fin] == segment`.
+- **Projection des annotations** : CUAD annote des passages, nous classons des segments. On
+  transfère une étiquette quand le segment et le passage se chevauchent assez ; la règle
+  (`min(20, longueur)`) est fixée **avant** de voir les résultats, pour ne pas l'ajuster sur eux.
+- **Déséquilibre** : 97 % des segments n'ont aucune de nos familles. Un modèle qui dit toujours
+  « aucune » aurait 97 % d'exactitude et ne servirait à rien : il faudra mesurer la précision et
+  le rappel de chaque famille, pas l'exactitude globale.
+- **Test automatique** : une fonction avec des `assert`, que pytest lance et vérifie. Notre test
+  de traçabilité contrôle les 79 510 segments en une seconde : la règle absolue 1 devient
+  vérifiable à chaque modification du code.
+- *Relu par Sara : à faire*
+
+### Problèmes et solutions
+- Téléchargement de `data.zip` lent (~7 minutes) : le code a été écrit pendant ce temps.
+- Annotation de longueur 0 : elle aurait étiqueté tous les segments (seuil de 0) ; exclue dans le code.
+- pytest absent : tests appelés directement avec Python en attendant l'accord d'installation.
+
+### Décisions
+- D-004 : acceptée provisoirement (option 1), à confirmer par l'encadrant.
+- D-005 : **acceptée** par Sara : `data/splits/` commité, exception de la règle 5 étendue dans `CLAUDE.md`.
+
+### Prochaine étape
+- Sara : relire « Ce que j'ai compris » ; prendre l'habitude de lancer `python -m pytest` avant chaque commit.
+- Encadrant : confirmer D-004, valider D-001 et D-002.
+- Segmentation v2 éventuelle (fusionner les segments de moins de 20 caractères), à décider en
+  regardant **le train seulement**.
+- Baseline F2 (scikit-learn : TF-IDF + régression logistique, une par famille), réglée sur la validation.
+
+---
+
+## 2026-11-22 — Exploration de CUAD (notebook exécuté) et préparation de D-004
+
+- **Qui** : Sara-hjd (avec Claude Code)
+- **Durée** : *à compléter*
+- **Branche** : `exp/exploration-cuad`
+- **Objectif** : exécuter et interpréter `notebooks/01_exploration_cuad.ipynb`, préparer D-004,
+  préparer l'entretien avec l'encadrant.
+
+> ⚠️ **Exception ponctuelle à la règle « Sara exécute les commandes »** (CLAUDE.md), décidée par
+> Sara **pour cette séance uniquement**, afin de montrer un avancement à l'encadrant. Claude Code
+> a exécuté lui-même le notebook, les `git add` et les `git commit` sur `exp/exploration-cuad`.
+> Push, fusion, suppression, installation et toute action sur `main` ou GitHub restaient soumis à
+> l'accord de Sara. Chaque action est tracée dans [JOURNAL_ACTIONS.md](JOURNAL_ACTIONS.md).
+> **La règle habituelle s'applique de nouveau dès la prochaine séance.**
+
+### Fait
+- Notebook exécuté en entier avec le noyau `.venv` (Python 3.11.18, pandas 3.1.1) : **aucune
+  erreur**, aucune cellule à corriger.
+- 4 cellules ajoutées après une première lecture des résultats : **f.3** (les passages *Uncapped*
+  sont-ils aussi *Cap* ?) et **g.3** (les `<omitted>` expliquent-ils l'écart 13 823 / 13 101 ?).
+- Cellule « Conclusions » rédigée (sans recopier d'extrait de contrat).
+- Vérification en lecture seule du dépôt GitHub de CUAD : le découpage officiel est dans `data.zip`
+  (`train_separate_questions.json`, `test.json`, cités par `run.sh`) ; pas de jeu de validation.
+- **D-004** (découpage train / validation / test) rédigée avec 4 options, statut « Proposée ».
+- `docs/JOURNAL_ACTIONS.md` créé ; `docs/FICHE_ENCADRANT.md` créée (fiche de révision).
+- Notebook commité **sans sorties** (aucun extrait de contrat dans le dépôt public).
+
+### Résultats clés
+- 510 contrats, 41 catégories, 13 823 passages ; positions `answer_start` exactes 13 823/13 823.
+- Longueur des contrats : médiane 33 143 caractères (de 645 à 338 211).
+- Nos 9 catégories : de 470 contrats (*Agreement Date*) à 111 (*Uncapped Liability*,
+  *Notice Period To Terminate Renewal*).
+- **Les 111 contrats *Uncapped* ont tous aussi *Cap*, et 125 des 167 passages *Uncapped* sont
+  exactement des passages *Cap*** : CUAD annote souvent une même clause dans les deux catégories.
+- **13 101 = nombre d'éléments de `master_clauses.csv`** ; l'écart de 722 avec le JSON vient du
+  découpage des annotations non contiguës (`<omitted>`), à 11 passages près.
+- **`context` = fichier TXT pour 510 contrats sur 510.**
+
+### Avancement
+
+| Fonctionnalité | Statut | Commentaire |
+|---|---|---|
+| F1 Ingestion PDF et provenance | À faire | L'exploration confirme le besoin d'aligner les positions CUAD sur notre texte PyMuPDF. |
+| F2 Extraction de clauses | À faire | Données comprises ; découpage D-004 à trancher avant tout entraînement. |
+| F3 Comparaison de paires de clauses | À faire | Constat : *Cap* + *Uncapped* dans un contrat n'est pas un signal d'incohérence. |
+| F4 NLI (ContractNLI) | À faire | |
+| F5 Recherche hybride et RAG avec abstention | À faire | |
+| F6 Interface analyste | À faire | |
+| F7 Traçabilité | À faire | Positions CUAD vérifiées exactes sur le texte CUAD. |
+
+- **Étape du planning** : étape 1 (données CUAD), exploration terminée ; reste D-004.
+
+### Ce que j'ai compris
+<!-- Rédigé par Claude en fin de séance, relu et corrigé par Sara. -->
+- **Notebook et noyau** : un notebook mélange texte et code ; le **noyau** est le Python qui
+  exécute les cellules et garde les variables en mémoire. D'où l'importance de l'ordre
+  d'exécution, et du choix du noyau `.venv` (c'est lui qui a pandas 3).
+- **Aplatir des données imbriquées** : le JSON de CUAD est une structure « listes dans des listes ».
+  On le parcourt une fois pour fabriquer trois tableaux simples (contrats, questions, passages) :
+  ensuite, chaque question se règle avec un `groupby` ou un filtre.
+- **Vérifier avant de faire confiance** : on a contrôlé que chaque position `answer_start` retombe
+  exactement sur le texte annoté (13 823/13 823). C'est la base de la traçabilité (F7) : une
+  position qu'on n'a pas vérifiée ne peut pas servir de preuve.
+- **Médiane plutôt que moyenne** : avec quelques contrats énormes, la moyenne serait trompeuse ;
+  la médiane donne le contrat « typique ».
+- **Déséquilibre des classes** : la plupart des catégories sont absentes de la plupart des contrats.
+  Un modèle qui répondrait toujours « absent » aurait l'air bon sur beaucoup de questions : il
+  faudra des métriques qui ne se laissent pas tromper.
+- **Une annotation n'est pas une clause distincte** : la même phrase peut être annotée *Cap* et
+  *Uncapped* (une limite avec exception). Pour F3, il faudra comparer des clauses différentes,
+  pas des étiquettes.
+- **Réconcilier des chiffres** : on a formulé des hypothèses (doublons, découpage, unité de
+  comptage), puis on les a testées une à une. Résultat : l'article compte les éléments du CSV,
+  le JSON les morceaux. Expliquer un écart est plus convaincant que de le cacher.
+- **Pourquoi D-004 avant tout entraînement** : si on choisit les contrats de test après avoir vu
+  des résultats, on triche sans le vouloir. Le découpage doit se faire par contrat, être fixé et
+  enregistré avant le premier entraînement.
+- **Sorties de notebook et dépôt public** : les sorties contiennent du texte de contrat ; on commite
+  le notebook sans sorties, chacun peut le réexécuter avec les données locales.
+- *Relu par Sara : à faire*
+
+### Problèmes et solutions
+- `jupyter nbconvert --execute --inplace` (réécriture du notebook) a été bloqué par le contrôle de
+  sécurité de Claude Code. Solution : exécuter vers une copie dans un dossier temporaire ; le
+  notebook du dépôt n'a donc jamais contenu de sorties.
+- Un extrait de date d'un contrat s'était glissé dans les Conclusions : retiré avant le commit.
+
+### Décisions
+- D-004 proposée (voir [decisions.md](decisions.md)), **à trancher ensemble**.
+- D-001 et D-002 toujours à valider avec l'encadrant.
+
+### Preuves
+- Exécution complète : `jupyter nbconvert --to notebook --execute` (voir JOURNAL_ACTIONS.md, A3 à A6).
+- Commits : voir JOURNAL_ACTIONS.md.
+
+### Prochaine étape
+- Sara relit les Conclusions du notebook, D-004 et la rubrique « Ce que j'ai compris ».
+- Trancher D-004 ensemble (et télécharger `data.zip` si l'option 1 est retenue).
+- Reporter les constats dans `docs/data_provenance.md` (limites 3, 8, 9).
+- Push de `exp/exploration-cuad` : **seulement avec l'accord de Sara**.
+
+---
+
+## 2026-11-16 — Fusion de la PR #1, puis début de l'étape 1 (données CUAD)
+
+- **Qui** : Sara-hjd (avec Claude Code)
+- **Durée** : *à compléter*
+- **Branche** : `exp/exploration-cuad` (créée depuis `main` à jour, `2a558c8`)
+- **Objectif** : clore l'étape 0 (fusion de la PR #1), puis préparer les données de l'étape 1 :
+  comprendre CUAD, le télécharger et documenter sa provenance.
+
+### Fait
+- Vérifications de début de séance :
+  - `git status` : propre ;
+  - `git log --graph --all` : historique linéaire, `main` n'a pas bougé ;
+  - `gh pr view 1` : PR ouverte, sans relecture ;
+  - collaborateurs du dépôt : ILyas394 n'a pas encore accepté l'invitation.
+- Barre d'état VS Code **confirmée** : `Python 3.11.18 ('.venv': venv)`.
+- **Décision : fusionner la PR #1 avant la relecture d'Ilyas**, car l'étape 1 a besoin de la
+  structure de dossiers. Ilyas relira la PR **a posteriori** quand il aura accès : une PR
+  fusionnée reste consultable et commentable. L'invitation est toujours en attente
+  (envoyée le 2026-11-15, elle expire au bout de 7 jours, vers le 2026-11-22).
+- PR #1 fusionnée avec `gh pr merge 1 --merge` : commit de fusion **`2a558c8`**, qui conserve `63c067f`.
+  Lien : https://github.com/Sara-hjd/ContractGuardian/pull/1
+- Premier `git pull` sur `main` : *fast-forward* de `5cf0cb5` à `2a558c8`.
+- Branche `chore/structure-projet` supprimée en local (`git branch -d`) et sur GitHub
+  (`git push origin --delete`). `git branch -a` confirme : seule `main` reste.
+- **Étape 0 terminée.**
+- Création de la branche `exp/exploration-cuad` pour l'étape 1.
+- Recherche des sources officielles de CUAD (Zenodo, site de l'Atticus Project, article
+  NeurIPS 2021).
+- Règle précisée dans `CLAUDE.md` : Claude peut lancer seul les commandes **en lecture seule**
+  (status, log, diff, ls, md5, gh api GET, pages web…). Tout ce qui modifie quelque chose
+  reste à Sara.
+- **CUAD v1 téléchargé** depuis Zenodo dans `data/raw/cuad/CUAD_v1.zip` (105,9 Mo).
+  **Empreinte MD5 vérifiée** et conforme à Zenodo. Décompressé dans `data/raw/cuad/CUAD_v1/` :
+  1 051 fichiers (1 JSON, 1 CSV, 1 README, 510 PDF, 510 TXT, 28 XLSX), 173,7 Mo.
+- `git check-ignore` confirme que les fichiers CUAD sont ignorés par la règle `data/raw/*`.
+- Création de `docs/data_provenance.md` : identification, téléchargement, licence CC BY 4.0
+  et citation, contenu, usage dans le projet, et 9 limites connues (dont l'absence de
+  catégorie confidentialité, « annotation ≠ risque », et `answer_start` calculé sur le texte
+  de CUAD et non sur notre extraction PDF).
+
+### Avancement
+
+| Fonctionnalité | Statut | Commentaire |
+|---|---|---|
+| F1 Ingestion PDF et provenance | À faire | |
+| F2 Extraction de clauses | À faire | CUAD en préparation (étape 1). |
+| F3 Comparaison de paires de clauses | À faire | |
+| F4 NLI (ContractNLI) | À faire | |
+| F5 Recherche hybride et RAG avec abstention | À faire | |
+| F6 Interface analyste | À faire | |
+| F7 Traçabilité | À faire | |
+
+- **Étape du planning** : étape 0 **terminée** ; étape 1 (données) **en cours**.
+  Le planning détaillé reste à établir avec l'encadrant.
+
+### Ce que j'ai compris
+*Relu par Sara : à faire*
+
+**1. Lire le graphe Git** (`git log --oneline --graph --all --decorate`)
+- Chaque ligne est un commit, le plus récent en haut. On le lit de bas en haut pour suivre l'histoire.
+- Une **branche est une étiquette** collée sur un commit. `HEAD -> main` veut dire
+  « tu es sur `main` ». `origin/…` est la dernière image de GitHub connue du Mac.
+  `origin/HEAD` indique la branche par défaut de GitHub (`main`).
+- Une branche **contient** un commit si on l'atteint en suivant les lignes vers le bas.
+  Ici, `63c067f` est atteignable depuis `main` (`2a558c8`), donc il est dans `main`.
+
+**2. Fusionner et pull request**
+- **Fusionner**, c'est faire entrer le travail d'une branche dans une autre. Ça permet de
+  travailler séparément, puis de rassembler le travail dans `main`. Si deux personnes ont
+  modifié les mêmes lignes, Git signale un **conflit** à résoudre à la main.
+- La **pull request** est la demande de fusion sur GitHub. Elle permet de relire les changements
+  ligne par ligne, de commenter et d'approuver **avant** que ça entre dans `main`, et elle en
+  garde la trace. Ici, la relecture est une règle du binôme, que GitHub n'impose pas.
+- Trois méthodes de fusion sur GitHub :
+  - `--merge` crée un **commit de fusion** à deux parents et garde les commits d'origine ;
+  - `--squash` regroupe tout en **un nouveau commit**, avec un nouvel identifiant ;
+  - `--rebase` **recopie** les commits au bout de `main`, avec de nouveaux identifiants.
+
+  On a choisi `--merge` pour garder `63c067f` et la trace « PR #1 ».
+- Une fusion faite **par GitHub** via une PR crée toujours un nouveau commit (ici `2a558c8`).
+  Le **fast-forward** (simple avance de l'étiquette) a eu lieu **sur le Mac**, au moment du `git pull`.
+
+**3. Le premier `git pull`**
+- `origin/main` n'est pas GitHub en direct : c'est une **image** qui n'est rafraîchie que
+  quand on communique avec GitHub. D'où le message trompeur « up to date » juste après le
+  `git switch main`.
+- `git pull` = **`fetch`** (télécharger les nouveaux commits et rafraîchir `origin/main`)
+  + **`merge`** (faire avancer la `main` locale). Ici, la `main` locale était un ancêtre
+  direct, donc un simple *fast-forward*, sans conflit possible.
+- Bonne habitude : `git pull` sur `main` **avant** de créer une nouvelle branche.
+
+**4. Supprimer une branche fusionnée**
+- Supprimer une branche enlève seulement **l'étiquette** : les commits restent dans `main`.
+- `git branch -d` est **prudent** : il refuse si la branche contient du travail non fusionné.
+  `git branch -D` force la suppression, à éviter.
+- `git push origin --delete <branche>` supprime la branche sur GitHub. La PR reste consultable.
+- `git branch -a` liste les branches locales et l'image de celles de GitHub ;
+  `git ls-remote --heads origin` interroge GitHub en direct.
+
+**Comment tout s'enchaîne** : vérifier l'état (status, graphe, PR, collaborateurs) →
+fusionner la PR sur GitHub → rapatrier la fusion avec `git pull` → supprimer la branche
+terminée → repartir de `main` à jour sur une nouvelle branche pour l'étape suivante.
+
+### Problèmes et solutions
+- Claude avait annoncé un *fast-forward* pour la fusion de la PR. Inexact : via GitHub,
+  `--merge` crée toujours un commit de fusion. Le *fast-forward* a eu lieu lors du `git pull` local.
+- Après `git switch main`, certains fichiers et dossiers ont semblé « disparaître » ou revenir
+  en arrière (par exemple `.venv*/` redevenu `.venv/`). C'est normal : les fichiers reflètent
+  le commit de la branche courante (`5cf0cb5`). Le `git pull` a tout ramené.
+- Claude a tenté une commande `gh api` de lecture alors que la règle ne l'autorisait pas encore
+  (bloquée, sans effet). Résolu par la précision « lecture seule » ajoutée dans `CLAUDE.md`.
+- Pour vérifier les comptages, Claude a lancé un court `python3 -c` en lecture seule sur
+  `CUAD_v1.json`. C'est un écart à deux règles (ne jamais utiliser `python3`, et le lancement
+  de scripts est réservé à Sara). Il ne se reproduira pas : les comptages se feront dans le
+  notebook d'exploration, lancé par Sara avec le `.venv`.
+
+### Décisions
+- Fusion de la PR #1 avant relecture, avec relecture d'Ilyas a posteriori (voir « Fait »).
+
+### Preuves
+- `gh pr merge 1 --merge` : `✓ Merged pull request Sara-hjd/ContractGuardian#1`.
+- `git pull` : `5cf0cb5..2a558c8  main -> origin/main`, `Fast-forward`,
+  `15 files changed, 314 insertions(+), 9 deletions(-)`.
+- `git branch -d` : `Deleted branch chore/structure-projet (was 63c067f).`
+- `git push origin --delete` : `- [deleted]  chore/structure-projet`.
+- `git branch -a` : `* main`, `remotes/origin/HEAD -> origin/main`, `remotes/origin/main`.
+- `curl` : 100 % de 100 Mio en 3 min 46. `ls -l` : 105 883 672 octets.
+- `md5` : `c38f490a984420b8a62600db401fafd5` (identique à Zenodo).
+- `find … -type f | wc -l` : 1 051 fichiers extraits (510 PDF, 510 TXT, 28 XLSX).
+- `git check-ignore -v` : `.gitignore:15:data/raw/*` pour le zip et le JSON.
+
+### Prochaine étape
+- Commiter `CLAUDE.md`, `docs/PROGRESS.md` et `docs/data_provenance.md` sur
+  `exp/exploration-cuad`, sans push.
+- Exploration de CUAD dans un notebook : répartition des catégories, longueur des contrats,
+  comparaison `context` / `full_contract_txt`, réconciliation des comptages.
+- Décision à préparer (D-004) : quel découpage entraînement/test utiliser (celui de l'article ?).
+- Suivre l'invitation d'Ilyas (expiration vers le 2026-11-22), puis lui demander de relire
+  la PR #1 a posteriori.
+
+---
+
 ## 2026-11-15 — Structure du projet et environnement Python
 
 - **Qui** : Sara-hjd (avec Claude Code)
