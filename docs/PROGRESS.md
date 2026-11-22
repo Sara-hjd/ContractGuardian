@@ -73,6 +73,55 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 
 ## Séances
 
+## 2026-11-22 (suite 3) — Décisions de Sara et pull requests
+
+- **Qui** : Sara-hjd (avec Claude Code)
+- **Branche** : `exp/baseline-extraction`
+
+> ⚠️ **Exception ponctuelle**, limitée par Sara à une liste précise : mettre à jour les décisions,
+> PROGRESS et la fiche ; commiter et pousser `exp/baseline-extraction` ; créer les PR A et B ;
+> ajouter ILyas394 comme relecteur (PR A, PR B, PR #1). **Aucune fusion.** Actions tracées dans
+> [JOURNAL_ACTIONS.md](JOURNAL_ACTIONS.md) (E1 et suivantes). Règle habituelle ensuite.
+
+### Décisions prises par Sara, à présenter à l'encadrant pour validation
+- **D-001** (segment comme unité de base) : acceptée.
+- **D-002** (confidentialité) : acceptée. **ContractNLI** comme source de données réelles pour la
+  famille confidentialité, **et** une baseline par mots-clés (comparaison et solution de secours).
+  À faire : télécharger et documenter ContractNLI, vérifier l'adaptation de ses passages d'évidence
+  en segments étiquetés (risque : les exemples négatifs), figer la liste de mots-clés avant toute
+  évaluation.
+- **D-004** (splits CUAD) : passe de « acceptée provisoirement » à **acceptée**.
+- **D-006** (baseline avant l'étape 2) : **confirmée**.
+
+### Fait
+- `docs/decisions.md`, `docs/FICHE_ENCADRANT.md`, ce journal mis à jour.
+- Commit et push de `exp/baseline-extraction`.
+- PR A (`exp/exploration-cuad` → `main`) et PR B (`exp/baseline-extraction` → `exp/exploration-cuad`)
+  créées, ILyas394 relecteur ; ILyas394 relecteur de la PR #1. Liens : voir JOURNAL_ACTIONS.md.
+
+### Avancement
+- Inchangé (voir l'entrée « suite 2 »). Ajout au planning : **ContractNLI** pour la famille
+  confidentialité (F2) et pour F4.
+
+### Ce que j'ai compris
+<!-- Rédigé par Claude en fin de séance, relu et corrigé par Sara. -->
+- **Décider puis faire valider** : les décisions sont prises par le binôme (Sara), puis présentées
+  à l'encadrant ; le statut le dit (« acceptée, à présenter »), pour garder la trace de qui a décidé.
+- **PR empilées** : la PR B a pour base la branche de la PR A ; GitHub n'y montre que le travail
+  nouveau. Quand la PR A sera fusionnée et sa branche supprimée, la PR B basculera vers `main`.
+  On fusionne avec « merge commit » (pas « squash ») pour que les commits de A restent les mêmes.
+- **Relecture** : Ilyas relit et approuve avant toute fusion ; les points sensibles (règle 5 et
+  D-005, D-006) sont signalés dans la description des PR.
+- *Relu par Sara : à faire*
+
+### Prochaine étape
+- Ilyas : relire et approuver PR A, puis PR B ; relire la PR #1 a posteriori.
+- Sara : fusionner elle-même PR A puis PR B après approbation (`--merge`).
+- Encadrant : valider D-001, D-002, D-004, D-006.
+- Ensuite : étape 2 (ingestion PDF, base de données) et téléchargement de ContractNLI.
+
+---
+
 ## 2026-11-22 (suite 2) — Baselines d'extraction (F2) sur la validation
 
 - **Qui** : Sara-hjd (avec Claude Code)

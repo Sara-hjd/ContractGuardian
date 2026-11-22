@@ -54,15 +54,18 @@
   7 liées à la segmentation. Détail : `docs/analyses/erreurs_baseline_tfidf_val.md`.
 - **Planning** : baseline faite avant l'ingestion PDF (D-006), à valider.
 
-## Décisions à valider
+## Décisions prises par Sara le 2026-11-22, à présenter pour validation
 
-| | Sujet | État |
+| | Sujet | Décision |
 |---|---|---|
-| **D-001** | Le **segment** comme unité de base | Proposée ; implémentée (v1) |
-| **D-002** | Confidentialité absente de CUAD | À choisir : ContractNLI, annotation humaine, ou retrait de F2 |
-| **D-004** | Splits : test officiel + validation 15 % du train, par contrat, graine 42 | **Acceptée provisoirement**, à confirmer |
-| **D-005** | Commiter le fichier des splits (titres seulement) | Acceptée (Sara) |
-| **D-006** | Protocole des baselines ; baseline avant l'étape 2 | Acceptée (Sara), à présenter |
+| **D-001** | Unité de base | Le **segment** (texte + provenance) ; implémenté (v1) et testé |
+| **D-002** | Confidentialité absente de CUAD | **ContractNLI** (données réelles, passages d'évidence) **+ baseline par mots-clés** (comparaison et secours) |
+| **D-004** | Splits CUAD | Test officiel + validation 15 % du train, par contrat, graine 42 |
+| **D-005** | Fichier des splits | Commité (titres seulement), exception de la règle 5 étendue |
+| **D-006** | Protocole des baselines ; planning | Baseline avant l'étape 2 (ingestion PDF, base de données) |
+
+Point à discuter pour D-002 : dans un NDA, presque tout le texte parle de confidentialité ;
+d'où viendront les exemples **négatifs** ?
 
 ## 5 questions probables, avec la réponse
 

@@ -495,3 +495,46 @@ PROGRESS.md). Même exception ; installation de scikit-learn et MLflow **autoris
   git commit -m "exp(extraction): baselines mots-clés et TF-IDF évaluées sur la validation"
   ```
 - **Résultat** : voir `git log` ; push en attente de l'accord de Sara.
+
+### D14 — 23:11 — Push de `exp/baseline-extraction` (accord de Sara) — fin de l'exception
+
+- **Accord** : « Oui, pousse exp/baseline-extraction. »
+- **Commande** : `git push -u origin exp/baseline-extraction`
+- **Résultat** : branche créée sur GitHub (commit `0de4008`), suivie localement. `main` non touchée,
+  aucune PR créée.
+- **Fin de l'exception** : à partir d'ici, Sara exécute de nouveau toutes les commandes
+  (CLAUDE.md). Ce paragraphe n'est **pas commité** par Claude : Sara le commitera.
+
+---
+
+## Séance du 2026-11-22 (suite 3) — exception limitée : décisions, commit, push, PR
+
+**Périmètre accordé par Sara, et seulement celui-ci** : mettre à jour les décisions, PROGRESS et la
+fiche ; commiter sur `exp/baseline-extraction` (journal D14 + ces mises à jour) et pousser ; créer
+la PR A et la PR B avec ILyas394 comme relecteur ; ajouter ILyas394 comme relecteur de la PR #1.
+**Aucune fusion.** Ensuite, la règle habituelle reprend.
+
+Note : un premier message de Sara demandait seulement de modifier les fichiers et de lui donner
+les commandes Git ; le second, plus récent, autorise explicitement ces actions : c'est lui qui
+est appliqué.
+
+### E1 — Mettre à jour les décisions, PROGRESS et la fiche
+
+- **Action** : modifications avec l'outil d'édition (pas de commande shell).
+  - `docs/decisions.md` : D-001 et D-002 « Acceptée (Sara, 2026-11-22), à présenter à
+    l'encadrant » ; D-002 : décision (ContractNLI + baseline par mots-clés), raisons, 5 conséquences ;
+    D-004 « Acceptée » ; D-006 « confirmée par Sara le 2026-11-22 ».
+  - `docs/FICHE_ENCADRANT.md` : tableau « Décisions prises par Sara, à présenter pour validation ».
+  - `docs/PROGRESS.md` : entrée « suite 3 ».
+
+### E2 — Commit et push de `exp/baseline-extraction`
+
+- **Commandes** :
+  ```bash
+  git status --short
+  git add docs/decisions.md docs/PROGRESS.md docs/FICHE_ENCADRANT.md docs/JOURNAL_ACTIONS.md
+  git commit -m "docs(decisions): accepter D-001, D-002, D-004 et confirmer D-006"
+  git push
+  ```
+- **Explication** : `git push` sans argument envoie la branche courante vers la branche suivie
+  (`origin/exp/baseline-extraction`, reliée en D14 avec `-u`).
