@@ -97,7 +97,8 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 - **Données prêtes** : `data/processed/cuad_segments_v1.jsonl` (non commité), 79 510 segments
   étiquetés par famille.
 - **Tests** : `tests/test_tracabilite.py` (4 tests), lancés à la main : **tous passent**, dont
-  la traçabilité des 79 510 segments. pytest pas encore installé (accord de Sara à demander).
+  la traçabilité des 79 510 segments. Puis, avec l'accord de Sara : pytest installé, `tests/test_splits.py`
+  ajouté (D-005), `python -m pytest` → **6 tests passent sur 6**.
 
 ### Résultats clés
 
@@ -124,7 +125,7 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 | F7 Traçabilité | En cours | Test automatique : 79 510 segments traçables. |
 
 - **Étape du planning** : étape 1 (données CUAD) **terminée**, sous réserve de D-004 (encadrant)
-  et D-005 (Sara). Prochaine : baseline F2.
+  (encadrant). D-005 acceptée. Prochaine étape : à choisir (voir le récapitulatif de fin de séance).
 
 ### Ce que j'ai compris
 <!-- Rédigé par Claude en fin de séance, relu et corrigé par Sara. -->
@@ -160,10 +161,10 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 
 ### Décisions
 - D-004 : acceptée provisoirement (option 1), à confirmer par l'encadrant.
-- D-005 : proposée (commiter `data/splits/` en étendant l'exception de la règle 5), à valider par Sara.
+- D-005 : **acceptée** par Sara : `data/splits/` commité, exception de la règle 5 étendue dans `CLAUDE.md`.
 
 ### Prochaine étape
-- Sara : valider D-005 ; accord pour installer pytest ; relire « Ce que j'ai compris ».
+- Sara : relire « Ce que j'ai compris » ; prendre l'habitude de lancer `python -m pytest` avant chaque commit.
 - Encadrant : confirmer D-004, valider D-001 et D-002.
 - Segmentation v2 éventuelle (fusionner les segments de moins de 20 caractères), à décider en
   regardant **le train seulement**.

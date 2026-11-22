@@ -349,3 +349,33 @@ Sara a reconduit la même exception pour la suite de la séance, avec les mêmes
   git add CLAUDE.md .gitignore docs/decisions.md docs/JOURNAL_ACTIONS.md data/splits/cuad_v1_splits.json tests/test_splits.py
   git commit -m "chore(data): versionner les splits CUAD (D-005) et étendre la règle 5"
   ```
+
+### C2 — Point 3 : installer pytest et lancer les tests
+
+- **Accord de Sara** : « 3 oui : installe pytest, ajoute-le dans requirements.txt, puis lance les
+  tests avec pytest et montre-moi le résultat. »
+- **Commandes** :
+  ```bash
+  .venv/bin/python -m pip install "pytest>=8"
+  .venv/bin/python -m pytest --version
+  .venv/bin/python -m pytest -v
+  ```
+- **Explication** : `python -m pip install` installe dans le Python du `.venv` ; `python -m pytest`
+  cherche les fichiers `tests/test_*.py` (réglage `testpaths` de `pytest.ini`), lance chaque
+  fonction `test_*` et affiche PASSED ou FAILED ; `-v` (verbose) affiche une ligne par test.
+- **Résultat** : pytest 9.2.0 ; **6 passed in 0.27s** (2 tests de splits, 4 de traçabilité).
+- **Fichiers touchés** : `requirements.txt` (ligne `pytest>=8`), `.venv/` (non versionné),
+  `docs/PROGRESS.md` (pytest installé, D-005 acceptée).
+- **Commit** :
+  ```bash
+  git add requirements.txt docs/PROGRESS.md docs/JOURNAL_ACTIONS.md
+  git commit -m "chore(deps): ajouter pytest et lancer la suite de tests"
+  ```
+
+### C3 — Point 1 : push de tous les commits
+
+- **Accord de Sara** : « 1 oui, mais en dernier : une fois 2 et 3 commités, pousse tout en une
+  seule fois. »
+- **Commande** : `git push` (la branche suit déjà `origin/exp/exploration-cuad` depuis A14).
+- **Résultat** : voir la sortie de la commande dans la conversation ; ce paragraphe est commité
+  avant le push, donc il est inclus dans ce qui est poussé.

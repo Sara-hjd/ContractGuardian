@@ -16,3 +16,7 @@ jupyter>=1.0
 
 # Graphiques : histogrammes, diagrammes en barres...
 matplotlib>=3.9
+
+# Tests automatisés (tests/) : vérifient par exemple la traçabilité des segments.
+# Lancement : python -m pytest
+pytest>=8
