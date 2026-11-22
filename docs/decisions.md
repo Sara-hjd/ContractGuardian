@@ -288,3 +288,42 @@ l'exception de la règle 5 dans `CLAUDE.md`, au même titre que `data/annotation
 - Toute nouvelle version du découpage = nouveau fichier (`cuad_v2_splits.json`) et nouvelle
   décision ; on ne modifie jamais un fichier de splits déjà utilisé pour entraîner.
 - Prévoir un test qui vérifie que les fichiers de `data/splits/` ne contiennent que des titres.
+
+---
+
+## D-006 — Protocole des baselines d'extraction (F2) et ordre du planning
+
+- **Date** : 2026-11-22
+- **Statut** : **Acceptée** (Sara), à présenter à l'encadrant
+
+### Contexte
+Les données de l'étape 1 sont prêtes (splits D-004, segments v1). Il faut un point de comparaison
+pour F2 et un protocole d'évaluation qui respecte la règle 2, avec un fort déséquilibre
+(≈ 97 % de segments sans famille).
+
+### Décision
+1. **Ordre du planning** : la baseline d'extraction (étape 3) passe **avant** l'ingestion PDF et
+   la base de données (étape 2). Raisons : données prêtes, résultat chiffré rapide, validation de
+   la chaîne de bout en bout ; l'étape 2 commencera par vérifier sur quelques PDF du **train** que
+   les segments PyMuPDF ressemblent aux segments CUAD.
+2. **Tâche** : multi-étiquette, un classifieur oui / non par famille (durée, résiliation,
+   responsabilité).
+3. **Métriques** : précision, rappel, F1 par famille et macro-F1 ; **jamais l'exactitude globale**.
+4. **Baseline 1 (mots-clés)** : liste écrite à la main depuis les définitions CUAD, **figée avant
+   toute évaluation**.
+5. **Baseline 2** : TF-IDF (`sublinear_tf`, `min_df=2`) + régression logistique
+   `class_weight="balanced"` ; grille fixée à l'avance : n-grammes {1, 2} × C {0,1 ; 1 ; 10} ;
+   seuil par famille de 0,05 à 0,95 ; tout est choisi par F1 **sur la validation**.
+6. **Test fermé** : `charger_segments` refuse le test sans `ouvrir_test=True`.
+7. **Suivi** : un run MLflow par baseline (base locale `mlflow.db`, non commitée).
+
+### Raisons
+- Une baseline simple dit si un modèle plus coûteux (Transformer) apporte vraiment quelque chose.
+- Figer mots-clés et grille avant de voir les résultats évite de « régler à la main » sur la
+  validation au-delà de ce qui est prévu.
+
+### Conséquences
+- Les métriques de validation sont **optimistes** (seuils réglés dessus) ; le chiffre de référence
+  viendra du test, ouvert une seule fois à la fin de F2.
+- Résultat 2026-11-22 : C = 10 (bord de la grille) retenu pour les 3 familles ; élargir la grille
+  serait une nouvelle expérience, notée comme telle.

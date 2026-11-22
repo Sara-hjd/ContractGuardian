@@ -40,6 +40,20 @@
 4. **Fort déséquilibre** : 97 % des segments n'ont aucune famille → évaluer par précision, rappel
    et F1 par famille, jamais par l'exactitude globale.
 
+## Baselines d'extraction F2 (validation, test fermé)
+
+| Famille | Mots-clés F1 | TF-IDF + rég. log. F1 (précision / rappel) |
+|---|---|---|
+| durée | 0,18 | **0,73** (0,79 / 0,67) |
+| résiliation | 0,30 | **0,52** (0,51 / 0,54) — la plus difficile |
+| responsabilité | 0,26 | **0,76** (0,89 / 0,66) — la plus facile |
+| **macro-F1** | **0,25** | **0,67** |
+
+- Mots-clés : bon rappel, précision très faible (les mots « term », « liable » sont partout).
+- Analyse de 24 erreurs : **9 étiquettes discutables** (CUAD n'annote pas chaque occurrence),
+  7 liées à la segmentation. Détail : `docs/analyses/erreurs_baseline_tfidf_val.md`.
+- **Planning** : baseline faite avant l'ingestion PDF (D-006), à valider.
+
 ## Décisions à valider
 
 | | Sujet | État |
@@ -47,7 +61,8 @@
 | **D-001** | Le **segment** comme unité de base | Proposée ; implémentée (v1) |
 | **D-002** | Confidentialité absente de CUAD | À choisir : ContractNLI, annotation humaine, ou retrait de F2 |
 | **D-004** | Splits : test officiel + validation 15 % du train, par contrat, graine 42 | **Acceptée provisoirement**, à confirmer |
-| **D-005** | Commiter le fichier des splits (titres seulement) | Proposée, à valider par Sara |
+| **D-005** | Commiter le fichier des splits (titres seulement) | Acceptée (Sara) |
+| **D-006** | Protocole des baselines ; baseline avant l'étape 2 | Acceptée (Sara), à présenter |
 
 ## 5 questions probables, avec la réponse
 
@@ -66,5 +81,10 @@
    Chaque segment garde ses positions `[debut, fin)` dans le texte source ; un test automatique
    vérifie `texte[debut:fin] == segment` pour les 79 510 segments.
 5. **« 97 % de segments sans famille : comment évaluer ? »**
-   L'exactitude serait trompeuse (97 % en répondant toujours « aucune »). On mesurera précision,
+   L'exactitude serait trompeuse (97 % en répondant toujours « aucune »). On mesure précision,
    rappel et F1 **par famille**, sur la validation pour régler, puis une fois sur le test.
+6. **« Pourquoi la résiliation est-elle la plus difficile ? »**
+   Résilier *sans motif* et résilier *pour faute* emploient les mêmes mots ; TF-IDF compte les mots
+   sans comprendre la phrase. Et la famille mélange deux catégories assez différentes
+   (résiliation sans motif, obligations après la fin du contrat). Un Transformer, qui tient compte
+   du contexte, devrait aider.

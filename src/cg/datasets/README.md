@@ -11,6 +11,7 @@ jeux train / val / test (D-004), puis étiqueter les segments (D-001) par famill
 | `splits.py` | Construire, vérifier, écrire et lire le fichier des splits. |
 | `creer_splits.py` | Script : crée `data/splits/cuad_v1_splits.json`. |
 | `preparer_segments.py` | Script : crée `data/processed/cuad_segments_v1.jsonl` et affiche les statistiques. |
+| `segments.py` | `charger_segments` (refuse le test sans `ouvrir_test=True`, règle 2) et `etiquettes`. |
 
 ## Utilisation (depuis la racine, avec le `.venv`)
 

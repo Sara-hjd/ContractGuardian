@@ -38,6 +38,8 @@ models/
 # MLflow écrit ses runs, métriques et artefacts (parfois des modèles) ici.
 # Ce sont des résultats locaux, régénérables, souvent volumineux.
 mlruns/
+mlflow.db
+mlartifacts/
 
 # --- Secrets -------------------------------------------------------------------
 # Les fichiers .env contiennent mots de passe, clés et tokens : JAMAIS sur GitHub.

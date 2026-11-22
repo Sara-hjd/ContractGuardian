@@ -379,3 +379,119 @@ Sara a reconduit la même exception pour la suite de la séance, avec les mêmes
 - **Commande** : `git push` (la branche suit déjà `origin/exp/exploration-cuad` depuis A14).
 - **Résultat** : voir la sortie de la commande dans la conversation ; ce paragraphe est commité
   avant le push, donc il est inclus dans ce qui est poussé.
+
+---
+
+## Séance du 2026-11-22 (suite 2) — baselines d'extraction (même exception)
+
+Sara a décidé : baseline d'abord, puis étape 2 (changement d'ordre du planning, noté dans
+PROGRESS.md). Même exception ; installation de scikit-learn et MLflow **autorisée d'avance**.
+
+### D1 — 04:25 — Créer la branche et installer scikit-learn et MLflow
+
+- **Commandes** :
+  ```bash
+  git switch -c exp/baseline-extraction          # depuis exp/exploration-cuad, à jour avec GitHub
+  .venv/bin/python -m pip install "scikit-learn>=1.5" "mlflow>=2.17"
+  ```
+- **Explication** : `git switch -c` crée une branche à partir de la branche courante et s'y
+  place. `pip install` télécharge et installe les deux bibliothèques et leurs dépendances.
+- **Pourquoi** : une branche par tâche (CLAUDE.md) ; scikit-learn pour la baseline 2, MLflow
+  pour le suivi des expériences (F7).
+- **Résultat** : branche créée ; installation longue (réseau lent), lancée en arrière-plan,
+  voir D6.
+
+### D2 — Lire les définitions officielles des catégories (lecture seule)
+
+- **Commandes** : `grep` et `sed -n` sur `data/raw/cuad/CUAD_v1/CUAD_v1_README.txt`.
+- **Pourquoi** : justifier les mots-clés de la baseline 1 par les définitions de CUAD, **sans
+  regarder les segments de validation ni de test**.
+
+### D3 — Code de l'extraction
+
+- **Fichiers créés** : `src/cg/extraction/__init__.py`, `mots_cles.py` (baseline 1, liste figée
+  avant évaluation), `metriques.py`, `tfidf.py`, `README.md` ; `src/cg/datasets/segments.py`
+  (`charger_segments` refuse le test sans `ouvrir_test=True`) ;
+  `training/baselines_extraction.py` (grille n-grammes {1, 2} × C {0,1 ; 1 ; 10}, seuil par
+  famille, MLflow, erreurs de validation).
+- **Tests** : `tests/test_extraction.py` (7 tests).
+
+### D4 — Configuration
+
+- `requirements.txt` : `scikit-learn>=1.5`, `mlflow>=2.17`.
+- `.gitignore` : `mlflow.db` (base locale des runs) et `mlartifacts/` ajoutés à côté de `mlruns/`.
+- `src/cg/README.md`, `src/cg/datasets/README.md` : nouveaux fichiers mentionnés (via `sed -i ''`).
+
+### D5 — Échec de la première installation (réseau)
+
+- **Résultat de D1** : `error: incomplete-download` : un téléchargement coupé par le réseau ;
+  rien n'a été installé.
+
+### D6 — Deuxième tentative (≈ 04:40 → 06:43)
+
+- **Commandes** :
+  ```bash
+  .venv/bin/python -m pip install --retries 10 --timeout 120 --progress-bar off "scikit-learn>=1.5"
+  .venv/bin/python -m pip install --retries 10 --timeout 120 --progress-bar off "mlflow>=2.17"
+  ```
+- **Explication** : `--retries 10` réessaie jusqu'à 10 fois une connexion qui échoue ;
+  `--timeout 120` attend jusqu'à 120 s une réponse ; installer en deux fois permet de garder
+  scikit-learn même si MLflow échoue.
+- **Résultat** : **scikit-learn 1.9.1 installé** (avec scipy 1.17.1, joblib 1.6.0,
+  threadpoolctl 3.8.0, narwhals, cloudpickle). **MLflow : échec** sur le téléchargement de
+  `pyarrow` (dépendance d'environ 40 Mo), « issue with network connectivity, not pip ».
+
+### D7 — 09:46 — Troisième tentative pour MLflow, tests
+
+- **Commande** : la même avec `--resume-retries 50` (reprendre un téléchargement interrompu
+  au lieu de le recommencer).
+- **En parallèle** : `.venv/bin/python -m pytest -q` → **13 passed** (6 anciens + 7 d'extraction).
+
+### D8 — 12:18 — Résultat de la troisième tentative
+
+- **Résultat** : **MLflow 3.18.0 installé** (avec pyarrow 26.0.1, sqlalchemy, flask…).
+  L'installation affiche une « astuce » qui propose de charger une documentation de traçage :
+  message du paquet, sans rapport avec notre usage, ignoré.
+
+### D9 — 12:37 — Entraîner et évaluer les baselines
+
+- **Commande** :
+  ```bash
+  MLFLOW_DISABLE_AGENT_HINT=1 PYTHONPATH=src .venv/bin/python training/baselines_extraction.py
+  ```
+- **Explication** : `MLFLOW_DISABLE_AGENT_HINT=1` coupe le message d'astuce de MLflow ;
+  `PYTHONPATH=src` permet `import cg`.
+- **Résultat** (validation) : macro-F1 mots-clés **0,247**, TF-IDF **0,669** (0,635 au seuil 0,5).
+  Réglages retenus : bigrammes, C = 10, seuils 0,80 / 0,55 / 0,80. 201 erreurs écrites dans
+  `data/processed/erreurs_val_tfidf.jsonl` (ignoré). Fichiers MLflow : `mlflow.db`, `mlruns/` (ignorés).
+
+### D10 — Vérifier MLflow (lecture)
+
+- **Commande** : `mlflow.search_runs(experiment_names=['F2-extraction-baselines'])` en Python.
+- **Résultat** : 2 runs FINISHED, `baseline-1-mots-cles` et `baseline-2-tfidf-logreg`.
+
+### D11 — Analyse d'erreurs
+
+- **Commande** : script Python court qui lit `data/processed/erreurs_val_tfidf.jsonl` et tire
+  4 FP + 4 FN par famille (`sample(random_state=0)`), puis affiche les textes **dans le terminal
+  seulement**. Premier essai en erreur (pandas 3 et `groupby().apply()`), refait avec une boucle.
+- **Résultat** : 24 erreurs classées. Fichier créé : `docs/analyses/erreurs_baseline_tfidf_val.md`
+  (provenance + descriptions en français, **aucun extrait**).
+
+### D12 — Documentation
+
+- `docs/decisions.md` : **D-006** (protocole des baselines, ordre du planning).
+- `README.md` : tableau des résultats (validation).
+- `docs/PROGRESS.md` : entrée « suite 2 » avec le changement d'ordre du planning.
+- `docs/FICHE_ENCADRANT.md` : section baselines, D-005/D-006, question 6.
+
+### D13 — Commit
+
+- **Commandes** :
+  ```bash
+  .venv/bin/python -m pytest -q
+  git status --short
+  git add .gitignore requirements.txt README.md docs/ src/ tests/test_extraction.py training/baselines_extraction.py
+  git commit -m "exp(extraction): baselines mots-clés et TF-IDF évaluées sur la validation"
+  ```
+- **Résultat** : voir `git log` ; push en attente de l'accord de Sara.

@@ -26,8 +26,8 @@ Ce qui n'est **pas** ici :
 La traçabilité (F7) n'a pas de dossier à elle : c'est une règle que **tous** les modules
 respectent, puisque chaque sortie référence un segment avec sa provenance.
 
-**État actuel** (2026-11-22) : `ingestion/` (segmentation v1 du texte CUAD, pas encore de PDF)
-et `datasets/` existent. Les autres seront créés avec leur tâche.
+**État actuel** (2026-11-22) : `ingestion/` (segmentation v1 du texte CUAD, pas encore de PDF),
+`datasets/` et `extraction/` (baselines) existent. Les autres seront créés avec leur tâche.
 
 **Lancer un module** depuis la racine, avec le `.venv` : `PYTHONPATH=src .venv/bin/python -m cg.<module>`
 (`PYTHONPATH=src` indique à Python où trouver le paquet `cg`).

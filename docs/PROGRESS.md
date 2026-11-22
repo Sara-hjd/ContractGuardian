@@ -73,6 +73,93 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 
 ## Séances
 
+## 2026-11-22 (suite 2) — Baselines d'extraction (F2) sur la validation
+
+- **Qui** : Sara-hjd (avec Claude Code)
+- **Branche** : `exp/baseline-extraction` (créée depuis `exp/exploration-cuad`)
+- **Objectif** : deux baselines d'extraction, réglées et évaluées sur la validation.
+
+> ⚠️ **Même exception** (Claude Code exécute, tout est tracé dans
+> [JOURNAL_ACTIONS.md](JOURNAL_ACTIONS.md), actions D1 et suivantes). Installation de scikit-learn
+> et MLflow autorisée d'avance par Sara. **Règle habituelle dès la prochaine séance.**
+
+> 📅 **Changement d'ordre du planning, à présenter à l'encadrant** (D-006) : la **baseline
+> d'extraction (étape 3)** est faite **avant** l'ingestion PDF et la base de données (étape 2).
+> Raisons : les données de l'étape 1 sont prêtes ; un premier résultat chiffré valide toute la
+> chaîne (segments, étiquettes, métriques) ; la baseline ne dépend pas des PDF. Précaution :
+> l'étape 2 commencera par comparer, sur quelques PDF du **train**, les segments PyMuPDF aux
+> segments CUAD. Si D-004 change, la baseline se relance en quelques minutes.
+
+### Fait
+- Installation de scikit-learn 1.9.1 et MLflow 3.18.0 (3 tentatives : réseau très lent).
+- Code : `src/cg/extraction/` (mots-clés, TF-IDF, métriques, README), `src/cg/datasets/segments.py`
+  (le test ne se charge pas sans `ouvrir_test=True`), `training/baselines_extraction.py`.
+- Tests : `tests/test_extraction.py` (7 tests) ; suite complète : **13 tests passent**.
+- Deux runs MLflow (expérience `F2-extraction-baselines`).
+- Analyse de 24 erreurs de validation : `docs/analyses/erreurs_baseline_tfidf_val.md`.
+- D-006 (protocole et ordre du planning) ; tableau des résultats du README rempli (validation).
+
+### Résultats (validation, test fermé)
+
+| Famille | Mots-clés F1 (P / R) | TF-IDF + rég. log. F1 (P / R) |
+|---|---|---|
+| durée | 0,180 (0,10 / 0,80) | **0,727** (0,79 / 0,67) |
+| résiliation | 0,304 (0,21 / 0,53) | **0,521** (0,51 / 0,54) |
+| responsabilité | 0,257 (0,16 / 0,71) | **0,758** (0,89 / 0,66) |
+| **macro** | **0,247** | **0,669** |
+
+- Réglages retenus (sur val) : bigrammes, C = 10 (bord de la grille), seuils 0,80 / 0,55 / 0,80.
+- Seuil 0,5 au lieu du seuil réglé : macro-F1 0,635 au lieu de 0,669.
+- Erreurs lues (24) : 9 étiquettes discutables, 7 liées à la segmentation, 2 reformulations,
+  2 seuils, 2 vocabulaires trompeurs, 1 exception, 1 contexte.
+
+### Avancement
+
+| Fonctionnalité | Statut | Commentaire |
+|---|---|---|
+| F1 Ingestion PDF et provenance | En cours | Segmentation v1 ; PDF à l'étape 2. |
+| F2 Extraction de clauses | En cours | 2 baselines évaluées sur la validation ; Transformer à venir. |
+| F3 à F6 | À faire | |
+| F7 Traçabilité | En cours | Tests de traçabilité ; expériences suivies dans MLflow. |
+
+- **Étape du planning** : étape 3 (baseline) faite avant l'étape 2, voir l'encadré.
+
+### Ce que j'ai compris
+<!-- Rédigé par Claude en fin de séance, relu et corrigé par Sara. -->
+- **TF-IDF** transforme un texte en nombres : un poids par mot, fort si le mot est fréquent dans le
+  segment et rare ailleurs. **La régression logistique** apprend un poids par mot et en déduit une
+  probabilité ; on décide « oui » au-dessus d'un **seuil**.
+- **Multi-étiquette** : un classifieur oui / non par famille, parce qu'un segment peut relever de
+  plusieurs familles.
+- **Précision** = « quand le modèle signale, a-t-il raison ? » ; **rappel** = « trouve-t-il tout ? » ;
+  **F1** = compromis des deux ; **macro-F1** = moyenne des familles, la plus rare comptant autant.
+- **Pourquoi pas l'exactitude** : un modèle qui ne trouve rien aurait 97 % d'exactitude (un test le
+  montre : `test_modele_qui_ne_trouve_rien`).
+- **Pondération des classes** : sans elle, le modèle apprend à toujours dire « non ».
+- **Régler sur la validation, pas sur le test** : on a choisi n-grammes, C et seuils sur la
+  validation ; ses chiffres sont donc un peu optimistes. Le test reste fermé jusqu'à la fin.
+- **Lire les erreurs** apprend plus que les chiffres : une partie des « erreurs » sont des
+  étiquettes discutables de CUAD, et la segmentation en cause une autre partie.
+- **MLflow** garde, pour chaque entraînement, ses paramètres et ses métriques : on peut comparer
+  les runs et retrouver comment un résultat a été obtenu.
+- *Relu par Sara : à faire*
+
+### Problèmes et solutions
+- Installation interrompue deux fois (`incomplete-download`) : relance avec `--retries`, puis
+  `--resume-retries` pour reprendre le téléchargement de `pyarrow`.
+- pandas 3 retire les colonnes de regroupement dans `groupby().apply()` : tirage de l'échantillon
+  d'erreurs refait avec une boucle sur les groupes.
+
+### Décisions
+- D-006 acceptée (protocole des baselines, ordre du planning), à présenter à l'encadrant.
+
+### Prochaine étape
+- Sara : relire les résultats, l'analyse d'erreurs et « Ce que j'ai compris » ; ouvrir MLflow.
+- Avec l'encadrant : ordre du planning (D-006), D-004, D-001, D-002 ; étiquettes discutables de CUAD.
+- Ensuite : étape 2 (ingestion PDF, base de données), en commençant par la comparaison des segments.
+
+---
+
 ## 2026-11-22 (suite) — Fin de l'étape 1 : splits, segmentation v1, traçabilité
 
 - **Qui** : Sara-hjd (avec Claude Code)
