@@ -166,3 +166,20 @@ fichiers touchés, commit.
 ### A13 — Push : en attente de l'accord de Sara
 
 - Aucun `git push` n'a été fait. Commande proposée : `git push -u origin exp/exploration-cuad`.
+
+### A14 — 04:03 — Push de la branche (avec l'accord de Sara)
+
+- **Accord** : Sara a répondu « oui pousse la branche ».
+- **Vérification avant** : `git diff --stat main..HEAD` → uniquement de la documentation et le
+  notebook ; `jq` → 0 cellule avec sortie (aucun extrait de contrat publié).
+- **Commande** :
+  ```bash
+  git push -u origin exp/exploration-cuad
+  ```
+- **Explication** : envoie sur GitHub les commits de la branche absents du serveur (`26f4188`,
+  `dcf5760`, `21c9c4e`) ; `-u` relie la branche locale à `origin/exp/exploration-cuad`, pour que
+  les prochains `git push` / `git pull` sachent où aller.
+- **Résultat** : branche créée sur GitHub et suivie. `main` n'a pas été touchée, aucune PR créée.
+  Lien proposé par GitHub pour une future PR :
+  https://github.com/Sara-hjd/ContractGuardian/pull/new/exp/exploration-cuad
+- **Fichiers touchés** : aucun localement. Ce paragraphe est commité en local (A15), **non poussé**.
