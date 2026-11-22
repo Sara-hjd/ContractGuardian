@@ -73,6 +73,109 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 
 ## Séances
 
+## 2026-11-22 — Exploration de CUAD (notebook exécuté) et préparation de D-004
+
+- **Qui** : Sara-hjd (avec Claude Code)
+- **Durée** : *à compléter*
+- **Branche** : `exp/exploration-cuad`
+- **Objectif** : exécuter et interpréter `notebooks/01_exploration_cuad.ipynb`, préparer D-004,
+  préparer l'entretien avec l'encadrant.
+
+> ⚠️ **Exception ponctuelle à la règle « Sara exécute les commandes »** (CLAUDE.md), décidée par
+> Sara **pour cette séance uniquement**, afin de montrer un avancement à l'encadrant. Claude Code
+> a exécuté lui-même le notebook, les `git add` et les `git commit` sur `exp/exploration-cuad`.
+> Push, fusion, suppression, installation et toute action sur `main` ou GitHub restaient soumis à
+> l'accord de Sara. Chaque action est tracée dans [JOURNAL_ACTIONS.md](JOURNAL_ACTIONS.md).
+> **La règle habituelle s'applique de nouveau dès la prochaine séance.**
+
+### Fait
+- Notebook exécuté en entier avec le noyau `.venv` (Python 3.11.18, pandas 3.1.1) : **aucune
+  erreur**, aucune cellule à corriger.
+- 4 cellules ajoutées après une première lecture des résultats : **f.3** (les passages *Uncapped*
+  sont-ils aussi *Cap* ?) et **g.3** (les `<omitted>` expliquent-ils l'écart 13 823 / 13 101 ?).
+- Cellule « Conclusions » rédigée (sans recopier d'extrait de contrat).
+- Vérification en lecture seule du dépôt GitHub de CUAD : le découpage officiel est dans `data.zip`
+  (`train_separate_questions.json`, `test.json`, cités par `run.sh`) ; pas de jeu de validation.
+- **D-004** (découpage train / validation / test) rédigée avec 4 options, statut « Proposée ».
+- `docs/JOURNAL_ACTIONS.md` créé ; `docs/FICHE_ENCADRANT.md` créée (fiche de révision).
+- Notebook commité **sans sorties** (aucun extrait de contrat dans le dépôt public).
+
+### Résultats clés
+- 510 contrats, 41 catégories, 13 823 passages ; positions `answer_start` exactes 13 823/13 823.
+- Longueur des contrats : médiane 33 143 caractères (de 645 à 338 211).
+- Nos 9 catégories : de 470 contrats (*Agreement Date*) à 111 (*Uncapped Liability*,
+  *Notice Period To Terminate Renewal*).
+- **Les 111 contrats *Uncapped* ont tous aussi *Cap*, et 125 des 167 passages *Uncapped* sont
+  exactement des passages *Cap*** : CUAD annote souvent une même clause dans les deux catégories.
+- **13 101 = nombre d'éléments de `master_clauses.csv`** ; l'écart de 722 avec le JSON vient du
+  découpage des annotations non contiguës (`<omitted>`), à 11 passages près.
+- **`context` = fichier TXT pour 510 contrats sur 510.**
+
+### Avancement
+
+| Fonctionnalité | Statut | Commentaire |
+|---|---|---|
+| F1 Ingestion PDF et provenance | À faire | L'exploration confirme le besoin d'aligner les positions CUAD sur notre texte PyMuPDF. |
+| F2 Extraction de clauses | À faire | Données comprises ; découpage D-004 à trancher avant tout entraînement. |
+| F3 Comparaison de paires de clauses | À faire | Constat : *Cap* + *Uncapped* dans un contrat n'est pas un signal d'incohérence. |
+| F4 NLI (ContractNLI) | À faire | |
+| F5 Recherche hybride et RAG avec abstention | À faire | |
+| F6 Interface analyste | À faire | |
+| F7 Traçabilité | À faire | Positions CUAD vérifiées exactes sur le texte CUAD. |
+
+- **Étape du planning** : étape 1 (données CUAD), exploration terminée ; reste D-004.
+
+### Ce que j'ai compris
+<!-- Rédigé par Claude en fin de séance, relu et corrigé par Sara. -->
+- **Notebook et noyau** : un notebook mélange texte et code ; le **noyau** est le Python qui
+  exécute les cellules et garde les variables en mémoire. D'où l'importance de l'ordre
+  d'exécution, et du choix du noyau `.venv` (c'est lui qui a pandas 3).
+- **Aplatir des données imbriquées** : le JSON de CUAD est une structure « listes dans des listes ».
+  On le parcourt une fois pour fabriquer trois tableaux simples (contrats, questions, passages) :
+  ensuite, chaque question se règle avec un `groupby` ou un filtre.
+- **Vérifier avant de faire confiance** : on a contrôlé que chaque position `answer_start` retombe
+  exactement sur le texte annoté (13 823/13 823). C'est la base de la traçabilité (F7) : une
+  position qu'on n'a pas vérifiée ne peut pas servir de preuve.
+- **Médiane plutôt que moyenne** : avec quelques contrats énormes, la moyenne serait trompeuse ;
+  la médiane donne le contrat « typique ».
+- **Déséquilibre des classes** : la plupart des catégories sont absentes de la plupart des contrats.
+  Un modèle qui répondrait toujours « absent » aurait l'air bon sur beaucoup de questions : il
+  faudra des métriques qui ne se laissent pas tromper.
+- **Une annotation n'est pas une clause distincte** : la même phrase peut être annotée *Cap* et
+  *Uncapped* (une limite avec exception). Pour F3, il faudra comparer des clauses différentes,
+  pas des étiquettes.
+- **Réconcilier des chiffres** : on a formulé des hypothèses (doublons, découpage, unité de
+  comptage), puis on les a testées une à une. Résultat : l'article compte les éléments du CSV,
+  le JSON les morceaux. Expliquer un écart est plus convaincant que de le cacher.
+- **Pourquoi D-004 avant tout entraînement** : si on choisit les contrats de test après avoir vu
+  des résultats, on triche sans le vouloir. Le découpage doit se faire par contrat, être fixé et
+  enregistré avant le premier entraînement.
+- **Sorties de notebook et dépôt public** : les sorties contiennent du texte de contrat ; on commite
+  le notebook sans sorties, chacun peut le réexécuter avec les données locales.
+- *Relu par Sara : à faire*
+
+### Problèmes et solutions
+- `jupyter nbconvert --execute --inplace` (réécriture du notebook) a été bloqué par le contrôle de
+  sécurité de Claude Code. Solution : exécuter vers une copie dans un dossier temporaire ; le
+  notebook du dépôt n'a donc jamais contenu de sorties.
+- Un extrait de date d'un contrat s'était glissé dans les Conclusions : retiré avant le commit.
+
+### Décisions
+- D-004 proposée (voir [decisions.md](decisions.md)), **à trancher ensemble**.
+- D-001 et D-002 toujours à valider avec l'encadrant.
+
+### Preuves
+- Exécution complète : `jupyter nbconvert --to notebook --execute` (voir JOURNAL_ACTIONS.md, A3 à A6).
+- Commits : voir JOURNAL_ACTIONS.md.
+
+### Prochaine étape
+- Sara relit les Conclusions du notebook, D-004 et la rubrique « Ce que j'ai compris ».
+- Trancher D-004 ensemble (et télécharger `data.zip` si l'option 1 est retenue).
+- Reporter les constats dans `docs/data_provenance.md` (limites 3, 8, 9).
+- Push de `exp/exploration-cuad` : **seulement avec l'accord de Sara**.
+
+---
+
 ## 2026-11-16 — Fusion de la PR #1, puis début de l'étape 1 (données CUAD)
 
 - **Qui** : Sara-hjd (avec Claude Code)
