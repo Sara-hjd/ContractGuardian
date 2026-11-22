@@ -103,7 +103,13 @@ Prérequis déjà identifiés : Homebrew, Python 3.11, Git, Docker Desktop, Node
 
 | Fonctionnalité | Jeu d'évaluation | Métrique | Baseline | Modèle final | Date |
 |---|---|---|---|---|---|
-| | | | | | |
+| F2 Extraction | **Validation** CUAD (61 contrats, 8 253 segments) | Macro-F1 (3 familles) | Mots-clés : 0,247 · TF-IDF + rég. log. : **0,669** | — | 2026-11-22 |
+| F2 · durée | Validation | F1 (P / R) | Mots-clés 0,180 (0,10 / 0,80) · TF-IDF **0,727** (0,79 / 0,67) | — | 2026-11-22 |
+| F2 · résiliation | Validation | F1 (P / R) | Mots-clés 0,304 (0,21 / 0,53) · TF-IDF **0,521** (0,51 / 0,54) | — | 2026-11-22 |
+| F2 · responsabilité | Validation | F1 (P / R) | Mots-clés 0,257 (0,16 / 0,71) · TF-IDF **0,758** (0,89 / 0,66) | — | 2026-11-22 |
+
+*Chiffres de **validation**, optimistes car les seuils y sont réglés (D-006). Le jeu de test n'a
+pas été ouvert. Tâche différente de l'article CUAD : chiffres non comparables (D-004).*
 
 ## Documentation
 

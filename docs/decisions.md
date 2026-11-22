@@ -38,7 +38,8 @@ Ce que ça implique pour la suite (code, données, évaluation).
 ## D-001 — Le segment comme unité de base
 
 - **Date** : 2026-11-15
-- **Statut** : Proposée
+- **Statut** : **Acceptée (Sara, 2026-11-22), à présenter à l'encadrant**. Déjà mise en œuvre :
+  segmentation v1 (`src/cg/ingestion/segmentation.py`), traçabilité testée sur 79 510 segments.
 
 ### Contexte
 Toutes les fonctionnalités (extraction, comparaison, NLI, RAG) travaillent sur des morceaux
@@ -65,14 +66,15 @@ Option 3 : **le segment** est l'unité de base de tout le projet.
 - F1 doit produire des segments fiables, avec page et positions.
 - La base PostgreSQL stocke les segments ; les résultats (clauses, incohérences, réponses)
   pointent vers un ou plusieurs segments.
-- La règle de découpage (paragraphe, clause numérotée…) reste à définir et à documenter.
+- La règle de découpage v1 (lignes vides, plafond de 1 500 caractères) est documentée dans
+  `src/cg/ingestion/README.md` ; une v2 éventuelle sera décidée sur la validation.
 
 ---
 
 ## D-002 — La famille « confidentialité » est absente de CUAD
 
 - **Date** : 2026-11-15
-- **Statut** : Proposée, **à valider avec l'encadrant**
+- **Statut** : **Acceptée (Sara, 2026-11-22), à présenter à l'encadrant**
 
 ### Contexte
 Le projet doit extraire quatre familles de clauses : durée, résiliation, responsabilité,
@@ -92,15 +94,40 @@ sont interdites pour l'entraînement.
    que via F4/F5.
 
 ### Décision
-*À prendre avec l'encadrant.*
+**Option 1, complétée par une baseline par mots-clés** :
+- **ContractNLI** est la source de **données réelles** pour la famille confidentialité (règle 3 :
+  pas de données synthétiques). On réutilise ses **passages d'évidence** comme passages annotés.
+- Une **baseline par mots-clés** pour la confidentialité, construite comme celle des trois autres
+  familles (D-006). Elle sert de **point de comparaison** et de **solution de secours** si les
+  annotations de ContractNLI ne peuvent pas être adaptées à l'extraction.
 
 ### Raisons
-*À compléter après validation.*
+- ContractNLI annote des accords de confidentialité (NDA) réels, avec des passages d'évidence :
+  c'est la seule source réelle et autorisée (règle 3) déjà annotée pour ce sujet.
+- Il sert aussi à F4 (NLI) : un seul jeu à télécharger, documenter et comprendre pour deux
+  fonctionnalités.
+- La baseline par mots-clés est peu coûteuse, et elle garantit un résultat pour la quatrième
+  famille même si l'adaptation de ContractNLI échoue.
 
 ### Conséquences
-- Selon l'option : temps d'annotation à prévoir (option 2), ou périmètre de F2 réduit (option 3).
-- Dans tous les cas, les résultats de la famille confidentialité seront présentés à part
-  et non comparés directement aux trois autres familles.
+1. **Téléchargement de ContractNLI**, depuis sa source officielle, dans `data/raw/contractnli/`
+   (non versionné) : version, licence (à vérifier au téléchargement), empreinte et limites
+   documentées dans `docs/data_provenance.md`, comme pour CUAD.
+2. **Vérifier l'adaptation des passages d'évidence en segments étiquetés**, avant tout entraînement :
+   - comprendre le format : passages d'évidence rattachés à des hypothèses ; positions dans le texte ;
+   - segmenter les documents avec la règle v1 (D-001) et projeter les passages d'évidence avec la
+     même règle de chevauchement que CUAD, puis le **tester** (traçabilité, comme pour CUAD) ;
+   - **risque principal** : dans un NDA, presque tout le texte porte sur la confidentialité ;
+     décider quelles hypothèses comptent pour la famille, et d'où viennent les **exemples
+     négatifs** (segments non annotés des NDA ? contrats CUAD, au risque d'y trouver des clauses
+     de confidentialité non annotées ?). Ce choix fera l'objet d'une décision dédiée.
+   - si l'adaptation n'est pas fiable, on le documente et on s'appuie sur la baseline par mots-clés.
+3. **Découpage** : respecter le découpage train / dev / test **propre à ContractNLI** s'il en a un
+   (règle 2), sinon un découpage par document, fixé et versionné comme pour CUAD (D-004, D-005).
+4. **Baseline par mots-clés** : liste écrite à la main et justifiée, **figée avant toute
+   évaluation**, jamais modifiée après avoir vu les résultats (comme `mots_cles.py`).
+5. **Présentation** : les résultats de la famille confidentialité seront présentés **à part**
+   (données d'une autre source, NDA uniquement) et non comparés directement aux trois autres familles.
 
 ---
 
@@ -155,8 +182,7 @@ Elle ne contient **jamais le texte du contrat**.
 ## D-004 — Découpage entraînement / validation / test de CUAD
 
 - **Date** : 2026-11-22
-- **Statut** : **Acceptée provisoirement, à confirmer par l'encadrant** (option 1, choisie par Sara
-  le 2026-11-22)
+- **Statut** : **Acceptée (Sara, 2026-11-22), à présenter à l'encadrant** (option 1)
 
 ### Contexte
 Avant tout entraînement (F2), il faut fixer quels contrats servent à **entraîner**, à **régler**
@@ -288,3 +314,42 @@ l'exception de la règle 5 dans `CLAUDE.md`, au même titre que `data/annotation
 - Toute nouvelle version du découpage = nouveau fichier (`cuad_v2_splits.json`) et nouvelle
   décision ; on ne modifie jamais un fichier de splits déjà utilisé pour entraîner.
 - Prévoir un test qui vérifie que les fichiers de `data/splits/` ne contiennent que des titres.
+
+---
+
+## D-006 — Protocole des baselines d'extraction (F2) et ordre du planning
+
+- **Date** : 2026-11-22
+- **Statut** : **Acceptée, confirmée par Sara le 2026-11-22**, à présenter à l'encadrant
+
+### Contexte
+Les données de l'étape 1 sont prêtes (splits D-004, segments v1). Il faut un point de comparaison
+pour F2 et un protocole d'évaluation qui respecte la règle 2, avec un fort déséquilibre
+(≈ 97 % de segments sans famille).
+
+### Décision
+1. **Ordre du planning** : la baseline d'extraction (étape 3) passe **avant** l'ingestion PDF et
+   la base de données (étape 2). Raisons : données prêtes, résultat chiffré rapide, validation de
+   la chaîne de bout en bout ; l'étape 2 commencera par vérifier sur quelques PDF du **train** que
+   les segments PyMuPDF ressemblent aux segments CUAD.
+2. **Tâche** : multi-étiquette, un classifieur oui / non par famille (durée, résiliation,
+   responsabilité).
+3. **Métriques** : précision, rappel, F1 par famille et macro-F1 ; **jamais l'exactitude globale**.
+4. **Baseline 1 (mots-clés)** : liste écrite à la main depuis les définitions CUAD, **figée avant
+   toute évaluation**.
+5. **Baseline 2** : TF-IDF (`sublinear_tf`, `min_df=2`) + régression logistique
+   `class_weight="balanced"` ; grille fixée à l'avance : n-grammes {1, 2} × C {0,1 ; 1 ; 10} ;
+   seuil par famille de 0,05 à 0,95 ; tout est choisi par F1 **sur la validation**.
+6. **Test fermé** : `charger_segments` refuse le test sans `ouvrir_test=True`.
+7. **Suivi** : un run MLflow par baseline (base locale `mlflow.db`, non commitée).
+
+### Raisons
+- Une baseline simple dit si un modèle plus coûteux (Transformer) apporte vraiment quelque chose.
+- Figer mots-clés et grille avant de voir les résultats évite de « régler à la main » sur la
+  validation au-delà de ce qui est prévu.
+
+### Conséquences
+- Les métriques de validation sont **optimistes** (seuils réglés dessus) ; le chiffre de référence
+  viendra du test, ouvert une seule fois à la fin de F2.
+- Résultat 2026-11-22 : C = 10 (bord de la grille) retenu pour les 3 familles ; élargir la grille
+  serait une nouvelle expérience, notée comme telle.
