@@ -73,6 +73,104 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 
 ## Séances
 
+## 2026-11-22 (suite) — Fin de l'étape 1 : splits, segmentation v1, traçabilité
+
+- **Qui** : Sara-hjd (avec Claude Code)
+- **Branche** : `exp/exploration-cuad`
+- **Objectif** : avoir des données prêtes pour la baseline de F2.
+
+> ⚠️ **Même exception que plus haut**, reconduite par Sara pour la suite de la séance : Claude Code
+> exécute et note chaque action dans [JOURNAL_ACTIONS.md](JOURNAL_ACTIONS.md) (actions B1 et
+> suivantes). Accord de Sara requis pour push, fusion, suppression, installation.
+> **Règle habituelle dès la prochaine séance.**
+
+### Fait
+- **D-004 acceptée provisoirement** (à confirmer par l'encadrant) : test officiel CUAD + validation
+  de 15 % du train officiel, par contrat, graine 42 ; limite de comparabilité avec l'article notée.
+- **Découpage officiel récupéré** : `data.zip` du dépôt GitHub de CUAD (commit `7aad649`), empreinte
+  vérifiée ; train 408 / test 102, sans recouvrement, union = les 510 contrats.
+  `docs/data_provenance.md` complété (nouvelle section, limites 3, 8, 9, 10).
+- **Fichier des splits** `data/splits/cuad_v1_splits.json` (titres seulement) : train 347, val 61,
+  test 102 ; nos 9 catégories présentes dans chaque jeu. **D-005** proposée (le commiter ?).
+- **Code** : `src/cg/ingestion/segmentation.py` (segmentation v1), `src/cg/datasets/`
+  (chargement CUAD, splits, projection des annotations, 2 scripts), README de chaque sous-dossier.
+- **Données prêtes** : `data/processed/cuad_segments_v1.jsonl` (non commité), 79 510 segments
+  étiquetés par famille.
+- **Tests** : `tests/test_tracabilite.py` (4 tests), lancés à la main : **tous passent**, dont
+  la traçabilité des 79 510 segments. pytest pas encore installé (accord de Sara à demander).
+
+### Résultats clés
+
+| Jeu | Contrats | Segments | % durée | % résiliation | % responsabilité | % aucune |
+|---|---|---|---|---|---|---|
+| train | 347 | 58 000 | 1,35 | 0,88 | 0,81 | 97,08 |
+| val | 61 | 8 253 | 1,73 | 1,13 | 1,07 | 96,23 |
+| test | 102 | 13 257 | 1,61 | 0,83 | 0,83 | 96,82 |
+
+- Longueur des segments : médiane 154 caractères, 90 % sous 1 037 ; **15 % font moins de
+  20 caractères** (titres, numéros, lignes isolées) ; 6,9 % sont au plafond ou presque.
+- Sur 3 257 annotations de nos 9 catégories, **une seule** n'étiquette aucun segment.
+
+### Avancement
+
+| Fonctionnalité | Statut | Commentaire |
+|---|---|---|
+| F1 Ingestion PDF et provenance | En cours | Segmentation v1 du texte CUAD avec positions ; lecture PDF (PyMuPDF) à faire. |
+| F2 Extraction de clauses | En cours | Données prêtes (splits + segments étiquetés) ; baseline à faire. |
+| F3 Comparaison de paires de clauses | À faire | |
+| F4 NLI (ContractNLI) | À faire | |
+| F5 Recherche hybride et RAG avec abstention | À faire | |
+| F6 Interface analyste | À faire | |
+| F7 Traçabilité | En cours | Test automatique : 79 510 segments traçables. |
+
+- **Étape du planning** : étape 1 (données CUAD) **terminée**, sous réserve de D-004 (encadrant)
+  et D-005 (Sara). Prochaine : baseline F2.
+
+### Ce que j'ai compris
+<!-- Rédigé par Claude en fin de séance, relu et corrigé par Sara. -->
+- **Train, validation, test** : le train sert à apprendre, la validation à régler (choisir un
+  modèle, un seuil), le test à mesurer **une seule fois** à la fin. Si on règle sur le test, le
+  score final devient optimiste : on a « appris » le test sans le vouloir.
+- **Découper par contrat** : les segments d'un même contrat se ressemblent ; s'ils étaient
+  répartis entre train et test, le modèle serait testé sur du « presque déjà vu ».
+- **Graine aléatoire** : un tirage « au hasard » avec une graine fixée (42) donne toujours le même
+  résultat ; on la fixe **avant** de tirer, pour ne pas être tenté de relancer jusqu'à un tirage
+  qui nous arrange.
+- **Empreinte d'un fichier** (MD5, SHA-1) : une « signature » calculée sur son contenu. Deux
+  fichiers de même empreinte sont identiques : c'est ainsi qu'on a prouvé que le `CUADv1.json` du
+  dépôt GitHub est le même que celui de Zenodo.
+- **Segment et positions** : un segment, c'est un morceau de texte et ses positions `[debut, fin)`
+  dans le texte source. Python découpe avec `texte[debut:fin]`, fin exclue. Retirer les espaces
+  aux bords en **décalant les positions** garde la garantie `texte[debut:fin] == segment`.
+- **Projection des annotations** : CUAD annote des passages, nous classons des segments. On
+  transfère une étiquette quand le segment et le passage se chevauchent assez ; la règle
+  (`min(20, longueur)`) est fixée **avant** de voir les résultats, pour ne pas l'ajuster sur eux.
+- **Déséquilibre** : 97 % des segments n'ont aucune de nos familles. Un modèle qui dit toujours
+  « aucune » aurait 97 % d'exactitude et ne servirait à rien : il faudra mesurer la précision et
+  le rappel de chaque famille, pas l'exactitude globale.
+- **Test automatique** : une fonction avec des `assert`, que pytest lance et vérifie. Notre test
+  de traçabilité contrôle les 79 510 segments en une seconde : la règle absolue 1 devient
+  vérifiable à chaque modification du code.
+- *Relu par Sara : à faire*
+
+### Problèmes et solutions
+- Téléchargement de `data.zip` lent (~7 minutes) : le code a été écrit pendant ce temps.
+- Annotation de longueur 0 : elle aurait étiqueté tous les segments (seuil de 0) ; exclue dans le code.
+- pytest absent : tests appelés directement avec Python en attendant l'accord d'installation.
+
+### Décisions
+- D-004 : acceptée provisoirement (option 1), à confirmer par l'encadrant.
+- D-005 : proposée (commiter `data/splits/` en étendant l'exception de la règle 5), à valider par Sara.
+
+### Prochaine étape
+- Sara : valider D-005 ; accord pour installer pytest ; relire « Ce que j'ai compris ».
+- Encadrant : confirmer D-004, valider D-001 et D-002.
+- Segmentation v2 éventuelle (fusionner les segments de moins de 20 caractères), à décider en
+  regardant **le train seulement**.
+- Baseline F2 (scikit-learn : TF-IDF + régression logistique, une par famille), réglée sur la validation.
+
+---
+
 ## 2026-11-22 — Exploration de CUAD (notebook exécuté) et préparation de D-004
 
 - **Qui** : Sara-hjd (avec Claude Code)

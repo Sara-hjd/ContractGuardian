@@ -155,7 +155,8 @@ Elle ne contient **jamais le texte du contrat**.
 ## D-004 — Découpage entraînement / validation / test de CUAD
 
 - **Date** : 2026-11-22
-- **Statut** : Proposée, **à trancher avec Sara (et l'encadrant)**
+- **Statut** : **Acceptée provisoirement, à confirmer par l'encadrant** (option 1, choisie par Sara
+  le 2026-11-22)
 
 ### Contexte
 Avant tout entraînement (F2), il faut fixer quels contrats servent à **entraîner**, à **régler**
@@ -179,7 +180,8 @@ Ce que l'exploration (`notebooks/01_exploration_cuad.ipynb`) et les sources nous
 ### Options envisagées
 1. **Reprendre le découpage officiel** (`test.json` du dépôt GitHub) comme test, puis découper le
    train officiel en entraînement + validation (par exemple 85 % / 15 % des contrats, tirage fixé).
-   - ➕ Résultats **comparables à l'article** et aux autres travaux sur CUAD.
+   - ➕ Même **jeu de test** que l'article et les autres travaux sur CUAD (mais voir la limite
+     de comparabilité dans « Décision »).
    - ➕ Le test est fixé par d'autres : impossible de le « choisir » à notre avantage.
    - ➖ Il faut télécharger et vérifier `data.zip` (téléchargement à documenter dans
      `data_provenance.md`) et retrouver la liste des titres de chaque partie.
@@ -201,10 +203,36 @@ Ce que l'exploration (`notebooks/01_exploration_cuad.ipynb`) et les sources nous
      (règle 4 : pas de service payant).
 
 ### Décision
-*À prendre ensemble.*
+**Option 1** :
+- **Test** : les contrats du `test.json` officiel de CUAD (dépôt GitHub `TheAtticusProject/cuad`,
+  `data.zip`), sans modification.
+- **Entraînement + validation** : les contrats du train officiel, découpés **par contrat** en
+  **85 % entraînement / 15 % validation** (dans la fourchette 10–15 % fixée par Sara ; on prend le
+  haut de la fourchette pour avoir plus d'exemples de validation des catégories rares).
+- **Tirage de la validation** : aléatoire, avec une **graine fixée à l'avance : 42**, notée ici
+  avant le tirage.
+- **Contrôle** : on vérifie que nos 9 catégories sont présentes dans **chacun** des trois jeux.
+  Si une catégorie manquait, on **ne change pas de graine en silence** : on le note ici et on
+  décide ensemble (par exemple passer à un tirage stratifié).
+
+**Résultat du tirage (2026-11-22)** : train 347 contrats, validation 61, test 102 ; partition des
+510 contrats vérifiée. Nos 9 catégories sont présentes dans chaque jeu (minimum : 13 contrats
+*Uncapped Liability* dans le test, 14 *Notice Period To Terminate Renewal* en validation). Aucun
+nouveau tirage n'a été nécessaire. Fichier : `data/splits/cuad_v1_splits.json` (voir D-005).
+
+**Limite de comparabilité** : notre tâche n'est **pas** celle de l'article. L'article évalue un
+modèle de questions-réponses qui doit retrouver les passages exacts, sur les 41 catégories, avec des
+métriques propres (AUPR, précision à 80 % de rappel…). Nous classerons des **segments** (D-001) par
+**famille**, sur 9 catégories seulement. Même avec le même jeu de test, **nos chiffres ne seront
+pas directement comparables** à ceux de l'article ; on le dira à chaque présentation de résultats.
 
 ### Raisons
-*À compléter après la décision.*
+- Le test est fixé par les auteurs de CUAD, avant nous : il est impossible de le « choisir » à
+  notre avantage, ce qui protège la règle 2.
+- Le jeu de test est **le même** que celui des travaux publiés : utile pour situer nos résultats,
+  même si les chiffres ne se comparent pas directement.
+- Une validation tirée du train donne un jeu pour régler les modèles **sans toucher au test**.
+- Plus simple qu'un découpage stratifié ou qu'une validation croisée, et moins coûteux en calcul.
 
 ### Conséquences (quelle que soit l'option)
 - Le découpage se fait **par contrat** et est **enregistré dans un fichier** (liste des titres
@@ -215,3 +243,48 @@ Ce que l'exploration (`notebooks/01_exploration_cuad.ipynb`) et les sources nous
   l'incertitude des mesures.
 - Nos futures annotations humaines (D-002, D-003) devront respecter le même découpage si elles
   portent sur des contrats CUAD.
+
+---
+
+## D-005 — Où stocker le fichier des splits, et faut-il le commiter ?
+
+- **Date** : 2026-11-22
+- **Statut** : Proposée, **à valider par Sara** (elle touche la règle absolue 5)
+
+### Contexte
+Le fichier des splits (D-004) liste, pour chaque jeu, les **titres** des contrats CUAD
+(`train`, `val`, `test`), avec la source, la graine et la date. Il ne contient **aucun texte de
+contrat** (40 Ko). Pour la reproductibilité, Sara, Ilyas et l'encadrant doivent utiliser
+**exactement** les mêmes jeux : si chacun régénère le fichier, une différence de version de
+Python ou de code pourrait changer le tirage sans qu'on s'en aperçoive.
+
+La règle absolue 5 interdit de commiter des données, avec une seule exception : `data/annotations/`
+(D-003, références sans texte).
+
+### Options envisagées
+1. **Ne pas commiter** (fichier dans `data/processed/`, régénéré par chacun).
+   - ➕ Aucune question vis-à-vis de la règle 5.
+   - ➖ Reproductibilité fragile ; impossible de prouver quels contrats étaient dans le test.
+2. **Commiter `data/splits/cuad_v1_splits.json`** et étendre l'exception de la règle 5 à
+   `data/splits/`, aux mêmes conditions que D-003 (identifiants seulement, jamais de texte).
+   - ➕ Un seul découpage de référence, historisé par Git : on peut montrer à l'encadrant que le
+     test a été fixé **avant** le premier entraînement (date du commit).
+   - ➕ Les titres sont des identifiants publics de CUAD, comme ceux déjà prévus par D-003.
+   - ➖ Il faut modifier la règle 5 de `CLAUDE.md` et vérifier avant chaque commit qu'aucun texte
+     n'est présent.
+3. **Commiter seulement la recette** (graine + proportion + empreinte du fichier), pas les titres.
+   - ➕ Pas de liste de titres dans le dépôt.
+   - ➖ On ne voit pas les jeux sans relancer le script ; une empreinte différente dit qu'il y a un
+     problème, pas lequel.
+
+### Proposition
+**Option 2.** Emplacement : `data/splits/cuad_v1_splits.json` (déjà non ignoré par `.gitignore`,
+qui n'ignore que `data/raw/*` et `data/processed/*`). Si Sara l'accepte : ajouter `data/splits/` à
+l'exception de la règle 5 dans `CLAUDE.md`, au même titre que `data/annotations/`.
+
+**En attendant l'accord de Sara, le fichier n'est pas commité.**
+
+### Conséquences
+- Toute nouvelle version du découpage = nouveau fichier (`cuad_v2_splits.json`) et nouvelle
+  décision ; on ne modifie jamais un fichier de splits déjà utilisé pour entraîner.
+- Prévoir un test qui vérifie que les fichiers de `data/splits/` ne contiennent que des titres.

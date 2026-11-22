@@ -139,8 +139,9 @@ data[]                        → un élément par contrat (510)
    - les positions CUAD ne sont **pas directement transposables** à nos segments ;
    - il faudra une étape d'**alignement** (retrouver chaque passage CUAD dans notre texte),
      documentée et testée, pour respecter la règle de traçabilité (page, positions) ;
-   - il reste à vérifier pendant l'exploration si `context` est identique au fichier
-     correspondant de `full_contract_txt/`.
+   - **vérifié le 2026-11-22** (`notebooks/01_exploration_cuad.ipynb`, sections a.4 et h) :
+     les 13 823 positions retombent exactement sur le texte annoté, et `context` est **identique
+     caractère pour caractère** au fichier de `full_contract_txt/` pour les 510 contrats.
 4. **Le texte converti est imparfait.** D'après le README, la conversion PDF → TXT ne conserve
    ni la mise en page ni les tableaux, et les espaces entre mots et paragraphes sont parfois
    irréguliers. Le texte contient aussi des pieds de page, des numéros de page et des
@@ -154,10 +155,67 @@ data[]                        → un élément par contrat (510)
    la SEC, en anglais, répartis inégalement entre 25 types (de 3 à 34 contrats par type).
    Le README précise que ni les catégories ni les contrats ne sont exhaustifs ou représentatifs.
 8. **Découpage entraînement/test.** L'article utilise une séparation aléatoire 80 % / 20 %
-   des contrats. Le zip Zenodo ne contient qu'un seul fichier JSON, sans ce découpage, qui se
-   trouverait dans le `data.zip` du dépôt GitHub (à vérifier). Le choix du découpage, et
-   sa protection (règle 2), fera l'objet d'une décision avant tout entraînement.
-9. **Comptages à réconcilier.** L'article annonce 13 101 clauses annotées ; un premier comptage
-   des passages-réponses dans `CUAD_v1.json` donne 13 823. L'écart vient probablement de la
-   façon de compter (une clause peut être découpée en plusieurs passages) et sera examiné
-   pendant l'exploration.
+   des contrats. Le zip Zenodo ne contient pas ce découpage ; il est dans le `data.zip` du dépôt
+   GitHub (**vérifié le 2026-11-22**, voir la section suivante) : 408 contrats de train, 102 de
+   test, sans recouvrement. **Pas de jeu de validation officiel.** Notre découpage : D-004.
+9. **Comptages réconciliés (2026-11-22).** L'article annonce 13 101 clauses annotées ;
+   `CUAD_v1.json` contient 13 823 passages-réponses, sans doublon. **13 101 est exactement le
+   nombre d'éléments de `master_clauses.csv`.** Une annotation non contiguë y est un seul élément
+   (avec `<omitted>`), mais plusieurs passages dans le JSON : éléments + `<omitted>` = 13 834,
+   soit l'écart expliqué à 11 passages près (égalité exacte pour 32 catégories sur 41).
+   Voir le notebook, sections g.1 à g.3.
+10. **Catégories qui se recouvrent.** Une même phrase peut être annotée dans deux catégories :
+    125 des 167 passages *Uncapped Liability* ont exactement les positions d'un passage
+    *Cap On Liability* (notebook, section f.3). Un modèle multi-étiquette est donc nécessaire,
+    et la co-présence de ces deux catégories n'indique pas une incohérence.
+
+---
+
+## CUAD — découpage officiel train / test (`data.zip` du dépôt GitHub)
+
+### Identification
+
+| | |
+|---|---|
+| **Source** | Dépôt GitHub `TheAtticusProject/cuad`, fichier `data.zip` |
+| **Version figée** | commit `7aad649183846688381a147eeb3601aff590fe4a` (2021-03-11), dernier commit touchant `data.zip` |
+| **URL utilisée** | `https://raw.githubusercontent.com/TheAtticusProject/cuad/7aad649183846688381a147eeb3601aff590fe4a/data.zip` |
+| **Utilisation dans le dépôt officiel** | `run.sh` entraîne sur `data/train_separate_questions.json` et évalue sur `data/test.json` |
+
+### Téléchargement
+
+| | |
+|---|---|
+| **Date** | 2026-11-22 |
+| **Par** | Claude Code, avec l'accord de Sara-hjd (exception de séance, voir `docs/JOURNAL_ACTIONS.md`, B3) |
+| **Fichier** | `data/raw/cuad_official/data.zip` (ignoré par Git, **non extrait** : les scripts lisent dans le zip) |
+| **Taille** | 18 309 308 octets |
+| **Empreinte Git (SHA-1 de blob)** | `1ae94ff0a9b70b2e3b9b8d215737c8bfae460ddc`, **vérifiée** avec `git hash-object` : identique à celle de l'API GitHub |
+| **Empreinte MD5** | `24b7c808f1cb6373ae8f4faf49364f98` (calculée localement, pas de référence publiée) |
+
+```bash
+curl -sSL --create-dirs -o data/raw/cuad_official/data.zip "<URL ci-dessus>"
+git hash-object data/raw/cuad_official/data.zip
+```
+
+### Contenu
+
+| Fichier dans le zip | Taille | Contenu |
+|---|---|---|
+| `CUADv1.json` | 40,1 Mo | **Identique** à `CUAD_v1.json` de Zenodo (même MD5 `5174daa1…`) |
+| `train_separate_questions.json` | 35,1 Mo | Train officiel, format SQuAD : **408 contrats** |
+| `test.json` | 7,4 Mo | Test officiel, format SQuAD : **102 contrats** |
+
+Vérifications (`PYTHONPATH=src .venv/bin/python -m cg.datasets.creer_splits`) : aucun contrat
+commun aux deux fichiers ; leur union est exactement l'ensemble des 510 titres de `CUAD_v1.json`.
+
+### Licence et limites
+
+- **Le dépôt GitHub ne déclare aucune licence** (l'API renvoie `null`). Les données sont celles
+  de CUAD, publiées sous CC BY 4.0 sur Zenodo ; on cite CUAD comme ci-dessus. On n'en redistribue
+  rien : seuls des **titres** de contrats figurent dans notre fichier de splits (D-005).
+- Le découpage officiel est un tirage aléatoire de l'article (80 / 20) : il n'est pas stratifié
+  pour nos 9 catégories. Vérification faite : toutes sont présentes dans chacun de nos jeux
+  (minimum : 13 contrats *Uncapped Liability* dans le test).
+- Il n'y a **pas de validation officielle** : la nôtre (61 contrats) est tirée du train officiel
+  (D-004). Nos résultats ne seront pas directement comparables à ceux de l'article (tâche différente).

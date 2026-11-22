@@ -1,66 +1,70 @@
 # Fiche de révision — entretien encadrant (étape 1, données CUAD)
 
-*Mise à jour : 2026-11-22. Branche `exp/exploration-cuad`. Détails : `docs/PROGRESS.md`,
-`notebooks/01_exploration_cuad.ipynb` (section « Conclusions »), `docs/decisions.md`.*
+*Mise à jour : 2026-11-22 (fin d'étape 1). Branche `exp/exploration-cuad`. Détails :
+`docs/PROGRESS.md`, `notebooks/01_exploration_cuad.ipynb` (« Conclusions »), `docs/decisions.md`,
+`docs/data_provenance.md`.*
 
 ## Ce qui a été fait
 
-- **Étape 0** : dépôt, conventions, structure du projet, environnement Python 3.11 (`.venv`), PR #1 fusionnée.
-- **Étape 1** : CUAD v1 téléchargé depuis Zenodo, **empreinte MD5 vérifiée**, provenance et licence
-  (CC BY 4.0) documentées (`docs/data_provenance.md`). Exploration complète dans un notebook
-  (questions a à h), résultats interprétés. Travail réalisé avec l'assistance de Claude Code
-  (actions tracées dans `docs/JOURNAL_ACTIONS.md`).
-- **Règle tenue** : aucune donnée ni extrait de contrat dans le dépôt public (notebook commité sans sorties).
+- **Étape 0** : dépôt, conventions, structure, environnement Python 3.11 (`.venv`), PR #1 fusionnée.
+- **Étape 1 (terminée)** :
+  - CUAD v1 (Zenodo) et découpage officiel (`data.zip`, GitHub) téléchargés, **empreintes vérifiées**,
+    provenance et licence documentées ;
+  - exploration complète (notebook, questions a à h) ;
+  - **splits par contrat** (D-004) : train 347, validation 61, test 102 contrats ;
+  - **segmentation v1** et projection des annotations : 79 510 segments étiquetés par famille ;
+  - **test de traçabilité** automatique : les 79 510 segments retombent exactement sur le texte.
+- Travail réalisé avec l'assistance de Claude Code (actions tracées dans `docs/JOURNAL_ACTIONS.md`).
+- Aucune donnée ni extrait de contrat dans le dépôt public.
 
-## Chiffres clés de CUAD
+## Chiffres clés
 
 | | |
 |---|---|
-| Contrats | **510** (25 types, EDGAR / SEC), 1 texte par contrat |
-| Catégories | **41** ; aucune pour la confidentialité |
-| Passages annotés (JSON) | **13 823**, positions exactes à 100 % |
-| Annotations (article) | **13 101** = éléments de `master_clauses.csv` |
-| Longueur des contrats | médiane **33 143** caractères (645 à 338 211) |
-| Nos 9 catégories | de 470 contrats (*Agreement Date*) à 111 (*Uncapped Liability*, *Notice Period…*) |
+| Contrats CUAD | **510** (25 types, EDGAR / SEC) ; 41 catégories, aucune pour la confidentialité |
+| Passages annotés | **13 823** (JSON) ; **13 101** éléments dans le CSV = chiffre de l'article |
+| Longueur des contrats | médiane **33 143** caractères |
+| Splits | train **347** / val **61** / test **102** (test = test officiel) ; 9 catégories présentes partout |
+| Segments v1 | **79 510** ; médiane 154 caractères, plafond 1 500 |
+| Segments par famille (train) | durée 1,35 % · résiliation 0,88 % · responsabilité 0,81 % · **aucune 97 %** |
 
-## Les 3 découvertes importantes
+## Les découvertes importantes
 
-1. **Cap et Uncapped se recouvrent** : les 111 contrats *Uncapped Liability* ont tous aussi
-   *Cap On Liability*, et 125 des 167 passages *Uncapped* sont exactement des passages *Cap*. C'est
-   souvent **une seule clause** (limite + exception). → F3 ne doit pas lever d'alerte sur la simple
-   co-présence des deux catégories.
-2. **L'écart 13 823 / 13 101 est expliqué** : l'article compte les éléments du CSV ; le JSON découpe
-   les annotations non contiguës (`<omitted>`) en plusieurs passages. CSV + `<omitted>` = 13 834,
-   soit l'écart expliqué à 11 passages près.
-3. **Le texte CUAD est une référence fiable** : `context` = fichier TXT pour 510/510 contrats, et
-   chaque position retombe sur le bon passage. Mais notre propre extraction PDF (F1) donnera un autre
-   texte → **alignement nécessaire** pour garder la traçabilité.
+1. **Cap et Uncapped se recouvrent** : 125 des 167 passages *Uncapped* sont exactement des passages
+   *Cap* (une limite avec exception). → Tâche **multi-étiquette** ; pas d'alerte F3 sur la simple
+   co-présence.
+2. **L'écart 13 823 / 13 101 est expliqué** : le JSON découpe les annotations non contiguës
+   (`<omitted>`) ; expliqué à 11 passages près.
+3. **Positions fiables, mais seulement sur le texte CUAD** : `context` = TXT pour 510/510, positions
+   exactes à 100 %. Notre extraction PDF devra être alignée.
+4. **Fort déséquilibre** : 97 % des segments n'ont aucune famille → évaluer par précision, rappel
+   et F1 par famille, jamais par l'exactitude globale.
 
 ## Décisions à valider
 
-| | Sujet | Proposition |
+| | Sujet | État |
 |---|---|---|
-| **D-001** | Unité de base | Le **segment** (passage + page + positions), commun à toutes les fonctionnalités. |
-| **D-002** | Confidentialité absente de CUAD | Choisir : ContractNLI, annotation humaine, ou retrait du périmètre de F2. |
-| **D-004** | Découpage train / val / test | 4 options : test officiel CUAD + validation tirée du train ; aléatoire par contrat ; stratifié par contrat ; validation croisée. Découpage **par contrat** dans tous les cas. |
+| **D-001** | Le **segment** comme unité de base | Proposée ; implémentée (v1) |
+| **D-002** | Confidentialité absente de CUAD | À choisir : ContractNLI, annotation humaine, ou retrait de F2 |
+| **D-004** | Splits : test officiel + validation 15 % du train, par contrat, graine 42 | **Acceptée provisoirement**, à confirmer |
+| **D-005** | Commiter le fichier des splits (titres seulement) | Proposée, à valider par Sara |
 
 ## 5 questions probables, avec la réponse
 
-1. **« Pourquoi avoir exploré tout CUAD, test compris ? N'est-ce pas une fuite ? »**
-   L'exploration est **descriptive** : elle n'a réglé aucun hyperparamètre, seuil ou modèle (règle 2).
-   Le découpage (D-004) sera fixé et enregistré **avant** le premier entraînement, et le test ne sera
-   ouvert qu'une fois.
-2. **« Pourquoi découper par contrat et pas par passage ? »**
-   Les passages d'un même contrat se ressemblent (même rédaction, mêmes définitions). S'ils étaient
-   à la fois en entraînement et en test, le modèle serait évalué sur ce qu'il a presque déjà vu :
-   le score serait trop optimiste.
-3. **« Comment comptez-vous traiter la confidentialité, absente de CUAD ? »**
-   C'est D-002 : ContractNLI (accords de confidentialité annotés), ou annotation humaine sur des
-   contrats réels avec un guide et un accord inter-annotateurs. Pas de données synthétiques (règle 3).
-4. **« Les contrats font 33 000 caractères en médiane : comment un Transformer les lit-il ? »**
-   Il ne lit que ~512 *tokens* (≈ 2 000 caractères) à la fois. On découpe en **segments** (D-001),
-   chacun avec sa page et ses positions, ce qui sert aussi à citer la source exacte.
-5. **« Qu'avez-vous appris qui change la conception ? »**
-   Trois choses : (1) pour F3, une même clause peut porter deux étiquettes, donc il faut comparer
-   des clauses distinctes ; (2) la classe « absente » domine, donc les métriques doivent en tenir
-   compte ; (3) les positions CUAD ne valent que sur le texte CUAD, d'où l'alignement avec F1.
+1. **« Pourquoi le test officiel plutôt que votre propre découpage ? »**
+   Il a été fixé par les auteurs de CUAD, avant nous : on ne peut pas le choisir à notre avantage,
+   et c'est le même test que les travaux publiés. Mais notre tâche (classer des segments par
+   famille) diffère de la leur : nos chiffres ne sont **pas directement comparables**.
+2. **« Votre exploration a porté sur tout CUAD, test compris. Fuite ? »**
+   Non : elle était descriptive et n'a réglé aucun modèle. Les splits et la règle d'étiquetage ont
+   été fixés **avant** tout entraînement ; tout réglage se fera sur la validation (règle 2).
+3. **« Comment passez-vous des annotations CUAD à vos segments ? »**
+   Un segment reçoit une catégorie si son chevauchement avec un passage annoté atteint
+   min(20 caractères, longueur du passage). Règle fixée à l'avance ; une seule annotation sur 3 257
+   n'étiquette aucun segment.
+4. **« Comment garantissez-vous la traçabilité ? »**
+   Chaque segment garde ses positions `[debut, fin)` dans le texte source ; un test automatique
+   vérifie `texte[debut:fin] == segment` pour les 79 510 segments.
+5. **« 97 % de segments sans famille : comment évaluer ? »**
+   L'exactitude serait trompeuse (97 % en répondant toujours « aucune »). On mesurera précision,
+   rappel et F1 **par famille**, sur la validation pour régler, puis une fois sur le test.
