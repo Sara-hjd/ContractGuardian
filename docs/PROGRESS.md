@@ -73,6 +73,36 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 
 ## Séances
 
+## 2026-11-22 (suite 4) — PR #2 et #3 fusionnées ; début du mode « Claude exécute tout » (séance 1/3)
+
+- **Qui** : Sara-hjd (avec Claude Code)
+- **Branche** : `main`, puis `docs/mode-temporaire`
+
+> ⚠️ **Mode temporaire** décidé par Sara : pendant 3 séances, Claude exécute toutes les commandes
+> (voir la section en tête de `CLAUDE.md` : interdits, obligations, compteur). Cette suite de
+> séance est la **séance 1/3**. Actions tracées dans [JOURNAL_ACTIONS.md](JOURNAL_ACTIONS.md) (F1…).
+
+### Fait
+- PR #2 et #3 **fusionnées dans `main`** par décision de Sara, **sans attendre la relecture
+  d'Ilyas** (relecture a posteriori demandée en commentaire sur chaque PR, comme pour la PR #1).
+- **Incident** : la PR #3 (empilée) a été **fermée** par GitHub à la suppression de sa branche de
+  base, au lieu de basculer vers `main`. Réparée : branche de base recréée, PR rouverte, base
+  changée vers `main`, puis fusion. Leçon notée (F3).
+- `main` : 13 tests passent ; seule branche restante : `main`.
+- `CLAUDE.md` : section « Mode temporaire » (3 séances).
+
+### Ce que j'ai compris
+<!-- Rédigé par Claude, relu et corrigé par Sara. -->
+- **Fusionner sans relecture** est possible techniquement, mais la relecture sert justement à
+  ce que les deux membres du binôme valident les règles communes (ici : la règle 5). D'où le
+  commentaire laissé à Ilyas pour qu'il puisse encore réagir.
+- **PR empilées** : supprimer la branche de base au moment de la fusion peut **fermer** la PR
+  suivante. Ordre sûr : fusionner la première sans supprimer sa branche, changer la base de la
+  seconde vers `main`, puis supprimer la branche.
+- *Relu par Sara : à faire*
+
+---
+
 ## 2026-11-22 (suite 3) — Décisions de Sara et pull requests
 
 - **Qui** : Sara-hjd (avec Claude Code)

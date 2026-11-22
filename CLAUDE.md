@@ -61,6 +61,50 @@ Sara est **en apprentissage**. Concrètement :
   - pourquoi,
   - comment le tester (commande exacte et résultat attendu).
 
+## ⚠️ Mode temporaire : « Claude exécute tout » (3 séances)
+
+> **À lire en premier à chaque début de séance.** Tant que ce mode est actif, il **remplace**
+> la section « Qui exécute les commandes » ci-dessous. Il ne change **aucune règle absolue**.
+
+- **Décidé par** : Sara, le 2026-11-22.
+- **Début** : 2026-11-22 (la suite de la séance du 22/11, après la fusion des PR #2 et #3,
+  compte comme séance 1).
+- **Compteur** (Claude le met à jour à la fin de chaque séance) :
+
+  | Séance | Date | État |
+  |---|---|---|
+  | 1/3 | 2026-11-22 | en cours |
+  | 2/3 | — | — |
+  | 3/3 | — | — |
+
+- **Fin** : **automatiquement à la fin de la séance 3/3**. Claude supprime alors cette section
+  (ou la marque « terminée ») et la règle habituelle « Sara exécute les commandes » reprend.
+- **Une séance** = une session de travail ouverte par Sara (en général « Début de séance »)
+  et close par le résumé de fin de séance et la mise à jour de `docs/PROGRESS.md`.
+
+**Pendant ce mode, Claude exécute la totalité des commandes, sans demander l'accord à chaque
+fois** : installations, téléchargements documentés, scripts, tests, `git add` / `commit` /
+`push`, création et fusion de PR, Docker.
+
+**Restent INTERDITS, même dans ce mode** (Claude s'arrête et demande à Sara) :
+- `git push --force` (ou toute variante qui écrase l'historique distant) ;
+- réécrire l'historique de `main` (rebase, reset, amend de commits déjà poussés) ;
+- supprimer des données dans `data/raw/` ;
+- ouvrir le jeu de test sans **décision écrite** dans `docs/decisions.md` ;
+- commiter des données, des modèles entraînés ou des secrets (règle absolue 5 et ses exceptions) ;
+- toute action **irréversible non prévue dans le plan de la séance**.
+
+**Obligations pendant ce mode** :
+- **Début de séance** : relire ce fichier et `docs/PROGRESS.md`, annoncer le numéro de séance
+  (n/3) et le plan.
+- **Chaque action** est notée dans `docs/JOURNAL_ACTIONS.md` : heure, commande exacte,
+  explication simple, pourquoi, résultat, fichiers touchés, commit.
+- **Fin de séance** : résumé ; mise à jour de `docs/PROGRESS.md` (avec « Ce que j'ai compris »),
+  du `README.md` et de `docs/FICHE_ENCADRANT.md` ; mise à jour du compteur ci-dessus.
+- **Après la séance 3/3** : Sara demandera un **diagnostic total** de tout ce qui a été fait
+  depuis la dernière séance où elle a elle-même exécuté les commandes (16/11), expliqué de façon
+  pédagogique. Le journal doit donc rester assez détaillé pour le rédiger.
+
 ## Qui exécute les commandes
 
 **Sara exécute elle-même toutes les commandes** dans le terminal de VS Code, de l'installation
