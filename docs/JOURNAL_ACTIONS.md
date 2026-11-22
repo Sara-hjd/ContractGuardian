@@ -332,3 +332,20 @@ Sara a reconduit la même exception pour la suite de la séance, avec les mêmes
   ```
 - **Volontairement exclu** : `data/splits/cuad_v1_splits.json` (D-005 en attente de Sara).
 - **Résultat** : voir `git log`.
+
+### C1 — Point 2 : D-005 acceptée, exception de la règle 5 étendue
+
+- **Accord de Sara** : « 2 oui : étends l'exception de la règle 5 à data/splits/ (identifiants
+  seulement, jamais de texte), passe D-005 en Acceptée et commite le fichier des splits. »
+- **Actions** :
+  - `CLAUDE.md`, règle 5 : deux exceptions (`data/annotations/`, `data/splits/`), mêmes conditions ;
+  - `docs/decisions.md` : D-005 « Acceptée » (lignes modifiées avec `sed -i ''`) ;
+  - `.gitignore` : commentaire expliquant que `data/splits/` n'est pas ignoré (aucune règle changée) ;
+  - `tests/test_splits.py` créé (conséquence prévue par D-005) : clés autorisées seulement,
+    titres courts (≤ 300 caractères, le plus long en fait 161), pas de doublon, couverture des 510.
+- **Vérification** : les 2 tests appelés à la main → OK.
+- **Commit** :
+  ```bash
+  git add CLAUDE.md .gitignore docs/decisions.md docs/JOURNAL_ACTIONS.md data/splits/cuad_v1_splits.json tests/test_splits.py
+  git commit -m "chore(data): versionner les splits CUAD (D-005) et étendre la règle 5"
+  ```

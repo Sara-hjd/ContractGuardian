@@ -249,7 +249,7 @@ pas directement comparables** à ceux de l'article ; on le dira à chaque prése
 ## D-005 — Où stocker le fichier des splits, et faut-il le commiter ?
 
 - **Date** : 2026-11-22
-- **Statut** : Proposée, **à valider par Sara** (elle touche la règle absolue 5)
+- **Statut** : **Acceptée** (validée par Sara le 2026-11-22)
 
 ### Contexte
 Le fichier des splits (D-004) liste, pour chaque jeu, les **titres** des contrats CUAD
@@ -277,12 +277,12 @@ La règle absolue 5 interdit de commiter des données, avec une seule exception 
    - ➖ On ne voit pas les jeux sans relancer le script ; une empreinte différente dit qu'il y a un
      problème, pas lequel.
 
-### Proposition
+### Décision
 **Option 2.** Emplacement : `data/splits/cuad_v1_splits.json` (déjà non ignoré par `.gitignore`,
 qui n'ignore que `data/raw/*` et `data/processed/*`). Si Sara l'accepte : ajouter `data/splits/` à
 l'exception de la règle 5 dans `CLAUDE.md`, au même titre que `data/annotations/`.
 
-**En attendant l'accord de Sara, le fichier n'est pas commité.**
+**Option 2, validée par Sara.** `CLAUDE.md` (règle 5) est mis à jour : `data/splits/` est la seconde exception, aux mêmes conditions que `data/annotations/` (identifiants seulement, jamais de texte). Le fichier est commité le 2026-11-22, avant tout entraînement.
 
 ### Conséquences
 - Toute nouvelle version du découpage = nouveau fichier (`cuad_v2_splits.json`) et nouvelle

@@ -19,6 +19,8 @@ data/processed/*
 
 # data/annotations/ n'est PAS ignoré : nos annotations sont versionnées (décision D-003),
 # mais ne contiennent JAMAIS le texte des contrats, seulement des références.
+# data/splits/ n'est PAS ignoré non plus (D-005) : découpages train / val / test,
+# avec des titres de contrats et les paramètres du tirage, jamais de texte.
 
 # Fichiers déposés par l'application (PDF importés, index, exports).
 storage/
