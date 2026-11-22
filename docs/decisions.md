@@ -149,3 +149,69 @@ Elle ne contient **jamais le texte du contrat**.
 - Prévoir un test automatique qui vérifie qu'aucun fichier de `data/annotations/` ne contient
   de champ de texte.
 - L'annotateur est désigné par son identifiant GitHub, pas par une donnée personnelle.
+
+---
+
+## D-004 — Découpage entraînement / validation / test de CUAD
+
+- **Date** : 2026-11-22
+- **Statut** : Proposée, **à trancher avec Sara (et l'encadrant)**
+
+### Contexte
+Avant tout entraînement (F2), il faut fixer quels contrats servent à **entraîner**, à **régler**
+(validation : hyperparamètres, seuils, choix de modèle) et à **évaluer une seule fois** (test).
+La règle absolue 2 interdit d'utiliser le test pour régler quoi que ce soit.
+
+Ce que l'exploration (`notebooks/01_exploration_cuad.ipynb`) et les sources nous apprennent :
+- **510 contrats**, un seul texte par contrat ; le découpage doit se faire **par contrat**, jamais
+  par passage. Sinon, des passages d'un même contrat seraient à la fois en entraînement et en
+  test (fuite de données).
+- **Découpage officiel** : l'article utilise 80 % / 20 % des contrats, tiré au hasard. Le zip
+  Zenodo ne le contient pas. Le dépôt GitHub `TheAtticusProject/cuad` contient un `data.zip`
+  (18 Mo) ; son script `run.sh` entraîne sur `data/train_separate_questions.json` et évalue sur
+  `data/test.json`. **Il n'y a pas de jeu de validation officiel.** Le contenu exact de
+  `data.zip` n'a pas encore été téléchargé ni vérifié.
+- **Catégories rares** parmi les nôtres : *Uncapped Liability* et *Notice Period To Terminate
+  Renewal* n'apparaissent que dans 111 contrats. Un test de 102 contrats en contiendrait environ 22 :
+  les mesures par catégorie seront peu précises.
+- **25 types de contrats**, de 3 à 34 contrats par type.
+
+### Options envisagées
+1. **Reprendre le découpage officiel** (`test.json` du dépôt GitHub) comme test, puis découper le
+   train officiel en entraînement + validation (par exemple 85 % / 15 % des contrats, tirage fixé).
+   - ➕ Résultats **comparables à l'article** et aux autres travaux sur CUAD.
+   - ➕ Le test est fixé par d'autres : impossible de le « choisir » à notre avantage.
+   - ➖ Il faut télécharger et vérifier `data.zip` (téléchargement à documenter dans
+     `data_provenance.md`) et retrouver la liste des titres de chaque partie.
+   - ➖ Le test officiel n'est peut-être pas équilibré pour nos 9 catégories.
+2. **Notre propre découpage aléatoire par contrat** (par exemple 70 / 15 / 15), avec une graine
+   fixée, et la liste des titres de chaque partie versionnée (des titres, pas de texte).
+   - ➕ Simple, entièrement sous notre contrôle, documenté.
+   - ➖ Résultats **non comparables** directement à l'article.
+   - ➖ Le hasard peut laisser trop peu d'exemples d'une catégorie rare dans un jeu.
+3. **Notre propre découpage stratifié par contrat** : même chose que l'option 2, en équilibrant
+   la présence de nos 9 catégories (et/ou le type de contrat) entre les trois jeux.
+   - ➕ Chaque jeu contient assez d'exemples de chaque catégorie : mesures plus stables.
+   - ➖ Plus complexe à expliquer et à implémenter (un contrat a plusieurs catégories à la fois).
+   - ➖ Pas comparable à l'article non plus.
+4. **Validation croisée par contrat** (k plis) sur la partie entraînement, avec un test fixe
+   (officiel ou le nôtre) mis de côté.
+   - ➕ Utilise mieux les 510 contrats pour le réglage ; mesure aussi la variabilité.
+   - ➖ k fois plus d'entraînements : coûteux pour un Transformer sur une machine personnelle
+     (règle 4 : pas de service payant).
+
+### Décision
+*À prendre ensemble.*
+
+### Raisons
+*À compléter après la décision.*
+
+### Conséquences (quelle que soit l'option)
+- Le découpage se fait **par contrat** et est **enregistré dans un fichier** (liste des titres
+  par jeu), versionné ; il ne contient aucun texte de contrat.
+- Le jeu de test n'est **ouvert qu'une fois**, pour l'évaluation finale (règle 2). Les explorations
+  déjà faites portent sur tout CUAD mais sont descriptives : elles n'ont réglé aucun modèle.
+- Les catégories rares seront présentées avec leur nombre d'exemples de test, pour rappeler
+  l'incertitude des mesures.
+- Nos futures annotations humaines (D-002, D-003) devront respecter le même découpage si elles
+  portent sur des contrats CUAD.

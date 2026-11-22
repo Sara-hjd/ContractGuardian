@@ -136,3 +136,33 @@ fichiers touchés, commit.
   enregistre dans l'historique local de la branche (pas sur GitHub).
 - **Pourquoi** : étape 5 demandée par Sara ; le notebook est vérifié sans sortie.
 - **Résultat et commit** : voir A10.
+
+### A10 — Résultat du premier commit
+
+- **Résultat** : commit **`dcf5760`** `exp(data): explorer CUAD dans un notebook et journaliser la séance`
+  sur `exp/exploration-cuad`. Il reste `docs/decisions.md` modifié (D-004), commité en A12.
+- **Fichiers touchés** : `notebooks/01_exploration_cuad.ipynb`, `docs/PROGRESS.md`,
+  `docs/JOURNAL_ACTIONS.md`.
+
+### A11 — Créer la fiche encadrant
+
+- **Action** : création de `docs/FICHE_ENCADRANT.md` (outil d'écriture de fichiers) : ce qui a été
+  fait, chiffres clés, 3 découvertes, décisions à valider (D-001, D-002, D-004), 5 questions avec
+  réponses.
+- **Pourquoi** : étape 6 demandée par Sara, pour préparer l'entretien.
+- **Fichiers touchés** : `docs/FICHE_ENCADRANT.md` (créé).
+
+### A12 — Second commit : D-004 et fiche encadrant
+
+- **Commandes** :
+  ```bash
+  git add docs/decisions.md docs/FICHE_ENCADRANT.md docs/JOURNAL_ACTIONS.md
+  git commit -m "docs(decisions): proposer D-004 et préparer la fiche encadrant"
+  ```
+- **Explication** : un commit séparé, parce que ce sont des documents de décision et de préparation,
+  pas l'exploration elle-même : l'historique reste lisible.
+- **Résultat** : voir `git log` (le numéro de ce commit ne peut pas figurer dans le commit lui-même).
+
+### A13 — Push : en attente de l'accord de Sara
+
+- Aucun `git push` n'a été fait. Commande proposée : `git push -u origin exp/exploration-cuad`.
