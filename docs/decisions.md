@@ -563,7 +563,7 @@ reste disponible et testée si un modèle Transformer en tirait profit.
 ## D-009 — Famille « confidentialité » : adapter ContractNLI et choisir les exemples négatifs
 
 - **Date** : 2026-11-23
-- **Statut** : **Proposée, à décider par Sara**
+- **Statut** : **Acceptée (Sara, 2026-11-23)**, à présenter à l'encadrant
 
 ### Contexte
 D-002 : ContractNLI est la source réelle de la famille confidentialité. Trois questions restent :
@@ -612,4 +612,4 @@ avec la baseline par mots-clés **figée avant toute évaluation** (commit `e44c
   confidentialité.
 
 ### Décision
-*À prendre par Sara.*
+**Acceptée telle que proposée** (Sara, 2026-11-23) : segmentation de ContractNLI **coupée à chaque saut de ligne** ; **16 hypothèses sur 17** (nda-18 exclue) ; **négatifs pris dans les NDA** (option A). L'**option D** (annotation manuelle d'un échantillon CUAD par Sara et Ilyas, D-003) est **prévue plus tard**, comme jeu d'évaluation complémentaire.
