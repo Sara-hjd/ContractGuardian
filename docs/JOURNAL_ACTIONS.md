@@ -1062,3 +1062,46 @@ adapter les évidences en segments étiquetés + test de traçabilité ; figer l
 - **Commandes** : `pytest` ; `git add` ; `git commit` ; `git push -u origin exp/contractnli` ;
   `gh pr create` ; `gh pr merge <n> --merge --delete-branch` ; `git pull`.
 - **Après cette fusion, Claude n'exécute plus de commande modifiante** : il les donne à Sara.
+- **Résultat de I12** : PR #7 créée et **fusionnée** (commit de fusion `1694b5b`), branche
+  supprimée ; `main` à jour ; **29 passed** sur `main`. La base `cg-postgres` est toujours démarrée.
+- **Fin du mode temporaire (2026-11-23).** Ce dernier paragraphe n'est pas commité par Claude :
+  c'est Sara qui le commitera (règle habituelle).
+
+---
+
+## 2026-11-23 — Décisions de Sara et mise en place du second mode (5 séances) — séance 0/5
+
+**Consignes de Sara** : D-009 acceptée telle que proposée (option D prévue plus tard) ; remplacer
+l'extrait de date du rapport PDF par une description (règle 5) ; commiter le journal soi-même
+(branche, commit, push, PR, fusion) ; **nouveau mode « Claude exécute tout » pour 5 séances**,
+mêmes règles et interdits, avec un résumé de 10 lignes maximum à chaque fin de séance et un
+diagnostic complet après la 5e ; proposer le plan des 5 séances et attendre sa validation.
+
+### J1 — Mises à jour
+
+- `git switch -c docs/d009-mode-5-seances`.
+- `CLAUDE.md` : section « Mode temporaire (5 séances) » (compteur 0/5 à 5/5, fin automatique,
+  mêmes interdits, décisions proposées avant d'être notées, résumé court, diagnostic après 5/5) ;
+  le premier mode est mentionné en historique.
+- `docs/decisions.md` : **D-009 acceptée** (Sara, 2026-11-23).
+- `docs/analyses/verification_pdf_pymupdf.md` : le fragment de date d'un contrat est remplacé par
+  une description. **Limite** : il reste dans l'historique Git (commit de la PR #5) ; l'en retirer
+  imposerait de réécrire l'historique de `main`, ce qui est interdit ; fragment de quelques
+  caractères, sans information sur le contrat.
+- `docs/FICHE_ENCADRANT.md`, `docs/DIAGNOSTIC_2026-11-16_au_2026-11-23.md`, `docs/PROGRESS.md` :
+  statut de D-009.
+- Script Python de remplacement vérifiant chaque repère ; `grep -rn "19t h" docs src tests` : aucune
+  occurrence restante.
+
+### J2 — Commit, push, PR, fusion
+
+- **Commandes** :
+  ```bash
+  .venv/bin/python -m pytest -q
+  git add CLAUDE.md docs
+  git commit -m "docs(claude): D-009 acceptée, règle 5 dans le rapport PDF, mode temporaire de 5 séances"
+  git push -u origin docs/d009-mode-5-seances
+  gh pr create --base main --head docs/d009-mode-5-seances …
+  gh pr merge <n> --merge --delete-branch
+  git pull
+  ```

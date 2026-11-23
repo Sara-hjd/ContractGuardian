@@ -121,7 +121,7 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 - *Relu par Sara : à faire*
 
 ### Décisions
-- D-010, D-011 acceptées. D-009 proposée.
+- D-010, D-011 acceptées. D-009 proposée, puis **acceptée par Sara le 2026-11-23** (option D prévue plus tard).
 
 ### Prochaine étape
 - Sara : décider D-009 ; lire le diagnostic ; refaire les exercices de sa section 9.

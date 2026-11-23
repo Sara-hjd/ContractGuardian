@@ -46,9 +46,9 @@ raison du passage de 71 % à 98 %.
 
 ### L'échec observé dans l'échantillon
 
-Un défaut **du texte CUAD lui-même** : une date dont la conversion de CUAD a coupé un mot en deux
-(« 19t h » au lieu de « 19th »). Le PDF est correct ; le texte CUAD ne l'est pas. Aucune
-normalisation exacte ne peut le retrouver.
+Un défaut **du texte CUAD lui-même** : dans une date, la conversion de CUAD a inséré un espace
+au milieu d'un nombre ordinal (le suffixe est séparé du nombre). Le PDF est correct ; le texte
+CUAD ne l'est pas. Aucune normalisation exacte ne peut le retrouver.
 
 ## Segments PDF : constat de l'échantillon, puis correction sur train + validation
 

@@ -61,25 +61,29 @@ Sara est **en apprentissage**. Concrètement :
   - pourquoi,
   - comment le tester (commande exacte et résultat attendu).
 
-## Mode temporaire « Claude exécute tout » (3 séances) — ✅ TERMINÉ le 2026-11-23
+## ⚠️ Mode temporaire « Claude exécute tout » (5 séances)
 
-> **Ce mode est terminé.** La règle habituelle de la section « Qui exécute les commandes »
-> s'applique de nouveau : **Sara exécute toutes les commandes**. Cette section est gardée pour
-> l'historique (et pour le diagnostic : `docs/DIAGNOSTIC_2026-11-16_au_2026-11-23.md`).
+> **À lire en premier à chaque début de séance.** Tant que ce mode est actif, il **remplace**
+> la section « Qui exécute les commandes » ci-dessous. Il ne change **aucune règle absolue**.
 
-- **Décidé par** : Sara, le 2026-11-22.
-- **Début** : 2026-11-22 (la suite de la séance du 22/11, après la fusion des PR #2 et #3,
-  compte comme séance 1).
+- **Décidé par** : Sara, le 2026-11-23 (mêmes règles et interdits que le premier mode).
+- **Historique** : un premier mode de 3 séances a eu lieu du 2026-11-22 au 2026-11-23 ; bilan dans
+  `docs/DIAGNOSTIC_2026-11-16_au_2026-11-23.md`.
+- **Début** : 2026-11-23, à la **première séance qui suit la validation du plan** par Sara
+  (la mise en place du mode, le 23/11, ne compte pas comme une séance).
 - **Compteur** (Claude le met à jour à la fin de chaque séance) :
 
   | Séance | Date | État |
   |---|---|---|
-  | 1/3 | 2026-11-22 → 2026-11-23 | **terminée** (fusions PR #2 à #5, extraction PDF, D-007) |
-  | 2/3 | 2026-11-23 | **terminée** (PostgreSQL + pgvector, segments PDF, réentraînement ; D-008 acceptée, D-010 et D-011 proposées) |
-  | 3/3 | 2026-11-23 | **terminée** (ContractNLI, D-009 proposée, diagnostic total) — **fin du mode** |
+  | 0/5 | 2026-11-23 | mise en place du mode, plan proposé |
+  | 1/5 | — | — |
+  | 2/5 | — | — |
+  | 3/5 | — | — |
+  | 4/5 | — | — |
+  | 5/5 | — | — |
 
-- **Fin** : **automatiquement à la fin de la séance 3/3**. Claude supprime alors cette section
-  (ou la marque « terminée ») et la règle habituelle « Sara exécute les commandes » reprend.
+- **Fin** : **automatiquement à la fin de la séance 5/5**. Claude marque alors cette section
+  « terminée » et la règle habituelle « Sara exécute les commandes » reprend.
 - **Une séance** = une session de travail ouverte par Sara (en général « Début de séance »)
   et close par le résumé de fin de séance et la mise à jour de `docs/PROGRESS.md`.
 
@@ -95,16 +99,22 @@ fois** : installations, téléchargements documentés, scripts, tests, `git add`
 - commiter des données, des modèles entraînés ou des secrets (règle absolue 5 et ses exceptions) ;
 - toute action **irréversible non prévue dans le plan de la séance**.
 
+**Décisions de fond** : Claude les **propose** (options, mesures, recommandation) ; elles ne sont
+notées « Acceptée » qu'après la décision de Sara.
+
 **Obligations pendant ce mode** :
 - **Début de séance** : relire ce fichier et `docs/PROGRESS.md`, annoncer le numéro de séance
-  (n/3) et le plan.
+  (n/5) et le plan.
 - **Chaque action** est notée dans `docs/JOURNAL_ACTIONS.md` : heure, commande exacte,
   explication simple, pourquoi, résultat, fichiers touchés, commit.
-- **Fin de séance** : résumé ; mise à jour de `docs/PROGRESS.md` (avec « Ce que j'ai compris »),
-  du `README.md` et de `docs/FICHE_ENCADRANT.md` ; mise à jour du compteur ci-dessus.
-- **Après la séance 3/3** : Sara demandera un **diagnostic total** de tout ce qui a été fait
-  depuis la dernière séance où elle a elle-même exécuté les commandes (16/11), expliqué de façon
-  pédagogique. Le journal doit donc rester assez détaillé pour le rédiger.
+- **Fin de séance** :
+  - un **résumé court et simple (10 lignes maximum)** : ce qui a été fait, les chiffres clés, et
+    ce que Sara doit savoir expliquer ;
+  - mise à jour de `docs/PROGRESS.md` (avec « Ce que j'ai compris »), du `README.md` et de
+    `docs/FICHE_ENCADRANT.md` ; mise à jour du compteur ci-dessus.
+- **Après la séance 5/5** : un **nouveau diagnostic complet**, sur le modèle de
+  `docs/DIAGNOSTIC_2026-11-16_au_2026-11-23.md`, couvrant tout ce qui a été fait depuis le 23/11.
+  Le journal doit donc rester assez détaillé pour le rédiger.
 
 ## Qui exécute les commandes
 
