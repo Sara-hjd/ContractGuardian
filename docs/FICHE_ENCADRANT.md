@@ -81,8 +81,8 @@
 | **D-006** | Protocole des baselines ; planning | Baseline avant l'étape 2 (ingestion PDF, base de données) |
 | **D-007** | Alignement des annotations sur le texte PDF | Exact après normalisation étendue (Sara, 2026-11-23) |
 | **D-008** | Segmentation des PDF | Blocs PyMuPDF (Sara, 2026-11-23) ; fusion testée en expérience |
-| **D-010** | Base de données | *Proposée* : PostgreSQL 17 + pgvector, Docker, `.env`, SQL sans ORM |
-| **D-011** | Données d'entraînement F2 | *Proposée* : segments PDF blocs, sans fusion |
+| **D-010** | Base de données | PostgreSQL 17 + pgvector, Docker, `.env`, SQL sans ORM (Sara, 2026-11-23) |
+| **D-011** | Données d'entraînement F2 | Segments PDF blocs, sans fusion (Sara, 2026-11-23) |
 
 Point à discuter pour D-002 : dans un NDA, presque tout le texte parle de confidentialité ;
 d'où viendront les exemples **négatifs** ?

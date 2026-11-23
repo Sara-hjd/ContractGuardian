@@ -133,7 +133,7 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 - *Relu par Sara : à faire*
 
 ### Décisions
-- D-008 acceptée (Sara). D-010 et D-011 proposées.
+- D-008 acceptée (Sara). D-010 et D-011 proposées, puis **acceptées par Sara le 2026-11-23**.
 
 ### Prochaine étape
 - Sara : décider D-010 et D-011 ; puis fusion de la PR de cette séance.

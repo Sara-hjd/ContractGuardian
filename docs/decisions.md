@@ -481,7 +481,7 @@ réentraînement de la baseline sur les segments PDF : son seuil sera réglé, e
 ## D-010 — Base de données de l'application : PostgreSQL + pgvector dans Docker
 
 - **Date** : 2026-11-23
-- **Statut** : **Proposée, à décider par Sara** (implémentation provisoire en place, modifiable)
+- **Statut** : **Acceptée telle quelle (Sara, 2026-11-23)**, à présenter à l'encadrant
 
 ### Contexte
 La stack prévoit PostgreSQL + pgvector, lancés avec Docker, pour la base de l'application :
@@ -519,14 +519,14 @@ C'est le « monde de l'application », distinct des données d'entraînement (`d
 - **Mot de passe dans `docker-compose.yml`** : il serait commité dans un dépôt public.
 
 ### Décision
-*À prendre par Sara.*
+**Les 8 choix ci-dessus sont acceptés tels quels** (Sara, 2026-11-23). L'implémentation provisoire devient l'implémentation de référence.
 
 ---
 
 ## D-011 — Données d'entraînement de F2 : segments du texte CUAD ou segments PDF ?
 
 - **Date** : 2026-11-23
-- **Statut** : **Proposée, à décider par Sara**
+- **Statut** : **Acceptée (Sara, 2026-11-23)**, à présenter à l'encadrant
 
 ### Contexte
 L'application segmentera des PDF par blocs (D-008). La baseline a été entraînée sur des segments
@@ -556,4 +556,4 @@ simple. La fusion (option 3) n'est pas retenue pour l'instant ; la fonction `fus
 reste disponible et testée si un modèle Transformer en tirait profit.
 
 ### Décision
-*À prendre par Sara.*
+**Option 2** (Sara, 2026-11-23) : F2 est entraînée sur les **segments PDF par blocs, sans fusion** (`cuad_pdf_segments_fusion0.jsonl`), avec les annotations alignées selon D-007. La fusion des fragments n'est pas retenue pour la baseline.

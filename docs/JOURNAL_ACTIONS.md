@@ -952,3 +952,10 @@ l'expérience « fusion des fragments » ; (5) clôture.
   `git commit -m "feat(stockage): PostgreSQL + pgvector, segments PDF et réentraînement (D-008 ; D-010, D-011 proposées)"` ;
   `git push -u origin infra/postgres-pgvector` ; `gh pr create …`.
 - La base reste démarrée (`docker compose ps`) ; pour l'arrêter : `docker compose down`.
+
+### H15 — Décisions de Sara : D-010 et D-011 acceptées ; fusion de la PR #6
+
+- **Décisions** : D-010 acceptée telle quelle ; D-011 option 2 (segments PDF blocs, sans fusion).
+- **Fichiers** : `docs/decisions.md`, `docs/FICHE_ENCADRANT.md`, `docs/PROGRESS.md` (script Python
+  de remplacement vérifiant chaque repère).
+- **Commandes** : `git commit` ; `git push` ; `gh pr merge 6 --merge --delete-branch` ; `git pull`.
