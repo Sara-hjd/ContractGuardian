@@ -11,6 +11,7 @@ plusieurs familles, ou d'aucune (environ 97 % des segments).
 | `mots_cles.py` | Baseline 1 : `MOTS_CLES` (motifs écrits à la main et justifiés), `predire_mots_cles`. |
 | `tfidf.py` | Baseline 2 : vectoriseur TF-IDF, régression logistique pondérée (`class_weight="balanced"`), mots les plus lourds. |
 | `metriques.py` | Précision, rappel, F1 par famille, macro-F1 ; choix du seuil (sur la validation seulement). |
+| `mots_cles_confidentialite.py` | Baseline par mots-clés de la confidentialité (D-002), figée avant évaluation (commit `e44cdf8`). |
 
 L'entraînement se lance avec `training/baselines_extraction.py` (voir ce fichier).
 

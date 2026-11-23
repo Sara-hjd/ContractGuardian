@@ -1009,3 +1009,56 @@ adapter les évidences en segments étiquetés + test de traçabilité ; figer l
   hypothèses ; aucun pour nda-18).
 - **Preuve de l'ordre** : commité immédiatement (commit suivant), avant tout calcul de métriques et
   sans avoir lu aucun document ni aucune évidence.
+
+### I6 — 01:21 — Module de lecture de ContractNLI ; description de train et dev
+
+- **Fichier créé** : `src/cg/datasets/contractnli.py` (lecture dans le zip ; test refusé sans
+  `ouvrir_test=True` ; évidences → annotations, sans nda-18).
+- **Commande** : script Python court (statistiques de train et dev ; essai de lecture du test).
+- **Résultat** : train 423 accords, dev 61 ; positions valides ; 18,7 % des spans (train) servent
+  d'évidence ; lecture du test **refusée** (PermissionError), comme prévu.
+
+### I7 — 01:22 — Préparation des segments : bug détecté et corrigé
+
+- **Fichier créé** : `src/cg/datasets/preparer_segments_contractnli.py`.
+- **Constat** : 0 % de positifs : `projeter_annotations` ne garde que les catégories CUAD.
+- **Correction** : nouvelle fonction `categories_par_segment` dans `src/cg/datasets/cuad.py` (même
+  règle de chevauchement, sans filtre), utilisée par ContractNLI. 25 tests passent toujours.
+- **Second constat** : le texte de ContractNLI n'a aucune ligne vide (42,7 sauts de ligne par
+  accord) → segments v1 de 1 285 caractères en médiane, 55 % de positifs.
+
+### I8 — Segmentation coupée aux lignes ; comparaison
+
+- **Fichier modifié** : `src/cg/ingestion/segmentation.py` (paramètre `coupe_aux_lignes`, défaut
+  inchangé). Script Python de remplacement vérifiant chaque repère.
+- **Mesure (train ContractNLI)** : v1 médiane 1 285, 31,6 % au plafond ; coupée aux lignes médiane
+  132, 2,0 % au plafond, 21,1 % positifs ; spans ContractNLI médiane 101.
+
+### I9 — 01:23 — Mesures pour D-009 (dev ContractNLI + val CUAD, tests fermés)
+
+- **Fichier créé** : `training/baseline_confidentialite.py` (3 options, un run MLflow chacune,
+  expérience `F2-confidentialite`).
+- **Résultats** : A (NDA seulement) P 0,433 / R 0,877 / F1 0,580 ; B 0,313 / 0,877 / 0,462 ;
+  C 0,222 / 0,877 / 0,355. Segments CUAD val avec un mot-clé : 8,8 %, **51 contrats sur 61**.
+- `preparer_segments_contractnli` relancé avec la coupe aux lignes : train 18 355 segments
+  (21,1 % positifs), dev 2 872 (18,3 %), 0 non traçable.
+- **Tests** : `tests/test_contractnli.py` (3), `test_segmenter_coupe_aux_lignes` → **29 passed**.
+
+### I10 — Documentation
+
+- `docs/data_provenance.md` : section ContractNLI (source, empreintes, licence, conditions, format,
+  5 limites). `docs/decisions.md` : **D-009 « Proposée »**. README de `datasets/` et `extraction/`.
+
+### I11 — Diagnostic total
+
+- **Fichier créé** : `docs/DIAGNOSTIC_2026-11-16_au_2026-11-23.md` (chronologie, étapes, notions,
+  décisions, résultats, limites et erreurs, présentation, commandes pour tout refaire).
+- **Sources** : `git log` (20 commits depuis `26f4188`), `gh pr list` (PR #1 à #6), ce journal.
+
+### I12 — Clôture de la séance 3/3 et **fin du mode temporaire**
+
+- `docs/PROGRESS.md`, `README.md`, `docs/FICHE_ENCADRANT.md`, `CLAUDE.md` (compteur 3/3 ; mode
+  marqué **terminé** : la règle « Sara exécute les commandes » reprend).
+- **Commandes** : `pytest` ; `git add` ; `git commit` ; `git push -u origin exp/contractnli` ;
+  `gh pr create` ; `gh pr merge <n> --merge --delete-branch` ; `git pull`.
+- **Après cette fusion, Claude n'exécute plus de commande modifiante** : il les donne à Sara.
