@@ -76,6 +76,9 @@ def test_enregistrer_relire_et_tracer(connexion, tmp_path: Path) -> None:
         assert compter_segments_non_tracables(connexion, contrat_id) == 0
     finally:
         supprimer_contrat(connexion, contrat_id)
-    with connexion.cursor() as curseur:
+    # Vérification par une AUTRE connexion : la suppression doit être réellement validée.
+    from cg.stockage.connexion import connecter
+
+    with connecter() as autre, autre.cursor() as curseur:
         curseur.execute("SELECT count(*) FROM segments WHERE contrat_id = %s", (contrat_id,))
         assert curseur.fetchone()[0] == 0  # la suppression en cascade a tout effacé

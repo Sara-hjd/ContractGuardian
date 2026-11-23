@@ -692,6 +692,16 @@ CUAD, **normal** (rapport) pour la confidentialité ; **TF-IDF gardé comme réf
   TF-IDF gagne en résiliation et en moyenne ; le Transformer gagne en durée (≈ 8 clauses) et, de
   peu, en responsabilité (≈ 1 clause). **Choix final pour les 3 familles CUAD : en attente de
   Sara** (option 1 : TF-IDF partout ; option 2 : meilleur modèle par famille, rappel macro 0,809).
+- **Choix final (Sara, 2026-11-23) : option 2, meilleur modèle par famille**, décidé **sur la
+  validation, avant toute ouverture du test** :
+  - **durée** : Transformer (poids atténué), seuil 0,27 ;
+  - **résiliation** : TF-IDF (bigrammes, C = 10), seuil 0,54 ;
+  - **responsabilité** : Transformer (poids atténué), seuil 0,34 ;
+  - **confidentialité** : Transformer (D-013) ; seuil sous le même critère à fixer sur le dev avant le test.
+- **Mises en garde (Sara)** : l'écart avec « TF-IDF partout » est **petit** (rappel par annotation
+  macro 0,809 contre 0,794) ; choisir le meilleur modèle **famille par famille sur la validation**
+  rend ce chiffre **optimiste** (on a pris le maximum de deux mesures bruitées) ; **seul le test,
+  ouvert une seule fois** avec le modèle et les seuils ci-dessus figés, donnera le résultat de référence.
 
 ---
 
@@ -727,7 +737,7 @@ comme expérience, si charger deux modèles pose problème dans l'application.
 ## D-014 — Méthode de F4 (NLI sur ContractNLI)
 
 - **Date** : 2026-11-23
-- **Statut** : **Proposée, à décider par Sara** (implémentation provisoire en place)
+- **Statut** : **Acceptée (Sara, 2026-11-23)**, à présenter à l'encadrant
 
 ### Contexte
 F4 : pour un contrat et une hypothèse, dire *Entailment*, *Contradiction* ou *NotMentioned* en
@@ -748,6 +758,90 @@ son exclusion, D-009, ne concernait que la famille confidentialité de F2). Mesu
 **Option 2**, avec : unité = phrase de ContractNLI ; Legal-BERT small (D-012) ; échantillonnage
 d'entraînement fixé avant l'entraînement (évidences + 2 neutres, dont une difficile) ; seuils
 réglés sur le dev (document 0,85 ; évidence 0,95) ; baseline majoritaire gardée comme référence.
+
+### Décision
+**Option 2** (Sara, 2026-11-23) : paires (hypothèse, phrase) + agrégation au niveau du document ; seuils réglés sur le dev (0,85 ; 0,95) ; baseline majoritaire en référence.
+
+---
+
+## D-015 — Modèle d'embeddings et recherche hybride (F5)
+
+- **Date** : 2026-11-23
+- **Statut** : **Acceptée (Sara, 2026-11-23)**, à présenter à l'encadrant
+
+### Contexte
+F5 doit retrouver, dans un contrat, les segments qui répondent à une question : par les **mots**
+et par le **sens** (recherche hybride), avec la base PostgreSQL + pgvector (D-010).
+
+### Options envisagées (modèle d'embeddings)
+bge-small-en-v1.5 (133 Mo, MIT, 384 dim.) ; all-MiniLM-L6-v2 (90 Mo, Apache 2.0, un peu moins bon en
+recherche de passages) ; e5-small-v2 (133 Mo, MIT, comparable) ; nomic-embed-text-v1.5 (546 Mo,
+Apache 2.0, meilleur sur les textes longs mais 4 fois plus gros).
+
+### Décision
+- **Embeddings : `BAAI/bge-small-en-v1.5`** (vecteurs de 384 nombres, normalisés ; préfixe
+  d'instruction pour les questions).
+- **Recherche hybride dans PostgreSQL** (`db/init/002_recherche.sql`) : par les mots = texte intégral
+  PostgreSQL (`tsvector`, racinisation anglaise, requête en « OU ») ; par le sens = distance cosinus
+  pgvector (index HNSW) ; **fusion RRF** (1 / (60 + rang)). La recherche se fait **dans un contrat**.
+
+### Raisons
+Petit, libre, parmi les meilleurs de sa taille pour retrouver des passages ; tout reste dans la base
+de l'application (pas de moteur de recherche en plus).
+
+---
+
+## D-016 — LLM local pour la réponse générative de F5
+
+- **Date** : 2026-11-23
+- **Statut** : **Acceptée (Sara, 2026-11-23)**, à présenter à l'encadrant
+
+### Contexte
+Le cahier des charges demande un RAG avec un **modèle de langage local ou ouvert**, orchestré avec
+**LangGraph** (chercher → vérifier la preuve → répondre ou s'abstenir), sans service payant (règle 4).
+Le réseau est lent (≈ 166 Ko/s mesurés le 2026-11-23) : télécharger 5 Go prendrait des heures.
+
+### Options envisagées
+`qwen3:8b` (5,2 Go, Apache 2.0, texte) ; `qwen3:4b` (2,5 Go, plus rapide, moins fiable) ;
+`qwen3-vl:8b` (6,2 Go, Apache 2.0, texte + images, **déjà présent** sur le Mac).
+
+### Décision
+- **`qwen3-vl:8b`, via Ollama** (déjà présent : aucun téléchargement), pour avancer.
+- **Le nom du modèle est un simple paramètre de configuration** (`CG_LLM_MODELE`, voir
+  `src/cg/config.py`) : on pourra passer à `qwen3:8b` et **comparer les deux sur la même évaluation**.
+- **`qwen3:8b` reste l'option cible** si le réseau permet de le télécharger.
+- **Lien avec l'extension OCR** prévue au cahier des charges : Qwen-VL sait lire des **images**
+  (pages scannées) ; ce même modèle pourra servir à l'extension OCR des PDF scannés (46 pages sans
+  texte repérées dans le train, D-007), sans nouveau téléchargement.
+
+### Conditions d'usage
+Mode « réflexion » désactivé, température 0 (réponses reproductibles) ; le LLM ne voit que les
+passages retrouvés ; chaque citation est vérifiée **mot pour mot** dans le segment cité, sinon
+**abstention** (D-017 à venir pour le détail du graphe).
+
+---
+
+## D-017 — Réglages de F5 : critère d'abstention et graphe RAG
+
+- **Date** : 2026-11-23
+- **Statut** : **Proposée, à décider par Sara**
+
+### Contexte
+F5 doit répondre en citant exactement, ou s'abstenir. Mesures : `docs/analyses/qr_f5_val.md`
+(validation ; réglage sur 60 contrats du train ; test fermé).
+
+### Propositions de Claude
+1. **Critère de réglage du seuil d'abstention : l'exactitude équilibrée** (moyenne des bonnes
+   réponses et des bonnes abstentions), et non l'exactitude simple, qui récompense l'abstention
+   systématique quand 2/3 des questions n'ont pas de réponse. *Transparence : ce critère a été
+   choisi après avoir vu l'échec du premier ; le défaut était néanmoins visible avant tout calcul.*
+2. **Recherche** : hybride (RRF) ; extractif = premier résultat si similarité ≥ 0,71 (réglé sur le train).
+3. **Graphe RAG** (LangGraph) : 5 passages de la recherche hybride ; LLM `CG_LLM_MODELE` (D-016),
+   température 0, sans « réflexion », réponse JSON ; **toutes** les citations doivent exister mot
+   pour mot (espaces normalisés seulement) dans le passage cité et faire au moins 15 caractères,
+   sinon **abstention** ; chaque citation vérifiée reçoit ses positions dans le contrat.
+4. **Comparaison extractif / LLM** sur les mêmes 200 questions de validation (graine 0), avec
+   l'exactitude équilibrée comme mesure principale et le taux de réponses fausses en complément.
 
 ### Décision
 *À prendre par Sara.*

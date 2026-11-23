@@ -94,6 +94,15 @@
 - La **contradiction** reste la plus difficile (F1 0,575) : souvent une exception « sauf si… ».
 - *NotMentioned* sert d'abstention : sans phrase assez probante, le système n'affirme rien.
 
+## Questions-réponses (F5, validation)
+
+- **Recherche hybride** (mots + sens, PostgreSQL + pgvector) : la bonne réponse est dans les 10 premiers
+  segments pour **68 %** des questions (mots seuls 64 %, sens seul 64 %).
+- **Réponse extractive avec abstention** : exactitude équilibrée 0,521, à peine mieux que « toujours
+  s'abstenir » (0,5) : la similarité ne suffit pas pour savoir s'il faut répondre.
+- **RAG avec LLM local** (qwen3-vl:8b, LangGraph) : chaque citation est vérifiée mot pour mot, sinon
+  abstention ; évaluation complète à faire (le Mac s'est mis en veille pendant le calcul).
+
 ## Décisions prises par Sara le 2026-11-22, à présenter pour validation
 
 | | Sujet | Décision |
@@ -107,9 +116,12 @@
 | **D-008** | Segmentation des PDF | Blocs PyMuPDF (Sara, 2026-11-23) ; fusion testée en expérience |
 | **D-010** | Base de données | PostgreSQL 17 + pgvector, Docker, `.env`, SQL sans ORM (Sara, 2026-11-23) |
 | **D-011** | Données d'entraînement F2 | Segments PDF blocs, sans fusion (Sara, 2026-11-23) |
-| **D-012** | Modèle Transformer F2 ; critère | Legal-BERT small, poids atténué (CUAD), TF-IDF en référence (Sara) ; critère : rappel par annotation sous précision ≥ 0,50 *(valeur proposée)*, appliqué sur la validation |
+| **D-012** | Modèle Transformer F2 ; critère | Legal-BERT small, poids atténué (CUAD), TF-IDF en référence (Sara) ; critère : rappel par annotation sous précision ≥ 0,50 (Sara), appliqué sur la validation ; choix : Transformer (durée, responsabilité), TF-IDF (résiliation) |
 | **D-013** | CUAD + ContractNLI | Deux modèles (Sara) |
-| **D-014** | Méthode NLI (F4) | *Proposée* : paires hypothèse-phrase + agrégation, seuils réglés sur le dev |
+| **D-014** | Méthode NLI (F4) | Paires hypothèse-phrase + agrégation, seuils réglés sur le dev (Sara) |
+| **D-015** | Embeddings et recherche hybride (F5) | bge-small-en-v1.5 ; texte intégral PostgreSQL + pgvector, fusion RRF (Sara) |
+| **D-016** | LLM local (F5) | qwen3-vl:8b via Ollama (déjà présent), paramétrable ; qwen3:8b cible ; lien avec l'OCR (Sara) |
+| **D-017** | Réglages de F5 | *Proposée* : exactitude équilibrée pour l'abstention ; citations vérifiées mot pour mot |
 | **D-009** | Confidentialité : segmentation, négatifs | Coupe aux lignes, sans nda-18, négatifs dans les NDA (Sara, 2026-11-23) ; annotation CUAD plus tard |
 
 Point à discuter pour D-002 : dans un NDA, presque tout le texte parle de confidentialité ;

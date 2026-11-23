@@ -48,7 +48,10 @@ def connecter(configuration: dict[str, str] | None = None) -> psycopg.Connection
         configuration: Configuration à utiliser ; par défaut, ``lire_configuration()``.
 
     Returns:
-        Une connexion psycopg (à fermer, idéalement avec ``with``).
+        Une connexion psycopg en mode **autocommit** (à fermer, idéalement avec ``with``) : chaque
+        bloc ``with connexion.transaction():`` est une vraie transaction, validée à sa sortie, et une
+        simple lecture ne laisse pas de transaction ouverte (sinon, une suppression faite après une
+        lecture pouvait être annulée à la fermeture : bug corrigé le 2026-11-23).
 
     Raises:
         KeyError: Si une clé indispensable manque (copier ``.env.example`` en ``.env``).
@@ -62,4 +65,5 @@ def connecter(configuration: dict[str, str] | None = None) -> psycopg.Connection
         password=c["POSTGRES_PASSWORD"],
         dbname=c["POSTGRES_DB"],
         connect_timeout=5,
+        autocommit=True,
     )

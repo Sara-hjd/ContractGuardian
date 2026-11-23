@@ -73,6 +73,56 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 
 ## Séances
 
+## 2026-11-23 — Séance 3/5 (second mode) : F5, recherche hybride et réponse avec abstention
+
+- **Qui** : Sara-hjd (avec Claude Code, second mode temporaire, séance **3/5**)
+- **Branche** : `feat/rag-f5`
+
+### Fait
+- D-012 (option 2 : meilleur modèle par famille, avec mises en garde) et D-014 acceptées.
+- **D-015** (bge-small-en-v1.5 ; recherche hybride dans PostgreSQL) et **D-016** (`qwen3-vl:8b` via
+  Ollama, paramétrable par `CG_LLM_MODELE` ; `qwen3:8b` cible ; lien OCR) acceptées ; licence Apache
+  2.0 vérifiée et notée (`data_provenance.md`, section « Modèles »).
+- Base : `db/init/002_recherche.sql` (texte intégral + vecteurs) ; 96 244 vecteurs calculés.
+- `src/cg/recherche/` : embeddings, recherche hybride (RRF), extractif, client Ollama, **graphe
+  LangGraph** (chercher → générer → vérifier mot pour mot → répondre ou s'abstenir), questions CUAD.
+- **Bug corrigé** : les tests de la base laissaient des contrats (connexion désormais en autocommit) ;
+  13 contrats de test supprimés.
+- Tests : **40 passent**. D-017 proposée.
+
+### Résultats (validation ; réglage sur 60 contrats du train ; test fermé)
+- Recherche hybride : rappel@10 **0,682** (mots 0,638, sens 0,642).
+- Extractif avec abstention : exactitude équilibrée **0,521** (toujours s'abstenir : 0,500).
+- RAG + LLM : en place et essayé ; **évaluation complète reportée à la séance 5/5** (Mac en veille).
+
+### Avancement
+
+| Fonctionnalité | Statut | Commentaire |
+|---|---|---|
+| F5 | En cours | Recherche et extractif mesurés ; RAG + LLM à évaluer (Mac ouvert, sur secteur). |
+| F3 | À faire | Séance 4/5 : paires candidates, grille, kappa (annotation par Sara et Ilyas). |
+| F6 | À faire | Séance 5/5. |
+
+### Ce que j'ai compris
+<!-- Rédigé par Claude en fin de séance, relu et corrigé par Sara. -->
+- **Un embedding** transforme un texte en une liste de nombres ; deux textes de sens proche ont des
+  listes proches. **pgvector** range ces listes dans PostgreSQL et retrouve vite les plus proches.
+- **Recherche hybride** : les mots exacts (« termination ») et le sens (« end the contract ») se
+  complètent ; la **fusion RRF** additionne les rangs des deux classements.
+- **Un RAG** : on **cherche** les passages, on les donne au LLM, il **répond à partir d'eux seulement**,
+  et on **vérifie** chaque citation mot pour mot ; sinon, on s'abstient. **LangGraph** décrit ces
+  étapes comme un graphe.
+- **Choisir le bon critère** : quand 2 questions sur 3 n'ont pas de réponse, « toujours s'abstenir »
+  a 67 % d'exactitude ; on mesure donc l'**exactitude équilibrée**.
+- **Un calcul long a besoin d'un Mac éveillé** : la veille suspend les programmes ; on rend les
+  évaluations **reprenables** pour ne rien perdre.
+- *Relu par Sara : à faire*
+
+### Décisions
+- D-012 (option 2), D-014, D-015, D-016 acceptées ; D-017 proposée.
+
+---
+
 ## 2026-11-23 — Séance 2/5 (second mode) : critère de F2, puis NLI (F4)
 
 - **Qui** : Sara-hjd (avec Claude Code, second mode temporaire, séance **2/5**)

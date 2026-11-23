@@ -1285,3 +1285,145 @@ tests ; MLflow ; PR ; clôture (résumé de 10 lignes, rappel Ilyas).
   `CLAUDE.md` (compteur 2/5).
 - **Commandes** : `pytest` ; `git add` ; `git commit` ; `git push -u origin exp/nli-f4` ;
   `gh pr create` ; `gh pr merge <n> --merge --delete-branch` ; `git pull`.
+- **Résultat de L9** : PR #10 fusionnée (`2bc80d4`) ; 36 tests passent ; compteur 2/5.
+
+---
+
+## Séance 3/5 du second mode — 2026-11-23 — F5 : recherche hybride, réponse extractive, LLM local
+
+### M1 — 04:28 — Décisions de Sara ; branche
+
+- **D-012** : option 2 (Transformer pour durée et responsabilité, TF-IDF pour résiliation), avec les
+  mises en garde demandées (écart petit 0,809 / 0,794 ; choix par famille sur la validation donc
+  optimiste ; seul le test, ouvert une fois, donnera la référence). **D-014** acceptée.
+- `git switch -c feat/rag-f5` ; `docs/decisions.md` et `docs/FICHE_ENCADRANT.md` mis à jour.
+
+### M2 — Candidats D-015 et D-016 (lecture)
+
+- **Embeddings** (`curl …/api/models/<m>?blobs=true`) : bge-small-en-v1.5 133 Mo MIT ; all-MiniLM-L6-v2
+  90 Mo Apache 2.0 ; e5-small-v2 133 Mo MIT ; nomic-embed-text-v1.5 546 Mo Apache 2.0.
+- **Ollama** : déjà installé (0.40.16, serveur actif) ; modèle présent : `qwen3-vl:8b` (6,2 Go) ;
+  bibliothèque Ollama : qwen3 4b (2,5 Go), 8b (5,2 Go)… Aucun téléchargement de LLM avant la décision de Sara.
+
+### M3 — 04:33 — Migration de la base pour la recherche
+
+- **Fichier créé** : `db/init/002_recherche.sql` (colonne générée `tsv` + index GIN ; colonne
+  `embedding vector(384)` + index HNSW cosinus ; idempotent).
+- **Commande** : `docker exec -i cg-postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < db/init/002_recherche.sql`
+- **Explication** : `-i` transmet le fichier SQL au conteneur ; `ON_ERROR_STOP=1` arrête à la
+  première erreur. **Résultat** : colonnes et index créés.
+
+### M4 — Code de F5
+
+- **Fichiers créés** : `src/cg/recherche/` (`embeddings.py` : encodeur bge, vecteurs normalisés,
+  préfixe des questions ; `hybride.py` : recherche par mots (texte intégral PostgreSQL, requête en
+  « OU »), par sens (pgvector), fusion RRF, provenance ; `extractive.py` : citer ou s'abstenir ;
+  `indexer.py` : calcul des vecteurs en base) ; `evaluation/evaluer_qr_f5.py` ; `tests/test_recherche.py`
+  (3 tests, avec de faux vecteurs).
+
+### M5 — Bug trouvé et corrigé : les tests de la base laissaient des contrats
+
+- **Constat** : 96 270 segments au lieu de 96 244 ; 13 contrats `test-…` laissés par les lancements
+  de pytest depuis 01:04. **Cause** : après une lecture, la connexion restait dans une transaction
+  implicite ; la suppression s'y faisait, puis était **annulée** à la fermeture ; le test la
+  vérifiait dans la même transaction et passait à tort (bug de Claude, séance 2/3).
+- **Correction** : `src/cg/stockage/connexion.py` → connexions en **autocommit** ; le test vérifie la
+  suppression par une **autre** connexion. `pytest tests/test_stockage.py tests/test_recherche.py` →
+  6 passed, aucun contrat de test restant.
+- **Nettoyage** (données créées par les tests uniquement, filtre strict) :
+  `DELETE FROM contrats WHERE source = 'import' AND mode_extraction = 'test' AND titre LIKE 'test-%';`
+  → 13 supprimés ; la base revient à **408 contrats, 96 244 segments**.
+
+### M6 — Calcul des vecteurs : téléchargement bloqué, relancé
+
+- **Commande initiale** : `PYTHONPATH=src .venv/bin/python -u -m cg.recherche.indexer` (04:34).
+- **Constat** : fichier des poids à 0 octet pendant plus de 2 minutes (client de téléchargement
+  « Xet » de Hugging Face, `hf-xet` 1.8.0) ; le fichier était pourtant accessible (`curl -sI`).
+- **Correction** : arrêt (`pkill -f cg.recherche.indexer`), suppression du fichier partiel vide
+  (`*.incomplete` dans le cache Hugging Face, hors du dépôt), relance avec `HF_HUB_DISABLE_XET=1`
+  (téléchargement HTTP classique).
+
+### M7 — 04:39 — Décisions D-015 et D-016 ; licence ; configuration
+
+- **Décisions de Sara** : D-015 bge-small-en-v1.5 ; D-016 `qwen3-vl:8b` (déjà présent), avec
+  conditions : licence notée ; nom du modèle en paramètre ; `qwen3:8b` reste la cible ; lien OCR.
+- **Licence vérifiée** : `ollama show qwen3-vl:8b --license` → Apache 2.0 ; fiche Hugging Face
+  `Qwen/Qwen3-VL-8B-Instruct` → apache-2.0. `ollama show qwen3-vl:8b` : 8,2 milliards de paramètres,
+  Q4_K_M, « thinking » désactivable.
+- **Fichiers** : `docs/decisions.md` (D-015, D-016), `docs/data_provenance.md` (section « Modèles
+  préentraînés utilisés »), `src/cg/config.py` (`CG_LLM_MODELE`, défaut `qwen3-vl:8b` ; `CG_LLM_URL`),
+  `.env.example` (2 lignes).
+- **LangGraph installé** : `pip install … "langgraph>=0.2"` → langgraph 1.2.24, langchain-core 1.8.4.
+
+### M8 — Erreur de Claude : un `python3` parasite
+
+- Une commande contenait par erreur `python3 - 2>/dev/null` : appel du **Python 3.9 du système**,
+  interdit par `CLAUDE.md`. Il a lu une entrée vide et s'est arrêté sans rien exécuter ; mais la
+  commande s'est bloquée et sa fin (test de la configuration, retrait d'un import, ajout dans
+  `.env.example`) ne s'est pas exécutée. Vérifié, puis refait uniquement avec `.venv/bin/python`.
+
+### M9 — RAG LangGraph
+
+- **Fichiers créés** : `src/cg/recherche/llm.py` (client Ollama, bibliothèque standard),
+  `src/cg/recherche/graphe.py` (chercher → générer → vérifier ; citations vérifiées mot pour mot,
+  longueur ≥ 15 caractères, positions exactes ; abstention motivée), `src/cg/recherche/questions_cuad.py`
+  (déplacé depuis `evaluation/evaluer_qr_f5.py`), `evaluation/evaluer_rag_llm_f5.py`,
+  `src/cg/recherche/README.md` ; test du graphe avec un faux LLM (4 tests F5 passent).
+- **Essai réel** (passages inventés) : réponse citée et vérifiée en 19,6 s (chargement compris) ;
+  abstention correcte en 8,8 s.
+
+### M10 — 04:49 — Évaluation recherche + extractif (validation ; réglage sur 60 contrats du train)
+
+- **Indexation terminée** : 96 244 / 96 244 segments avec vecteur.
+- **Commande** : `PYTHONPATH=src .venv/bin/python -u evaluation/evaluer_qr_f5.py`
+- **Recherche** (809 questions avec réponse) : rappel@1 / @5 / @10 : mots 0,208 / 0,518 / 0,638 ;
+  sens 0,313 / 0,543 / 0,642 ; **hybride 0,323 / 0,586 / 0,682**.
+- **Défaut de méthode (Claude)** : réglé sur l'**exactitude**, le seuil (0,76) fait presque toujours
+  s'abstenir (2,1 % de réponses) ; or 2/3 des questions n'ont pas de réponse, et « toujours
+  s'abstenir » obtient la même exactitude (0,675). Le critère était mauvais d'avance.
+- **Correction (après avoir vu ce résultat, à faire valider dans D-017)** : réglage sur l'**exactitude
+  équilibrée** (moyenne bonnes réponses / bonnes abstentions ; 0,5 pour « toujours s'abstenir ») →
+  seuil 0,71 ; validation : exactitude équilibrée 0,521, 12,5 % de réponses, 68,8 % de réponses fausses.
+- **Lecture** : la similarité cosinus ne dit pas si la réponse est dans le contrat.
+
+### M11 — 04:52 — Comparaison extractif / RAG + LLM lancée
+
+- **Commande** : `MLFLOW_DISABLE_AGENT_HINT=1 PYTHONPATH=src nohup .venv/bin/python -u evaluation/evaluer_rag_llm_f5.py --seuil-extractif 0.71 > data/processed/progression_rag_llm.log 2>&1 &`
+- 200 questions de validation (graine 0), modèle `qwen3-vl:8b`. Résultats : M12.
+
+### M12 — 05:09 → 08:44 — Deux échecs du RAG + LLM, cause et corrections
+
+- **Échec 1 (05:09)** : erreur 500 d'Ollama dès la première question : « Load failed: timed out
+  waiting for llama-server to start » ; chargement du modèle très lent (17 min) avec 3,7 Go de
+  mémoire libre sur 24 (nombreuses applications ouvertes ; autre projet dans Docker : conteneurs
+  `tp_cdc-*`, ≈ 3 Go, **non touchés** car hors du plan de la séance).
+- **Correction 1** : `src/cg/recherche/llm.py` → 3 tentatives (pause de 15 s) sur erreur du serveur ;
+  préchauffage du modèle :
+  `curl -s -m 900 http://127.0.0.1:11434/api/generate -d '{"model":"qwen3-vl:8b","prompt":"Reply OK.","stream":false,"think":false,"keep_alive":"30m","options":{"num_predict":5}}'`
+  → chargé en 5,6 s, 100 % GPU.
+- **Échec 2 (07:53)** : dépassement du délai (300 s) de la **première** requête, partie 1 h 30 après
+  le lancement (06:17) ; trous dans le journal d'Ollama (06:17 → 07:53 → 08:44) : **mise en veille
+  du Mac** pendant le calcul (programmes suspendus, délais dépassés au réveil).
+- **Correction 2** : `evaluation/evaluer_rag_llm_f5.py` **reprenable** (chaque réponse écrite dans
+  `data/processed/rag_llm_reponses.jsonl`, non commité ; une relance saute les questions déjà
+  faites) ; lancement sous **`caffeinate -i`** (outil de macOS qui empêche la veille tant que le
+  programme tourne, sans changer les réglages) :
+  ```bash
+  MLFLOW_DISABLE_AGENT_HINT=1 PYTHONPATH=src nohup caffeinate -i .venv/bin/python -u evaluation/evaluer_rag_llm_f5.py --seuil-extractif 0.71 > data/processed/progression_rag_llm.log 2>&1 &
+  ```
+  Vérification : `pmset -g assertions` montre « PreventUserIdleSystemSleep … caffeinate ».
+
+### M13 — 11:39 — Troisième échec ; diagnostic par le journal système
+
+- **Constat** : dépassement du délai sur la première question ; `pmset -g log` montre le Mac en
+  **veille** (*Sleep*, *Deep Idle*) jusqu'au réveil par l'utilisatrice (11:40, *FullWake … UserActivity*).
+  `caffeinate -i` n'empêche pas la veille quand l'écran du portable est fermé.
+- **Décision de Claude** : ne pas relancer sans Mac éveillé ; évaluation du LLM **reportée à la
+  séance 5/5** (débordement prévu par Sara), Mac ouvert et branché ; le script est reprenable.
+
+### M14 — Clôture de la séance 3/5
+
+- `docs/analyses/qr_f5_val.md` ; `docs/decisions.md` (**D-017 proposée**) ; `README.md` (F5, résultats) ;
+  `docs/FICHE_ENCADRANT.md` ; `docs/PROGRESS.md` ; `CLAUDE.md` (compteur 3/5) ; `pytest` → 40 passed.
+- **Commandes** : `git add` ; `git commit` ; `git push -u origin feat/rag-f5` ; `gh pr create` ;
+  `gh pr merge <n> --merge --delete-branch` ; `git pull`.

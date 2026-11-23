@@ -18,7 +18,7 @@ Projet de fin d'année (PFA), EMSI.
 | F2 | Extraction de clauses | Repérer les clauses (durée, résiliation, responsabilité, confidentialité) : d'abord une baseline classique, puis un modèle Transformer. | En cours (baselines mots-clés et TF-IDF sur la validation ; segments PDF ; confidentialité via ContractNLI) |
 | F3 | Comparaison de paires de clauses | Comparer deux clauses pour signaler, avec prudence, une incohérence possible. | À faire |
 | F4 | NLI | Inférence en langage naturel (implication / contradiction / neutre), évaluée sur ContractNLI. | En cours (Transformer sur paires hypothèse-phrase, dev ; D-014 proposée) |
-| F5 | Recherche hybride et RAG avec abstention | Recherche par mots-clés + recherche vectorielle, puis réponse citant le texte exact, ou abstention. | À faire |
+| F5 | Recherche hybride et RAG avec abstention | Recherche par mots-clés + recherche vectorielle, puis réponse citant le texte exact, ou abstention. | En cours (recherche hybride + extractif mesurés ; RAG LangGraph + LLM local en place, évaluation à terminer) |
 | F6 | Interface analyste | Interface web (React) pour importer un contrat, consulter les clauses et poser des questions. | À faire |
 | F7 | Traçabilité | Chaque sortie renvoie au segment source (page, positions) ; chaque expérience est suivie dans MLflow. | En cours (test de traçabilité des segments) |
 
@@ -110,6 +110,8 @@ Prérequis déjà identifiés : Homebrew, Python 3.11, Git, Docker Desktop, Node
 | F2 · confidentialité | **Dev** ContractNLI (61 NDA, 2 872 segments) | F1 (P / R) | Mots-clés : 0,580 (0,43 / 0,88) · TF-IDF : 0,830 | Transformer (legal-bert-small) : **0,862** (0,85 / 0,87) | 2026-11-23 |
 | F2 Extraction (segments PDF, 3 familles) | **Validation** | Macro-F1 · macro rappel par annotation | TF-IDF : 0,656 · 0,724 | Transformer (legal-bert-small, poids atténué) : 0,625 · **0,773** | 2026-11-23 |
 | F4 NLI (ContractNLI) | **Dev** (61 NDA, 1 037 couples) | Exactitude · macro-F1 · évidences F1 | Classe majoritaire : 0,681 · 0,633 · — | Transformer (paires) : **0,778 · 0,717 · 0,630** | 2026-11-23 |
+| F5 Recherche (questions CUAD) | **Validation** (61 contrats, 809 questions avec réponse) | rappel@1 · @5 · @10 | Mots : 0,208 · 0,518 · 0,638 ; sens : 0,313 · 0,543 · 0,642 | Hybride : **0,323 · 0,586 · 0,682** | 2026-11-23 |
+| F5 Réponse avec abstention | **Validation** (2 492 questions) | Exactitude équilibrée | Toujours s'abstenir : 0,500 | Extractif : 0,521 (RAG + LLM : à mesurer) | 2026-11-23 |
 | F2 · responsabilité | Validation | F1 (P / R) | Mots-clés 0,257 (0,16 / 0,71) · TF-IDF **0,758** (0,89 / 0,66) | — | 2026-11-22 |
 
 *Chiffres de **validation**, optimistes car les seuils y sont réglés (D-006). Le jeu de test n'a
