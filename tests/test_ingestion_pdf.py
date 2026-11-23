@@ -92,3 +92,25 @@ def test_trouver_pdf_tolere_les_differences_de_nom(tmp_path: Path) -> None:
     assert trouver_pdf(tmp_path, "Gamma Agreement").name == "Gamma Agreement_Option.pdf"
     with pytest.raises(FileNotFoundError):
         trouver_pdf(tmp_path, "Delta Agreement")
+
+
+def test_mode_blocs_coupe_a_chaque_paragraphe(tmp_path: Path) -> None:
+    """Deux paragraphes éloignés sur une même page : deux blocs, donc deux segments traçables."""
+    pymupdf = pytest.importorskip("pymupdf")
+    from cg.ingestion.pdf import extraire_pdf, segmenter_pdf
+
+    chemin = tmp_path / "contrat.pdf"
+    document = pymupdf.open()
+    page = document.new_page()
+    page.insert_text((72, 72), "1. Term. This Agreement lasts two years.")
+    page.insert_text((72, 400), PHRASE)
+    document.save(chemin)
+    document.close()
+
+    for mode, attendu in (("blocs", 2), ("texte", 1)):
+        extrait = extraire_pdf(chemin, "contrat", mode)
+        segments = segmenter_pdf(extrait)
+        assert len(segments) == attendu, mode
+        for s in segments:
+            assert s.page == 1
+            assert extrait.texte[s.debut:s.fin] == s.texte

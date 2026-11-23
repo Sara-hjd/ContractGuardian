@@ -8,13 +8,21 @@ Choix v1 : les pages sont séparées par une ligne vide (``SEPARATEUR_PAGES``). 
 segmentation v1 coupe aux lignes vides, **aucun segment ne chevauche deux pages** : chaque
 segment a un numéro de page exact. Contrepartie : une clause coupée par un saut de page donne
 deux segments.
+
+Deux modes d'extraction (comparés pour D-008) :
+- ``"texte"`` : le texte brut de la page, tel que PyMuPDF le donne (peu de lignes vides) ;
+- ``"blocs"`` : les **blocs** de texte que PyMuPDF détecte sur la page (en général un paragraphe
+  visuel), séparés par une ligne vide. La segmentation v1 coupe alors à chaque bloc.
 """
 
 import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 import pymupdf
+
+ModeExtraction = Literal["texte", "blocs"]
 
 from cg.ingestion.segmentation import MAX_CARACTERES, Segment, segmenter
 
@@ -68,12 +76,32 @@ class DocumentPdf:
         raise ValueError(f"Position {position} hors des pages de {self.titre}")
 
 
-def extraire_pdf(chemin: Path, titre: str) -> DocumentPdf:
+def _texte_page(page: pymupdf.Page, mode: ModeExtraction) -> str:
+    """Texte d'une page selon le mode d'extraction.
+
+    Args:
+        page: Page PyMuPDF.
+        mode: ``"texte"`` (texte brut) ou ``"blocs"`` (blocs séparés par une ligne vide).
+
+    Returns:
+        Le texte de la page.
+    """
+    if mode == "texte":
+        # « text » : texte brut dans l'ordre de lecture proposé par PyMuPDF.
+        return page.get_text("text")
+    # Chaque bloc : (x0, y0, x1, y1, texte, numéro, type) ; type 0 = texte, 1 = image.
+    blocs = [b[4].strip("\n") for b in page.get_text("blocks") if b[6] == 0]
+    return SEPARATEUR_PAGES.join(b for b in blocs if b.strip())
+
+
+def extraire_pdf(chemin: Path, titre: str, mode: ModeExtraction = "texte") -> DocumentPdf:
     """Extrait le texte d'un PDF, page par page.
 
     Args:
         chemin: Chemin du fichier PDF.
         titre: Identifiant du contrat, recopié dans le document.
+        mode: ``"texte"`` (texte brut) ou ``"blocs"`` (un bloc PyMuPDF = un paragraphe,
+            séparés par une ligne vide).
 
     Returns:
         Le document : texte complet et positions de chaque page.
@@ -86,8 +114,7 @@ def extraire_pdf(chemin: Path, titre: str) -> DocumentPdf:
             if numero > 1:
                 morceaux.append(SEPARATEUR_PAGES)
                 position += len(SEPARATEUR_PAGES)
-            # « text » : texte brut dans l'ordre de lecture proposé par PyMuPDF.
-            texte_page = page.get_text("text")
+            texte_page = _texte_page(page, mode)
             morceaux.append(texte_page)
             pages.append(Page(numero=numero, debut=position, fin=position + len(texte_page)))
             position += len(texte_page)

@@ -761,3 +761,51 @@ diagnostic total depuis le 16/11.
   gh pr create --base main --head feat/ingestion-pdf …
   ```
 - **Pas de fusion** : la PR intégrera la décision de Sara sur D-007 avant d'être fusionnée.
+
+### G10 — 00:36 — D-007 acceptée par Sara ; numérotation
+
+- **Décision de Sara** : D-007 option 2 (exact + normalisation étendue ; annotations non
+  retrouvées comptées, listées par référence, exclues). Statut « Acceptée (Sara, 2026-11-23) ».
+- **Numérotation** : la segmentation des PDF devient **D-008** ; les exemples négatifs de
+  ContractNLI deviennent **D-009** (renvoi ajouté dans D-002). « D-008 » n'était écrit dans aucun
+  fichier (vérifié avec `grep -rn -E "D-00[89]" docs CLAUDE.md README.md src`).
+- **Fichiers** : `docs/decisions.md` (édition + `sed -i ''` pour le renvoi D-009).
+
+### G11 — Mode « blocs » de l'extraction PDF
+
+- **Fichier modifié** : `src/cg/ingestion/pdf.py` : paramètre `mode` de `extraire_pdf`
+  (`"texte"` ou `"blocs"`) ; en mode « blocs », le texte d'une page est la suite des blocs de texte
+  PyMuPDF (`page.get_text("blocks")`, blocs d'image ignorés), séparés par une ligne vide : la
+  segmentation v1 coupe donc à chaque bloc, sans nouveau code de segmentation.
+- **Test ajouté** : `test_mode_blocs_coupe_a_chaque_paragraphe` ; suite : **21 passed**.
+
+### G12 — 00:42 — Comparer les segmentations sur train + validation
+
+- **Commande** : `PYTHONPATH=src .venv/bin/python evaluation/comparer_segmentation_pdf.py`
+  (script créé ; 408 contrats de train + validation, test fermé ; 71 s).
+- **Résultats** : CUAD médiane 153, ≥ 1 400 : 6,6 % ; PDF « texte » médiane 148, ≥ 1 400 : 18,8 %,
+  annotations entières dans un segment 89,1 % ; PDF « blocs » médiane 83, ≥ 1 400 : 2,0 %, entières
+  92,0 % ; traçabilité 100 % dans les deux modes ; alignement 98,2 % dans les deux modes.
+- **Correction** : l'échantillon de 10 contrats (G6) avait exagéré l'écart de longueur (médiane
+  1 422) ; corrigé dans `docs/analyses/verification_pdf_pymupdf.md` et dans D-007.
+
+### G13 — D-008 proposée
+
+- `docs/decisions.md` : **D-008 « Proposée »** (tableau des mesures, 3 options, proposition :
+  blocs ; conséquence : préparer les données d'entraînement à partir des PDF et réentraîner la
+  baseline). Sara décidera.
+
+### G14 — Clôture de la séance 1/3
+
+- `src/cg/ingestion/README.md`, `docs/PROGRESS.md`, `README.md`, `docs/FICHE_ENCADRANT.md`,
+  `CLAUDE.md` (compteur : séance 1/3 terminée).
+- **Commandes** :
+  ```bash
+  .venv/bin/python -m pytest -q
+  git add -A src/cg/ingestion evaluation tests docs README.md CLAUDE.md
+  git commit -m "feat(ingestion): mode blocs, comparaison des segmentations PDF, D-007 acceptée, D-008 proposée"
+  git push
+  gh pr comment 5 --body "…correction de la médiane…"
+  gh pr merge 5 --merge --delete-branch
+  git pull
+  ```

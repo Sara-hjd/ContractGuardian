@@ -73,7 +73,7 @@ Sara est **en apprentissage**. Concrètement :
 
   | Séance | Date | État |
   |---|---|---|
-  | 1/3 | 2026-11-22 | en cours |
+  | 1/3 | 2026-11-22 → 2026-11-23 | **terminée** (fusions PR #2 à #5, extraction PDF, D-007) |
   | 2/3 | — | — |
   | 3/3 | — | — |
 

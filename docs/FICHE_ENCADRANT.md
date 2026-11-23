@@ -54,6 +54,14 @@
   7 liées à la segmentation. Détail : `docs/analyses/erreurs_baseline_tfidf_val.md`.
 - **Planning** : baseline faite avant l'ingestion PDF (D-006), à valider.
 
+## Lecture des PDF (étape 2, début)
+
+- PyMuPDF lit les 510 PDF ; chaque segment garde **sa page** et ses positions (traçabilité 100 %).
+- **98,3 %** des annotations de nos 9 catégories retrouvées dans le texte PDF (train), par
+  correspondance **exacte** après normalisation (D-007) ; les autres sont exclues, jamais devinées.
+- Segmentation des PDF à choisir (D-008) : par **blocs** PyMuPDF, 2 % de segments coupés au plafond
+  contre 18,8 % en texte brut.
+
 ## Décisions prises par Sara le 2026-11-22, à présenter pour validation
 
 | | Sujet | Décision |
@@ -63,6 +71,8 @@
 | **D-004** | Splits CUAD | Test officiel + validation 15 % du train, par contrat, graine 42 |
 | **D-005** | Fichier des splits | Commité (titres seulement), exception de la règle 5 étendue |
 | **D-006** | Protocole des baselines ; planning | Baseline avant l'étape 2 (ingestion PDF, base de données) |
+| **D-007** | Alignement des annotations sur le texte PDF | Exact après normalisation étendue (Sara, 2026-11-23) |
+| **D-008** | Segmentation des PDF | *Proposée* : blocs PyMuPDF (Sara décidera) |
 
 Point à discuter pour D-002 : dans un NDA, presque tout le texte parle de confidentialité ;
 d'où viendront les exemples **négatifs** ?

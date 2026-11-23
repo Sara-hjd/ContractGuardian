@@ -9,7 +9,7 @@ traçabilité (F7) : toute sortie du projet pointera vers un segment.
 | Fichier | Contenu |
 |---|---|
 | `segmentation.py` | La classe `Segment` et la fonction `segmenter(titre, texte)` (règle v1). |
-| `pdf.py` | `extraire_pdf` (PyMuPDF, texte page par page + positions des pages), `segmenter_pdf` (segments avec numéro de page), `trouver_pdf` (PDF CUAD d'un titre). |
+| `pdf.py` | `extraire_pdf` (PyMuPDF, texte page par page + positions des pages ; modes « texte » et « blocs », D-008), `segmenter_pdf` (segments avec numéro de page), `trouver_pdf` (PDF CUAD d'un titre). |
 | `alignement.py` | `normaliser` (niveaux « espaces » et « etendue », lien avec les positions d'origine) et `aligner` (retrouver un passage CUAD dans le texte PyMuPDF). |
 
 Les pages sont séparées par une ligne vide : un segment PDF ne chevauche jamais deux pages, et son numéro de page est exact. Vérification sur des PDF CUAD : `evaluation/verifier_extraction_pdf.py`.

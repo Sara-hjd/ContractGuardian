@@ -120,7 +120,7 @@ sont interdites pour l'entraînement.
    - **risque principal** : dans un NDA, presque tout le texte porte sur la confidentialité ;
      décider quelles hypothèses comptent pour la famille, et d'où viennent les **exemples
      négatifs** (segments non annotés des NDA ? contrats CUAD, au risque d'y trouver des clauses
-     de confidentialité non annotées ?). Ce choix fera l'objet d'une décision dédiée.
+     de confidentialité non annotées ?). Ce choix fera l'objet d'une décision dédiée (**D-009**).
    - si l'adaptation n'est pas fiable, on le documente et on s'appuie sur la baseline par mots-clés.
 3. **Découpage** : respecter le découpage train / dev / test **propre à ContractNLI** s'il en a un
    (règle 2), sinon un découpage par document, fixé et versionné comme pour CUAD (D-004, D-005).
@@ -359,7 +359,7 @@ pour F2 et un protocole d'évaluation qui respecte la règle 2, avec un fort dé
 ## D-007 — Méthode d'alignement des annotations CUAD sur le texte PDF (PyMuPDF)
 
 - **Date** : 2026-11-23
-- **Statut** : **Proposée, à décider par Sara**
+- **Statut** : **Acceptée (Sara, 2026-11-23)**, à présenter à l'encadrant
 
 ### Contexte
 Les positions des annotations CUAD portent sur le texte `context` de CUAD, pas sur le texte que
@@ -393,14 +393,80 @@ chaque préparation de données. L'option 3 pourra être réexaminée si le taux
 données.
 
 ### Décision
-*À prendre par Sara.*
+**Option 2** (Sara, 2026-11-23) : correspondance **exacte** après **normalisation étendue**. Les
+annotations non retrouvées sont **comptées, listées par référence et exclues**, jamais placées
+approximativement.
 
-### Conséquences (si l'option 2 est retenue)
+### Raisons
+- 98,3 % des annotations de nos 9 catégories retrouvées sur le train, sans aucune position inventée.
+- Pour la règle de traçabilité, une position fausse est pire qu'une annotation manquante.
+
+### Conséquences
 - `cg.ingestion.alignement` (niveau `"etendue"`) devient la méthode de référence ; ses tests
   font partie de la suite.
-- **Point lié, à décider séparément** : la segmentation v1 donne des segments PDF bien plus longs
-  que les segments CUAD (médiane 1 422 contre 136 caractères), car PyMuPDF laisse peu de lignes
-  vides. Piste : segmenter les PDF à partir des **blocs** de PyMuPDF. À faire avant d'appliquer la
-  baseline à des PDF.
+- Toute préparation de données à partir des PDF affiche le taux d'alignement et liste les
+  annotations exclues (références seulement : titre, catégorie, positions CUAD).
+- **Point lié** : la segmentation v1 sur le texte PDF produit une queue de segments coupés au
+  plafond (18,8 % contre 6,6 % pour CUAD sur train + validation ; l'échantillon de 10 contrats
+  avait exagéré l'écart). Voir **D-008**.
 - Les pages sans texte (46 dans le train, aucun contrat entièrement scanné) sont signalées ; l'OCR
   reste hors périmètre.
+
+---
+
+## D-008 — Segmentation des PDF : texte brut (v1) ou blocs PyMuPDF
+
+- **Date** : 2026-11-23
+- **Statut** : **Proposée, à décider par Sara**
+
+### Contexte
+La baseline (D-006) a été entraînée sur des segments du **texte CUAD**. L'application segmentera
+des **PDF** lus par PyMuPDF (D-007 pour l'alignement des annotations). Les segments doivent rester
+traçables (page, positions) et ressembler le plus possible à ce que le modèle a appris.
+
+Mesures sur les **408 contrats de train + validation** (test fermé), avec
+`evaluation/comparer_segmentation_pdf.py` ; même règle de segmentation v1 (lignes vides, plafond
+1 500 caractères) et même règle d'étiquetage (chevauchement ≥ min(20, longueur)) :
+
+| | CUAD (référence) | PDF « texte » (v1 sur le texte brut) | PDF « blocs » (v1 sur les blocs PyMuPDF) |
+|---|---|---|---|
+| Segments | 66 253 | 44 996 | 96 244 |
+| Longueur médiane | 153 | 148 | **83** |
+| 90 % des segments sous | 1 008 | 1 455 | **647** |
+| Segments < 20 caractères | 14,7 % | 27,0 % | 24,6 % |
+| Segments ≥ 1 400 caractères (au plafond) | 6,6 % | **18,8 %** | **2,0 %** |
+| Traçabilité (texte exact + segment dans sa page) | — | 100 % | 100 % |
+| Annotations (nos 9) alignées (D-007) | — | 98,2 % | 98,2 % |
+| … projetées sur ≥ 1 segment | — | 98,2 % | 98,2 % |
+| … **entières dans un seul segment** | — | 89,1 % | **92,0 %** |
+| Segments positifs : durée / résiliation / responsabilité | 1,40 / 0,91 / 0,84 % | 1,94 / 1,23 / 1,23 % | 0,95 / 0,64 / 0,66 % |
+
+### Options envisagées
+1. **v1 sur le texte brut PyMuPDF** (mode `"texte"`).
+   - ➕ Médiane proche de CUAD ; moins de segments.
+   - ➖ Près d'un segment sur cinq coupé au plafond : des clauses mélangées, coupées au hasard
+     (dans les contrats où PyMuPDF ne laisse pas de lignes vides).
+2. **v1 sur les blocs PyMuPDF** (mode `"blocs"`, un bloc = un paragraphe visuel).
+   - ➕ Presque plus de segments coupés au plafond (2 %) ; plus d'annotations tiennent dans un
+     seul segment (92,0 %) ; la mise en page du PDF guide le découpage.
+   - ➖ Segments plus courts que CUAD (médiane 83) et plus nombreux : encore plus de déséquilibre
+     (≈ 1 % de positifs par famille) ; un paragraphe coupé en plusieurs blocs donne plusieurs segments.
+3. **Blocs + fusion des fragments** (par exemple rattacher un bloc très court au bloc suivant de la
+   même page) : *non mesurée* ; viserait les 25 % de segments de moins de 20 caractères (titres,
+   numéros, lignes isolées). Plus de règles, donc plus à expliquer et à tester.
+
+### Proposition de Claude
+**Option 2 (blocs)**, en gardant l'option 3 comme amélioration possible plus tard, à mesurer sur la
+validation. Raisons : c'est la seule qui supprime presque tous les segments coupés au plafond ;
+elle garde le plus d'annotations entières ; elle est aussi simple que l'option 1 (même code, un
+paramètre `mode`).
+
+### Décision
+*À prendre par Sara.*
+
+### Conséquences (quelle que soit l'option)
+- **Aucune des deux segmentations PDF ne ressemble exactement aux segments CUAD.** Pour que le
+  modèle apprenne sur ce qu'il verra dans l'application, il faudra **préparer les données
+  d'entraînement à partir des PDF** (segments PDF + annotations alignées, D-007), puis
+  **réentraîner et réévaluer la baseline** sur ces segments (validation seulement).
+- Les segments PDF gardent leur page et leurs positions ; le test de traçabilité couvre les deux modes.

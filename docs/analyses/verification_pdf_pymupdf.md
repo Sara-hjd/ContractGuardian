@@ -50,27 +50,25 @@ Un défaut **du texte CUAD lui-même** : une date dont la conversion de CUAD a c
 (« 19t h » au lieu de « 19th »). Le PDF est correct ; le texte CUAD ne l'est pas. Aucune
 normalisation exacte ne peut le retrouver.
 
-## Constat important : les segments PDF sont beaucoup plus longs
+## Segments PDF : constat de l'échantillon, puis correction sur train + validation
 
-| Sur les 10 contrats | Segments CUAD (texte CUAD) | Segments PDF (texte PyMuPDF) |
-|---|---|---|
-| Nombre | 2 495 | 624 |
-| Longueur médiane | 136 caractères | **1 422** caractères |
-| Au plafond ou presque (≥ 1 400) | 3 % | **54 %** |
+Sur l'échantillon de **10 contrats**, les segments PDF (texte brut) semblaient environ 10 fois plus
+longs que les segments CUAD (médiane 1 422 contre 136 caractères, 54 % au plafond). PyMuPDF y
+laissait très peu de **lignes vides** (22 dans un contrat où il détecte 199 **blocs**).
 
-PyMuPDF sépare les lignes par un simple saut de ligne et laisse très peu de **lignes vides**
-(22 dans un contrat où il détecte 199 **blocs** de texte). La segmentation v1, qui coupe aux lignes
-vides, produit donc surtout de gros morceaux coupés au plafond. **La baseline a été entraînée sur
-des segments courts (CUAD) : elle verrait des segments très différents sur un PDF.**
+**Correction (mesure sur les 408 contrats de train + validation, D-008)** : cet échantillon était
+dominé par quelques gros contrats sans lignes vides. Sur l'ensemble, la médiane PDF (148) est
+proche de CUAD (153) ; le vrai écart est une **queue de segments coupés au plafond** (18,8 % des
+segments PDF ≥ 1 400 caractères, contre 6,6 % pour CUAD). Leçon : **un échantillon de 10 ne
+suffit pas** pour une distribution de longueurs ; on mesure sur tout le train + validation.
 
-Piste : segmenter les PDF à partir des **blocs** de PyMuPDF (`page.get_text("blocks")`), qui
-correspondent mieux aux paragraphes visuels. À traiter dans une décision séparée de D-007.
+La comparaison complète (texte brut contre blocs PyMuPDF) est dans **D-008** (`docs/decisions.md`).
 
 ## Ce qu'on en retient
 
 1. L'alignement **exact après normalisation étendue** retrouve 98 % des annotations sans jamais
-   inventer de position : c'est la base proposée pour D-007.
+   inventer de position : c'est l'option retenue par Sara pour **D-007** (acceptée le 2026-11-23).
 2. Les annotations non retrouvées (≈ 2 %) doivent être **comptées et exclues**, jamais placées au hasard.
-3. La **segmentation des PDF** doit être revue (blocs PyMuPDF) avant d'utiliser la baseline sur des PDF.
+3. La **segmentation des PDF** est à décider (D-008) avant d'utiliser la baseline sur des PDF.
 4. L'application devra détecter les **pages sans texte** et prévenir l'utilisateur (OCR hors périmètre
    pour l'instant).
