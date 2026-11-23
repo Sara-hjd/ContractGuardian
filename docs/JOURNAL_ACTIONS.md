@@ -959,3 +959,53 @@ l'expérience « fusion des fragments » ; (5) clôture.
 - **Fichiers** : `docs/decisions.md`, `docs/FICHE_ENCADRANT.md`, `docs/PROGRESS.md` (script Python
   de remplacement vérifiant chaque repère).
 - **Commandes** : `git commit` ; `git push` ; `gh pr merge 6 --merge --delete-branch` ; `git pull`.
+
+---
+
+## Séance 3/3 du mode temporaire — 2026-11-23 — ContractNLI, D-009, baseline confidentialité
+
+**Plan annoncé** : télécharger et documenter ContractNLI ; explorer train + dev (test fermé) ;
+adapter les évidences en segments étiquetés + test de traçabilité ; figer la liste de mots-clés
+**avant** toute évaluation ; proposer D-009 ; clôture, fin du mode, diagnostic total.
+
+### I1 — 01:16 — PR #6 fusionnée, branche de la séance
+
+- Voir H15 : commit `6353622`, PR #6 fusionnée (`a92d7d6`), 25 tests passent sur `main`.
+- `git switch -c exp/contractnli`.
+
+### I2 — Source officielle (lecture)
+
+- **Consultation** : https://stanfordnlp.github.io/contract-nli/ ; `curl -sI -L <zip>` (en-têtes seulement).
+- **Résultat** : 607 NDA, 17 hypothèses, CC BY 4.0, Koreeda & Manning, Findings of EMNLP 2021 ;
+  zip 65 362 913 octets, modifié le 2022-02-11. **Conditions d'utilisation** (Hitachi America) :
+  y accéder vaut acceptation ; usage régi par CC BY 4.0. À lire par Sara.
+
+### I3 — 01:18 — Téléchargement
+
+- **Commande** :
+  ```bash
+  curl -sSL --retry 10 --retry-delay 5 -C - --create-dirs -o data/raw/contractnli/contract-nli.zip "https://stanfordnlp.github.io/contract-nli/resources/contract-nli.zip"
+  md5 data/raw/contractnli/contract-nli.zip ; shasum -a 256 data/raw/contractnli/contract-nli.zip
+  unzip -l data/raw/contractnli/contract-nli.zip | grep -v -E "\.(txt|pdf|htm|html)$"
+  ```
+- **Explication** : `--retry 10` réessaie en cas d'échec réseau ; `-C -` reprend un téléchargement
+  interrompu ; `shasum -a 256` calcule une empreinte SHA-256 (plus robuste que MD5).
+- **Résultat** : 65 362 913 octets (= taille annoncée) ; MD5 `d1ab038c2d6d771959a75bbb28792c56` ;
+  SHA-256 `e03fc77bbf8b53e2976a250e81d8a294bc3d5e5fb014521e477dee9340d6287b` (aucune empreinte
+  officielle publiée) ; contenu : `train.json`, `dev.json`, `test.json`, `LICENSE`, `TERMS`,
+  `README.md`, `raw/` (documents d'origine) ; fichier ignoré par Git.
+
+### I4 — Lecture du README, des conditions et des 17 hypothèses (pas des documents)
+
+- **Commandes** : `unzip -p … README.md` ; `unzip -p … TERMS` ;
+  `unzip -p … train.json | jq -r '.labels | …'` (`-p` lit un fichier du zip sans l'extraire).
+- **Résultat** : format compris (documents, spans = phrases ou éléments de liste, annotations par
+  hypothèse : Entailment / Contradiction / NotMentioned + indices de spans d'évidence). Constat :
+  **nda-18 (« No solicitation ») n'est pas de la confidentialité**.
+
+### I5 — Liste de mots-clés de la confidentialité, figée AVANT toute évaluation
+
+- **Fichier créé** : `src/cg/extraction/mots_cles_confidentialite.py` (10 motifs justifiés par les
+  hypothèses ; aucun pour nda-18).
+- **Preuve de l'ordre** : commité immédiatement (commit suivant), avant tout calcul de métriques et
+  sans avoir lu aucun document ni aucune évidence.
