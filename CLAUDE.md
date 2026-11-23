@@ -77,7 +77,7 @@ Sara est **en apprentissage**. Concrètement :
   |---|---|---|
   | 0/5 | 2026-11-23 | mise en place du mode, plan proposé |
   | 1/5 | 2026-11-23 | **terminée** (Transformer F2 : 2 modèles, 2 expériences ; D-012 et D-013 proposées) |
-  | 2/5 | — | — |
+  | 2/5 | 2026-11-23 | **terminée** (D-012 critère + calcul équitable, D-013 ; F4 NLI ; D-014 proposée) |
   | 3/5 | — | — |
   | 4/5 | — | — |
   | 5/5 | — | — |

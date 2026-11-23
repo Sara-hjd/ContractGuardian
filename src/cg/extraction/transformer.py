@@ -76,7 +76,7 @@ def poids_positifs(y: np.ndarray, racine: bool = False) -> torch.Tensor:
     return torch.tensor(np.sqrt(rapport) if racine else rapport, dtype=torch.float32)
 
 
-def _lots(nb: int, taille: int, melanger: bool, graine: int) -> list[np.ndarray]:
+def decouper_en_lots(nb: int, taille: int, melanger: bool, graine: int) -> list[np.ndarray]:
     """Découpe les indices ``0..nb-1`` en lots.
 
     Args:
@@ -112,7 +112,7 @@ def predire_probas(
     """
     modele.eval()
     sorties = []
-    for lot in _lots(len(textes), taille_lot, melanger=False, graine=0):
+    for lot in decouper_en_lots(len(textes), taille_lot, melanger=False, graine=0):
         entree = tokeniseur([textes[i] for i in lot], truncation=True, max_length=longueur_max,
                             padding=True, return_tensors="pt").to(appareil)
         sorties.append(torch.sigmoid(modele(**entree).logits).float().cpu().numpy())
@@ -153,7 +153,7 @@ def entrainer(
     for epoque in range(1, epoques + 1):
         modele.train()
         total = 0.0
-        lots = _lots(len(textes), taille_lot, melanger=True, graine=graine + epoque)
+        lots = decouper_en_lots(len(textes), taille_lot, melanger=True, graine=graine + epoque)
         for lot in lots:
             entree = tokeniseur([textes[i] for i in lot], truncation=True, max_length=longueur_max,
                                 padding=True, return_tensors="pt").to(appareil)

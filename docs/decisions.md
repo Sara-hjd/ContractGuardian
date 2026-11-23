@@ -619,7 +619,7 @@ avec la baseline par mots-clés **figée avant toute évaluation** (commit `e44c
 ## D-012 — Modèle Transformer pour F2 et ses réglages
 
 - **Date** : 2026-11-23
-- **Statut** : **Proposée, à décider par Sara** (implémentation provisoire en place)
+- **Statut** : **Acceptée (Sara, 2026-11-23)**, à présenter à l'encadrant ; **valeur de la précision minimale du critère : proposée**
 
 ### Contexte
 Après les baselines (D-006, D-011), F2 doit utiliser un modèle de langage préentraîné (stack :
@@ -649,14 +649,56 @@ graphique MPS ; règle 4). Mesures : `docs/analyses/transformer_f2_val.md` (vali
 - **Le choix du modèle évalué une seule fois sur le test** sera une décision séparée, à la fin de F2.
 
 ### Décision
-*À prendre par Sara.*
+**Acceptée** (Sara, 2026-11-23) : Legal-BERT small ; poids des positifs **atténué** (racine) pour
+CUAD, **normal** (rapport) pour la confidentialité ; **TF-IDF gardé comme référence**.
+
+### Critère de sélection des modèles de F2 (fixé le 2026-11-23, avant toute ouverture du test)
+- **Critère principal** (Sara) : **rappel par annotation**, sous contrainte d'une **précision
+  minimale** (précision par segment) ; **macro-F1 affiché en complément**.
+- **Valeur proposée par Claude : précision ≥ 0,50 pour chaque famille** (« au moins une alerte sur
+  deux est juste »), valeur ronde et compréhensible, non ajustée sur un modèle. *À confirmer par Sara.*
+- **Procédure** : pour chaque modèle candidat et chaque famille, le seuil est choisi **sur la
+  validation** = le plus petit seuil (rappel maximal) dont la précision atteint le minimum ; un
+  modèle est admissible si toutes ses familles l'atteignent ; on retient l'admissible au **meilleur
+  rappel par annotation** (macro sur les familles).
+- **Règle 2** : le critère **choisit le modèle sur la validation**. Le modèle retenu (et ses seuils)
+  est figé, puis **lui seul** est évalué **une fois** sur le test ; le test ne sert jamais à
+  départager.
+- **Mesures (validation, `evaluation/critere_selection_f2.py`)**, 3 familles CUAD :
+
+  | Précision min. | TF-IDF : rappel annot. (P macro, F1 macro) | Transformer atténué | Transformer poids fort |
+  |---|---|---|---|
+  | 0,40 | 0,842 (0,405 ; 0,520) | 0,842 (0,407 ; 0,524) | 0,621 |
+  | **0,50** | **0,794** (0,502 ; 0,573) | 0,742 (0,506 ; 0,550) | non admissible |
+  | 0,60 | **0,761** (0,607 ; 0,619) | 0,697 (0,602 ; 0,576) | non admissible |
+
+- **Conséquence (si 0,50 est confirmé)** : pour les 3 familles CUAD, **TF-IDF** est retenu (le
+  Transformer retrouve moins de clauses de résiliation à précision égale : 0,438 contre 0,640) ;
+  pour la confidentialité, le critère reste à appliquer (Transformer : P 0,852, R 0,873).
+- **Confirmation de Sara (2026-11-23)** : précision minimale **0,50 par famille**, à condition que
+  la comparaison soit équitable (pour chaque modèle et chaque famille, seuil réglé sur la validation
+  pour maximiser le **rappel par annotation** sous précision ≥ 0,50).
+- **Calcul refait à la lettre** (`evaluation/critere_selection_f2_equitable.py`, validation) :
+  mêmes seuils et mêmes chiffres que le premier calcul.
+
+  | Famille (annotations) | TF-IDF : seuil, rappel annot. | Transformer atténué : seuil, rappel annot. |
+  |---|---|---|
+  | durée (208) | 0,30 ; 0,870 | 0,27 ; **0,909** |
+  | résiliation (89) | 0,54 ; **0,640** | 0,84 ; 0,438 |
+  | responsabilité (116) | 0,27 ; 0,871 | 0,34 ; **0,879** |
+  | **macro** | **0,794** | 0,742 |
+
+- **La condition posée par Sara (« TF-IDF meilleur pour les 3 familles ») n'est pas remplie** :
+  TF-IDF gagne en résiliation et en moyenne ; le Transformer gagne en durée (≈ 8 clauses) et, de
+  peu, en responsabilité (≈ 1 clause). **Choix final pour les 3 familles CUAD : en attente de
+  Sara** (option 1 : TF-IDF partout ; option 2 : meilleur modèle par famille, rappel macro 0,809).
 
 ---
 
 ## D-013 — Combiner CUAD et ContractNLI pour F2 : un modèle ou deux ?
 
 - **Date** : 2026-11-23
-- **Statut** : **Proposée, à décider par Sara** (implémentation provisoire : deux modèles)
+- **Statut** : **Acceptée (Sara, 2026-11-23)**, à présenter à l'encadrant
 
 ### Contexte
 Les 3 familles viennent de CUAD (segments PDF, D-011) ; la confidentialité vient de ContractNLI
@@ -676,6 +718,36 @@ non annotée) ; les NDA de ContractNLI n'ont **pas** d'étiquettes de durée, r�
 ### Proposition de Claude
 **Option 1** pour l'instant (implémentée et mesurée) ; l'option 2 pourra être testée plus tard
 comme expérience, si charger deux modèles pose problème dans l'application.
+
+### Décision
+**Option 1** (Sara, 2026-11-23) : **deux modèles séparés** (3 familles CUAD ; confidentialité ContractNLI).
+
+---
+
+## D-014 — Méthode de F4 (NLI sur ContractNLI)
+
+- **Date** : 2026-11-23
+- **Statut** : **Proposée, à décider par Sara** (implémentation provisoire en place)
+
+### Contexte
+F4 : pour un contrat et une hypothèse, dire *Entailment*, *Contradiction* ou *NotMentioned* en
+citant les évidences (traçabilité). Données : ContractNLI (D-002), 17 hypothèses (nda-18 incluse :
+son exclusion, D-009, ne concernait que la famille confidentialité de F2). Mesures sur le **dev** :
+`docs/analyses/nli_f4_dev.md`.
+
+### Options envisagées
+1. **Classe majoritaire par hypothèse** (baseline de l'article) : exactitude 0,681, macro-F1 0,633 ;
+   aucune évidence.
+2. **Paires (hypothèse, phrase) + agrégation au niveau du document** : exactitude 0,778,
+   macro-F1 0,717, évidences F1 0,630. ➕ Chaque décision s'appuie sur des phrases citées, avec
+   positions ; *NotMentioned* sert d'abstention. ➖ Ne voit qu'une phrase à la fois.
+3. **Document entier (ou fenêtres de plusieurs phrases) par hypothèse** : pourrait mieux traiter
+   les contradictions qui combinent plusieurs phrases. ➖ Plus long, plus de mémoire ; à tester plus tard.
+
+### Proposition de Claude
+**Option 2**, avec : unité = phrase de ContractNLI ; Legal-BERT small (D-012) ; échantillonnage
+d'entraînement fixé avant l'entraînement (évidences + 2 neutres, dont une difficile) ; seuils
+réglés sur le dev (document 0,85 ; évidence 0,95) ; baseline majoritaire gardée comme référence.
 
 ### Décision
 *À prendre par Sara.*

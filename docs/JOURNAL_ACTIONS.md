@@ -1199,3 +1199,89 @@ tests ; MLflow ; PR ; clôture (résumé de 10 lignes, rappel Ilyas).
   `README.md` (résultats), `docs/FICHE_ENCADRANT.md`, `docs/PROGRESS.md`, `CLAUDE.md` (compteur 1/5).
 - **Commandes** : `pytest` ; `git add` ; `git commit` ; `git push -u origin exp/transformer-f2` ;
   `gh pr create` ; `gh pr merge <n> --merge --delete-branch` ; `git pull`.
+- **Résultat de K9** : PR #9 fusionnée (`f4dc3e9`) ; 32 tests passent ; compteur 1/5.
+
+---
+
+## Séance 2/5 du second mode — 2026-11-23 — décisions D-012 / D-013, critère de F2, puis NLI (F4)
+
+### L1 — 04:05 — Décisions de Sara ; branche
+
+- **Décisions** : D-012 acceptée (Legal-BERT small, poids atténué CUAD, normal confidentialité,
+  TF-IDF en référence) ; **ajout demandé** : fixer avant toute ouverture du test le critère qui
+  départage les modèles de F2 (rappel par annotation sous précision minimale ; macro-F1 en
+  complément ; valeur à proposer). D-013 acceptée (deux modèles).
+- **Point signalé à Sara** : pour respecter la règle 2, le critère départage les modèles **sur la
+  validation** ; le test n'évalue ensuite que le modèle retenu.
+- `git switch -c exp/nli-f4`.
+
+### L2 — 04:06 — Précision de TF-IDF sur les segments PDF (validation)
+
+- **Commande** : script Python court qui réutilise `regler` de `training/baselines_extraction_pdf.py`.
+- **Résultat** : précision macro 0,728 (durée 0,742, résiliation 0,639, responsabilité 0,803).
+
+### L3 — 04:12 — Critère appliqué sur la validation, 3 valeurs de précision minimale
+
+- **Fichier créé** : `evaluation/critere_selection_f2.py` (seuil = plus petit seuil atteignant la
+  précision minimale ; modèles rechargés depuis `models/`, sans réentraînement).
+- **Commande** : `MLFLOW_DISABLE_AGENT_HINT=1 PYTHONPATH=src .venv/bin/python -u evaluation/critere_selection_f2.py`
+- **Résultats** (rappel par annotation macro) : P ≥ 0,40 : TF-IDF 0,842, Transformer atténué 0,842,
+  poids fort 0,621 ; P ≥ 0,50 : **TF-IDF 0,794**, atténué 0,742, poids fort non admissible ;
+  P ≥ 0,60 : TF-IDF 0,761, atténué 0,697.
+- **Proposition** : précision ≥ 0,50 par famille ; conséquence : TF-IDF retenu pour les 3 familles CUAD.
+- `docs/decisions.md` : D-012 acceptée + section « Critère de sélection » (valeur **proposée**) ;
+  D-013 acceptée ; `docs/FICHE_ENCADRANT.md` mis à jour.
+
+### L4 — 04:14 — Code de F4 (NLI)
+
+- **Fichiers créés** : `src/cg/nli/` (`__init__.py`, `paires.py`, `modele.py`, `evaluation.py`,
+  `README.md`), `training/nli_contractnli.py`, `tests/test_nli.py` (4 tests → passed).
+- **Méthode (D-014, à proposer)** : unité = phrase de ContractNLI ; paires (hypothèse, phrase) à
+  3 classes ; échantillonnage fixé avant l'entraînement (évidences + 2 neutres par document et
+  hypothèse, dont une « difficile ») ; décision du document par agrégation (seuil de confiance →
+  sinon NotMentioned ; évidences = phrases au-dessus d'un second seuil) ; seuils réglés sur le dev.
+- **Renommage** : `_lots` → `decouper_en_lots` dans `src/cg/extraction/transformer.py` et
+  `src/cg/nli/modele.py` (fonction partagée, donc publique). Un premier essai avec `sed 's/\b…'`
+  n'a rien fait (`\b` non reconnu par le `sed` de macOS) ; refait avec un script Python (`re.sub`).
+
+### L5 — 04:15 — Entraînement NLI lancé
+
+- **Commande** :
+  ```bash
+  MLFLOW_DISABLE_AGENT_HINT=1 PYTHONPATH=src nohup .venv/bin/python -u training/nli_contractnli.py > data/processed/progression_nli.log 2>&1 &
+  ```
+- **Premiers chiffres** (dev, test fermé) : 1 037 couples (document, hypothèse) : 519 Entailment,
+  423 NotMentioned, 95 Contradiction. **Baseline majoritaire** : exactitude 0,681, macro-F1 0,633
+  (F1 : NotMentioned 0,629, Entailment 0,753, Contradiction 0,516). Paires d'entraînement : 22 606
+  (6 762 Entailment, 14 265 NotMentioned, 1 579 Contradiction).
+
+### L6 — 04:18 — Critère de D-012 refait « à la lettre » (validation)
+
+- **Demande de Sara** : confirmer que, pour chaque modèle et chaque famille, le seuil maximise le
+  rappel par annotation sous précision ≥ 0,50, ou refaire le calcul.
+- **Constat** : le premier calcul prenait le plus petit seuil admissible (rappel par segment
+  maximal), équivalent en principe ; refait quand même à la lettre.
+- **Fichier créé** : `evaluation/critere_selection_f2_equitable.py` (recherche exhaustive des seuils ;
+  correspondance annotation → segments calculée une fois).
+- **Résultat** : mêmes seuils et mêmes chiffres. TF-IDF : durée 0,870, résiliation 0,640,
+  responsabilité 0,871, macro 0,794 ; Transformer atténué : 0,909, 0,438, 0,879, macro 0,742.
+  **La condition de Sara (TF-IDF meilleur sur les 3 familles) n'est pas remplie** → choix en attente.
+
+### L7 — 04:21 — Résultats de l'entraînement NLI (dev)
+
+- Pertes 0,475 → 0,247 ; 86 734 paires évaluées ; seuils document 0,85, évidence 0,95 ;
+  exactitude 0,778, macro-F1 0,717 (NotMentioned 0,739, Entailment 0,836, Contradiction 0,575) ;
+  évidences P 0,678, R 0,588, F1 0,630. Modèle : `models/f4-nli-legal-bert-small`.
+
+### L8 — 04:22 — Seuils NLI réévalués avec des grilles élargies (le seuil d'évidence était au bord)
+
+- **Fichier créé** : `evaluation/reevaluer_seuils_nli.py` ; **résultat** : mêmes seuils (0,85 ; 0,95),
+  mêmes métriques → 0,95 est un vrai optimum.
+
+### L9 — Clôture de la séance 2/5
+
+- `docs/analyses/nli_f4_dev.md` ; `docs/decisions.md` (D-012 : confirmation et tableau par famille,
+  choix en attente ; **D-014 proposée**) ; `README.md`, `docs/FICHE_ENCADRANT.md`, `docs/PROGRESS.md`,
+  `CLAUDE.md` (compteur 2/5).
+- **Commandes** : `pytest` ; `git add` ; `git commit` ; `git push -u origin exp/nli-f4` ;
+  `gh pr create` ; `gh pr merge <n> --merge --delete-branch` ; `git pull`.

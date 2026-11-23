@@ -17,7 +17,7 @@ Projet de fin d'année (PFA), EMSI.
 | F1 | Ingestion PDF et provenance | Lire un contrat PDF et le découper en segments, chacun avec sa page et ses positions. | En cours (extraction PDF PyMuPDF par blocs avec pages, alignement D-007, base PostgreSQL + pgvector dans Docker) |
 | F2 | Extraction de clauses | Repérer les clauses (durée, résiliation, responsabilité, confidentialité) : d'abord une baseline classique, puis un modèle Transformer. | En cours (baselines mots-clés et TF-IDF sur la validation ; segments PDF ; confidentialité via ContractNLI) |
 | F3 | Comparaison de paires de clauses | Comparer deux clauses pour signaler, avec prudence, une incohérence possible. | À faire |
-| F4 | NLI | Inférence en langage naturel (implication / contradiction / neutre), évaluée sur ContractNLI. | À faire |
+| F4 | NLI | Inférence en langage naturel (implication / contradiction / neutre), évaluée sur ContractNLI. | En cours (Transformer sur paires hypothèse-phrase, dev ; D-014 proposée) |
 | F5 | Recherche hybride et RAG avec abstention | Recherche par mots-clés + recherche vectorielle, puis réponse citant le texte exact, ou abstention. | À faire |
 | F6 | Interface analyste | Interface web (React) pour importer un contrat, consulter les clauses et poser des questions. | À faire |
 | F7 | Traçabilité | Chaque sortie renvoie au segment source (page, positions) ; chaque expérience est suivie dans MLflow. | En cours (test de traçabilité des segments) |
@@ -109,6 +109,7 @@ Prérequis déjà identifiés : Homebrew, Python 3.11, Git, Docker Desktop, Node
 | F2 Extraction (segments PDF, blocs) | **Validation** (61 contrats, 11 465 segments PDF) | Macro-F1 · macro rappel par annotation | TF-IDF entraîné sur CUAD : 0,643 · 0,719 — entraîné sur PDF : **0,656 · 0,724** | — | 2026-11-23 |
 | F2 · confidentialité | **Dev** ContractNLI (61 NDA, 2 872 segments) | F1 (P / R) | Mots-clés : 0,580 (0,43 / 0,88) · TF-IDF : 0,830 | Transformer (legal-bert-small) : **0,862** (0,85 / 0,87) | 2026-11-23 |
 | F2 Extraction (segments PDF, 3 familles) | **Validation** | Macro-F1 · macro rappel par annotation | TF-IDF : 0,656 · 0,724 | Transformer (legal-bert-small, poids atténué) : 0,625 · **0,773** | 2026-11-23 |
+| F4 NLI (ContractNLI) | **Dev** (61 NDA, 1 037 couples) | Exactitude · macro-F1 · évidences F1 | Classe majoritaire : 0,681 · 0,633 · — | Transformer (paires) : **0,778 · 0,717 · 0,630** | 2026-11-23 |
 | F2 · responsabilité | Validation | F1 (P / R) | Mots-clés 0,257 (0,16 / 0,71) · TF-IDF **0,758** (0,89 / 0,66) | — | 2026-11-22 |
 
 *Chiffres de **validation**, optimistes car les seuils y sont réglés (D-006). Le jeu de test n'a

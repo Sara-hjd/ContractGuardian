@@ -87,6 +87,13 @@
 - Leçon : un poids des positifs trop fort (≈ 100) fait dire « oui » trop souvent (F1 0,506) ;
   atténué (racine, ≈ 10) → 0,625.
 
+## NLI sur ContractNLI (F4, dev)
+
+- Transformer sur paires (hypothèse, phrase) : exactitude **0,778**, macro-F1 **0,717** (classe
+  majoritaire : 0,681 / 0,633) ; évidences citées : précision 0,678, rappel 0,588.
+- La **contradiction** reste la plus difficile (F1 0,575) : souvent une exception « sauf si… ».
+- *NotMentioned* sert d'abstention : sans phrase assez probante, le système n'affirme rien.
+
 ## Décisions prises par Sara le 2026-11-22, à présenter pour validation
 
 | | Sujet | Décision |
@@ -100,8 +107,9 @@
 | **D-008** | Segmentation des PDF | Blocs PyMuPDF (Sara, 2026-11-23) ; fusion testée en expérience |
 | **D-010** | Base de données | PostgreSQL 17 + pgvector, Docker, `.env`, SQL sans ORM (Sara, 2026-11-23) |
 | **D-011** | Données d'entraînement F2 | Segments PDF blocs, sans fusion (Sara, 2026-11-23) |
-| **D-012** | Modèle Transformer F2 | *Proposée* : legal-bert-small, poids atténué (CUAD) |
-| **D-013** | CUAD + ContractNLI | *Proposée* : deux modèles |
+| **D-012** | Modèle Transformer F2 ; critère | Legal-BERT small, poids atténué (CUAD), TF-IDF en référence (Sara) ; critère : rappel par annotation sous précision ≥ 0,50 *(valeur proposée)*, appliqué sur la validation |
+| **D-013** | CUAD + ContractNLI | Deux modèles (Sara) |
+| **D-014** | Méthode NLI (F4) | *Proposée* : paires hypothèse-phrase + agrégation, seuils réglés sur le dev |
 | **D-009** | Confidentialité : segmentation, négatifs | Coupe aux lignes, sans nda-18, négatifs dans les NDA (Sara, 2026-11-23) ; annotation CUAD plus tard |
 
 Point à discuter pour D-002 : dans un NDA, presque tout le texte parle de confidentialité ;
