@@ -300,3 +300,22 @@ shasum -a 256 data/raw/contractnli/contract-nli.zip
 5. **CUAD n'annote pas la confidentialité**, alors que 51 contrats de validation CUAD sur 61
    contiennent des mots de la confidentialité : on ne peut pas utiliser CUAD comme source de
    négatifs « propres » (D-009).
+
+---
+
+## Modèles préentraînés utilisés
+
+Les modèles ne sont **pas** des données d'entraînement : ils sont téléchargés (ou présents
+localement) et ne sont **jamais commités** (`models/`, cache Hugging Face, cache Ollama).
+
+| Modèle | Usage | Source | Licence (vérifiée) | Date |
+|---|---|---|---|---|
+| `nlpaueb/legal-bert-small-uncased` | F2 (extraction), F4 (NLI) — D-012, D-014 | Hugging Face | CC BY-SA 4.0 | 2026-11-23 |
+| `BAAI/bge-small-en-v1.5` | F5 (embeddings) — D-015 | Hugging Face | MIT | 2026-11-23 |
+| `qwen3-vl:8b` (Qwen3-VL 8B Instruct, 8,2 milliards de paramètres, quantification Q4_K_M) | F5 (réponse générative) — D-016 | Ollama (déjà présent localement, téléchargé hors du projet le 2026-11-22) ; modèle d'origine `Qwen/Qwen3-VL-8B-Instruct` | **Apache 2.0** (licence affichée par `ollama show qwen3-vl:8b --license` et fiche Hugging Face officielle) | vérifiée le 2026-11-23 |
+
+**Limites** :
+- Legal-BERT a été préentraîné sur des textes juridiques incluant des contrats EDGAR : certains
+  contrats de CUAD (eux aussi issus d'EDGAR) ont pu y figurer (pas leurs étiquettes).
+- `qwen3-vl:8b` a été obtenu en dehors du projet (déjà sur la machine) : sa provenance exacte est
+  celle de la bibliothèque Ollama ; empreinte locale : identifiant Ollama `9cf69da2b16d`.
