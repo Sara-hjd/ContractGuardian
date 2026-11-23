@@ -14,7 +14,7 @@ Projet de fin d'année (PFA), EMSI.
 
 | ID | Fonctionnalité | Description | Statut |
 |---|---|---|---|
-| F1 | Ingestion PDF et provenance | Lire un contrat PDF et le découper en segments, chacun avec sa page et ses positions. | En cours (segmentation v1 du texte CUAD) |
+| F1 | Ingestion PDF et provenance | Lire un contrat PDF et le découper en segments, chacun avec sa page et ses positions. | En cours (segmentation v1, extraction PDF PyMuPDF avec pages, alignement des annotations D-007) |
 | F2 | Extraction de clauses | Repérer les clauses (durée, résiliation, responsabilité, confidentialité) : d'abord une baseline classique, puis un modèle Transformer. | En cours (données prêtes, baseline à faire) |
 | F3 | Comparaison de paires de clauses | Comparer deux clauses pour signaler, avec prudence, une incohérence possible. | À faire |
 | F4 | NLI | Inférence en langage naturel (implication / contradiction / neutre), évaluée sur ContractNLI. | À faire |

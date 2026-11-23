@@ -662,3 +662,150 @@ diagnostic total depuis le 16/11.
   git pull
   ```
 - **Résultat** : voir la PR et `git log` (ce paragraphe est écrit avant le commit).
+
+---
+
+## Séance 1/3 du mode temporaire — 2026-11-22 (suite 5) — vérification PDF avec PyMuPDF
+
+**Plan annoncé** : installer PyMuPDF ; `src/cg/ingestion/pdf.py` (texte par page + positions) ;
+`src/cg/ingestion/alignement.py` ; vérifier sur 10 PDF du **train** ; tests ; proposer D-007
+(Sara décide).
+
+### G1 — 23:37 — Branche et installation de PyMuPDF
+
+- **Commandes** :
+  ```bash
+  git switch -c feat/ingestion-pdf
+  .venv/bin/python -m pip install --retries 10 --timeout 120 --resume-retries 50 --progress-bar off "pymupdf>=1.24"
+  ```
+- **Pourquoi** : une branche par tâche ; PyMuPDF est l'outil prévu pour lire les PDF (stack).
+  Options de pip reprises de D7 à cause du réseau lent. Lancé en arrière-plan.
+
+### G2 — 23:37 — Correspondance titres CUAD ↔ fichiers PDF (lecture)
+
+- **Commande** : petit script Python qui compare les noms des 510 PDF (sans extension) aux 510
+  titres de `CUAD_v1.json`.
+- **Résultat** : 505 correspondances exactes ; 5 différences (espace final, tiret final, « É »
+  encodé autrement en Unicode, suffixe ajouté). D'où `trouver_pdf` (comparaison normalisée,
+  puis par début de nom). Extensions `.pdf` et `.PDF` mélangées.
+
+### G3 — Code et tests
+
+- **Fichiers créés** : `src/cg/ingestion/pdf.py`, `src/cg/ingestion/alignement.py`,
+  `evaluation/verifier_extraction_pdf.py`, `tests/test_ingestion_pdf.py` (7 tests).
+- **Fichier modifié** : `src/cg/ingestion/README.md` (nouveaux fichiers, via `sed -i ''`).
+- **Choix v1** : pages séparées par une ligne vide → aucun segment PDF sur deux pages.
+- **Vérification** : `pytest tests/test_ingestion_pdf.py` → 5 passed, 2 skipped (PyMuPDF pas
+  encore installé).
+
+### G4 — 2026-11-23 00:28 — Arrêter l'installation de PyMuPDF 2.1 et relancer en 1.x
+
+- **Constat (23:55)** : pip téléchargeait `pymupdf-2.1` à ~8 Ko/s (8,1 Mo en 17 min). La
+  version 2.1 ajoute des dépendances lourdes inutiles pour nous (`onnxruntime`,
+  `pymupdf_layout`, `pymupdf4llm`) : installation estimée à plus d'une heure.
+- **Décision de Sara** : « arrête et relance ».
+- **Commandes** :
+  ```bash
+  kill 58296                                   # arrêter le processus pip (numéro trouvé avec ps)
+  .venv/bin/python -m pip list | grep -i -E "mupdf|onnx|flatbuffers"   # rien d'installé à moitié
+  .venv/bin/python -m pip install --retries 10 --timeout 120 --resume-retries 50 --progress-bar off "pymupdf>=1.24,<2"
+  ```
+- **Explication** : `kill` envoie un signal d'arrêt au processus ; `<2` limite la version à la
+  série 1.x, qui lit le texte page par page sans ces dépendances.
+- **Résultat** : arrêt propre, aucun paquet partiel ; nouvelle installation lancée en arrière-plan.
+
+### G5 — 00:31 — PyMuPDF installé ; tests ; vérification sur 10 PDF
+
+- **Résultat de G4** : `pymupdf 1.28.2` installé (≈ 3 minutes).
+- **Commandes** :
+  ```bash
+  .venv/bin/python -m pytest -q
+  PYTHONPATH=src .venv/bin/python evaluation/verifier_extraction_pdf.py
+  ```
+- **Résultat** : **20 passed**. 10 contrats du train : 0 page vide, traçabilité « oui » partout ;
+  alignement 79,5 % (espaces) et **98,6 %** (étendu) sur nos 9 catégories ; 1 échec
+  (`data/processed/alignement_echecs.jsonl`, non commité).
+
+### G6 — 00:32 — Diagnostic des échecs et des segments (lecture, terminal seulement)
+
+- **Commandes** : deux scripts Python courts (lecture seule des données, rien d'écrit).
+- **Résultats** : les échecs au niveau « espaces » viennent des **guillemets typographiques** du
+  PDF (207 dans un contrat) ; le seul échec étendu est un défaut du texte CUAD (mot coupé dans une
+  date). Segments PDF : médiane 1 422 caractères contre 136 pour CUAD, 54 % au plafond ; un
+  contrat n'a que 22 lignes vides pour 199 blocs PyMuPDF.
+
+### G7 — 00:32 — Mesure sur les 347 contrats du train (lecture)
+
+- **Commande** : script Python court qui extrait les 347 PDF du train et aligne toutes les
+  annotations aux deux niveaux ; puis un second script qui classe les pages vides (avec ou sans
+  image). Le test n'est pas touché.
+- **Résultats** : nos 9 catégories : espaces 70,65 % (1 603 / 2 269), **étendu 98,28 %**
+  (2 230 / 2 269) ; 41 catégories : étendu 99,31 %. 46 pages vides dans 21 contrats : 39 blanches,
+  7 avec une image ; aucun contrat entièrement scanné.
+
+### G8 — Documentation, D-007 proposée
+
+- `docs/analyses/verification_pdf_pymupdf.md` créé (chiffres, aucun extrait).
+- `docs/decisions.md` : **D-007 « Proposée »** (4 options, proposition : option 2). Sara décide.
+- `docs/data_provenance.md` : limite 3 complétée (script Python qui insère une ligne après un
+  repère précis, avec vérification que le repère existe).
+- `requirements.txt` : `pymupdf>=1.24,<2`.
+
+### G9 — Commit, push, PR (sans fusion : D-007 attend Sara)
+
+- **Commandes** :
+  ```bash
+  git add requirements.txt src/cg/ingestion/ evaluation/verifier_extraction_pdf.py tests/test_ingestion_pdf.py docs/
+  git commit -m "feat(ingestion): extraction PDF PyMuPDF, alignement des annotations, D-007 proposée"
+  git push -u origin feat/ingestion-pdf
+  gh pr create --base main --head feat/ingestion-pdf …
+  ```
+- **Pas de fusion** : la PR intégrera la décision de Sara sur D-007 avant d'être fusionnée.
+
+### G10 — 00:36 — D-007 acceptée par Sara ; numérotation
+
+- **Décision de Sara** : D-007 option 2 (exact + normalisation étendue ; annotations non
+  retrouvées comptées, listées par référence, exclues). Statut « Acceptée (Sara, 2026-11-23) ».
+- **Numérotation** : la segmentation des PDF devient **D-008** ; les exemples négatifs de
+  ContractNLI deviennent **D-009** (renvoi ajouté dans D-002). « D-008 » n'était écrit dans aucun
+  fichier (vérifié avec `grep -rn -E "D-00[89]" docs CLAUDE.md README.md src`).
+- **Fichiers** : `docs/decisions.md` (édition + `sed -i ''` pour le renvoi D-009).
+
+### G11 — Mode « blocs » de l'extraction PDF
+
+- **Fichier modifié** : `src/cg/ingestion/pdf.py` : paramètre `mode` de `extraire_pdf`
+  (`"texte"` ou `"blocs"`) ; en mode « blocs », le texte d'une page est la suite des blocs de texte
+  PyMuPDF (`page.get_text("blocks")`, blocs d'image ignorés), séparés par une ligne vide : la
+  segmentation v1 coupe donc à chaque bloc, sans nouveau code de segmentation.
+- **Test ajouté** : `test_mode_blocs_coupe_a_chaque_paragraphe` ; suite : **21 passed**.
+
+### G12 — 00:42 — Comparer les segmentations sur train + validation
+
+- **Commande** : `PYTHONPATH=src .venv/bin/python evaluation/comparer_segmentation_pdf.py`
+  (script créé ; 408 contrats de train + validation, test fermé ; 71 s).
+- **Résultats** : CUAD médiane 153, ≥ 1 400 : 6,6 % ; PDF « texte » médiane 148, ≥ 1 400 : 18,8 %,
+  annotations entières dans un segment 89,1 % ; PDF « blocs » médiane 83, ≥ 1 400 : 2,0 %, entières
+  92,0 % ; traçabilité 100 % dans les deux modes ; alignement 98,2 % dans les deux modes.
+- **Correction** : l'échantillon de 10 contrats (G6) avait exagéré l'écart de longueur (médiane
+  1 422) ; corrigé dans `docs/analyses/verification_pdf_pymupdf.md` et dans D-007.
+
+### G13 — D-008 proposée
+
+- `docs/decisions.md` : **D-008 « Proposée »** (tableau des mesures, 3 options, proposition :
+  blocs ; conséquence : préparer les données d'entraînement à partir des PDF et réentraîner la
+  baseline). Sara décidera.
+
+### G14 — Clôture de la séance 1/3
+
+- `src/cg/ingestion/README.md`, `docs/PROGRESS.md`, `README.md`, `docs/FICHE_ENCADRANT.md`,
+  `CLAUDE.md` (compteur : séance 1/3 terminée).
+- **Commandes** :
+  ```bash
+  .venv/bin/python -m pytest -q
+  git add -A src/cg/ingestion evaluation tests docs README.md CLAUDE.md
+  git commit -m "feat(ingestion): mode blocs, comparaison des segmentations PDF, D-007 acceptée, D-008 proposée"
+  git push
+  gh pr comment 5 --body "…correction de la médiane…"
+  gh pr merge 5 --merge --delete-branch
+  git pull
+  ```

@@ -120,7 +120,7 @@ sont interdites pour l'entraînement.
    - **risque principal** : dans un NDA, presque tout le texte porte sur la confidentialité ;
      décider quelles hypothèses comptent pour la famille, et d'où viennent les **exemples
      négatifs** (segments non annotés des NDA ? contrats CUAD, au risque d'y trouver des clauses
-     de confidentialité non annotées ?). Ce choix fera l'objet d'une décision dédiée.
+     de confidentialité non annotées ?). Ce choix fera l'objet d'une décision dédiée (**D-009**).
    - si l'adaptation n'est pas fiable, on le documente et on s'appuie sur la baseline par mots-clés.
 3. **Découpage** : respecter le découpage train / dev / test **propre à ContractNLI** s'il en a un
    (règle 2), sinon un découpage par document, fixé et versionné comme pour CUAD (D-004, D-005).
@@ -353,3 +353,120 @@ pour F2 et un protocole d'évaluation qui respecte la règle 2, avec un fort dé
   viendra du test, ouvert une seule fois à la fin de F2.
 - Résultat 2026-11-22 : C = 10 (bord de la grille) retenu pour les 3 familles ; élargir la grille
   serait une nouvelle expérience, notée comme telle.
+
+---
+
+## D-007 — Méthode d'alignement des annotations CUAD sur le texte PDF (PyMuPDF)
+
+- **Date** : 2026-11-23
+- **Statut** : **Acceptée (Sara, 2026-11-23)**, à présenter à l'encadrant
+
+### Contexte
+Les positions des annotations CUAD portent sur le texte `context` de CUAD, pas sur le texte que
+PyMuPDF extrait des PDF (limite 3 de `data_provenance.md`). Pour entraîner ou évaluer sur des
+segments PDF avec leur page (règle 1), il faut retrouver chaque passage annoté dans le texte
+PyMuPDF. Mesures sur les **347 contrats du train** (voir `docs/analyses/verification_pdf_pymupdf.md`).
+
+### Options envisagées
+1. **Correspondance exacte, normalisation des espaces seulement** : 70,7 % des annotations de nos
+   9 catégories retrouvées.
+   - ➕ La plus simple. ➖ Rate près d'un tiers des annotations (guillemets typographiques du PDF).
+2. **Correspondance exacte, normalisation étendue** (espaces, minuscules, guillemets et tirets
+   unifiés, ligatures, césures) : **98,3 %** (2 230 / 2 269) ; 99,3 % sur les 41 catégories.
+   - ➕ Aucune position inventée : un passage est retrouvé tel quel, ou pas du tout.
+   - ➕ Simple à expliquer et à tester ; ~0,1 s par contrat.
+   - ➖ 1,7 % d'annotations perdues (39), dont des défauts du texte CUAD lui-même.
+3. **Option 2 + repli approximatif** (recherche de la zone la plus ressemblante, par exemple avec
+   `difflib`) pour les annotations restantes.
+   - ➕ Récupérerait une partie des 1,7 %.
+   - ➖ Risque de positions **fausses** (une zone qui ressemble n'est pas forcément la bonne), donc
+     risque pour la traçabilité ; plus complexe ; il faudrait un seuil de ressemblance à régler.
+4. **Ne pas aligner** : entraîner et évaluer uniquement sur le texte CUAD ; les PDF ne servent que
+   dans l'application.
+   - ➕ Aucun travail d'alignement.
+   - ➖ Aucune mesure des modèles sur de vrais segments PDF, alors que c'est ce que verra l'application.
+
+### Proposition de Claude
+**Option 2.** Les annotations non retrouvées sont **comptées, listées (références seulement) et
+exclues**, jamais placées approximativement. Le taux d'alignement est recalculé et affiché à
+chaque préparation de données. L'option 3 pourra être réexaminée si le taux baisse sur d'autres
+données.
+
+### Décision
+**Option 2** (Sara, 2026-11-23) : correspondance **exacte** après **normalisation étendue**. Les
+annotations non retrouvées sont **comptées, listées par référence et exclues**, jamais placées
+approximativement.
+
+### Raisons
+- 98,3 % des annotations de nos 9 catégories retrouvées sur le train, sans aucune position inventée.
+- Pour la règle de traçabilité, une position fausse est pire qu'une annotation manquante.
+
+### Conséquences
+- `cg.ingestion.alignement` (niveau `"etendue"`) devient la méthode de référence ; ses tests
+  font partie de la suite.
+- Toute préparation de données à partir des PDF affiche le taux d'alignement et liste les
+  annotations exclues (références seulement : titre, catégorie, positions CUAD).
+- **Point lié** : la segmentation v1 sur le texte PDF produit une queue de segments coupés au
+  plafond (18,8 % contre 6,6 % pour CUAD sur train + validation ; l'échantillon de 10 contrats
+  avait exagéré l'écart). Voir **D-008**.
+- Les pages sans texte (46 dans le train, aucun contrat entièrement scanné) sont signalées ; l'OCR
+  reste hors périmètre.
+
+---
+
+## D-008 — Segmentation des PDF : texte brut (v1) ou blocs PyMuPDF
+
+- **Date** : 2026-11-23
+- **Statut** : **Proposée, à décider par Sara**
+
+### Contexte
+La baseline (D-006) a été entraînée sur des segments du **texte CUAD**. L'application segmentera
+des **PDF** lus par PyMuPDF (D-007 pour l'alignement des annotations). Les segments doivent rester
+traçables (page, positions) et ressembler le plus possible à ce que le modèle a appris.
+
+Mesures sur les **408 contrats de train + validation** (test fermé), avec
+`evaluation/comparer_segmentation_pdf.py` ; même règle de segmentation v1 (lignes vides, plafond
+1 500 caractères) et même règle d'étiquetage (chevauchement ≥ min(20, longueur)) :
+
+| | CUAD (référence) | PDF « texte » (v1 sur le texte brut) | PDF « blocs » (v1 sur les blocs PyMuPDF) |
+|---|---|---|---|
+| Segments | 66 253 | 44 996 | 96 244 |
+| Longueur médiane | 153 | 148 | **83** |
+| 90 % des segments sous | 1 008 | 1 455 | **647** |
+| Segments < 20 caractères | 14,7 % | 27,0 % | 24,6 % |
+| Segments ≥ 1 400 caractères (au plafond) | 6,6 % | **18,8 %** | **2,0 %** |
+| Traçabilité (texte exact + segment dans sa page) | — | 100 % | 100 % |
+| Annotations (nos 9) alignées (D-007) | — | 98,2 % | 98,2 % |
+| … projetées sur ≥ 1 segment | — | 98,2 % | 98,2 % |
+| … **entières dans un seul segment** | — | 89,1 % | **92,0 %** |
+| Segments positifs : durée / résiliation / responsabilité | 1,40 / 0,91 / 0,84 % | 1,94 / 1,23 / 1,23 % | 0,95 / 0,64 / 0,66 % |
+
+### Options envisagées
+1. **v1 sur le texte brut PyMuPDF** (mode `"texte"`).
+   - ➕ Médiane proche de CUAD ; moins de segments.
+   - ➖ Près d'un segment sur cinq coupé au plafond : des clauses mélangées, coupées au hasard
+     (dans les contrats où PyMuPDF ne laisse pas de lignes vides).
+2. **v1 sur les blocs PyMuPDF** (mode `"blocs"`, un bloc = un paragraphe visuel).
+   - ➕ Presque plus de segments coupés au plafond (2 %) ; plus d'annotations tiennent dans un
+     seul segment (92,0 %) ; la mise en page du PDF guide le découpage.
+   - ➖ Segments plus courts que CUAD (médiane 83) et plus nombreux : encore plus de déséquilibre
+     (≈ 1 % de positifs par famille) ; un paragraphe coupé en plusieurs blocs donne plusieurs segments.
+3. **Blocs + fusion des fragments** (par exemple rattacher un bloc très court au bloc suivant de la
+   même page) : *non mesurée* ; viserait les 25 % de segments de moins de 20 caractères (titres,
+   numéros, lignes isolées). Plus de règles, donc plus à expliquer et à tester.
+
+### Proposition de Claude
+**Option 2 (blocs)**, en gardant l'option 3 comme amélioration possible plus tard, à mesurer sur la
+validation. Raisons : c'est la seule qui supprime presque tous les segments coupés au plafond ;
+elle garde le plus d'annotations entières ; elle est aussi simple que l'option 1 (même code, un
+paramètre `mode`).
+
+### Décision
+*À prendre par Sara.*
+
+### Conséquences (quelle que soit l'option)
+- **Aucune des deux segmentations PDF ne ressemble exactement aux segments CUAD.** Pour que le
+  modèle apprenne sur ce qu'il verra dans l'application, il faudra **préparer les données
+  d'entraînement à partir des PDF** (segments PDF + annotations alignées, D-007), puis
+  **réentraîner et réévaluer la baseline** sur ces segments (validation seulement).
+- Les segments PDF gardent leur page et leurs positions ; le test de traçabilité couvre les deux modes.

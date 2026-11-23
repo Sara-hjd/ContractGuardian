@@ -27,3 +27,7 @@ scikit-learn>=1.5
 # Suivi des expériences (F7) : paramètres et métriques de chaque entraînement.
 # Interface : mlflow ui --backend-store-uri sqlite:///mlflow.db
 mlflow>=2.17
+
+# Lecture des PDF (F1) : texte page par page. Série 1.x : la 2.x ajoute des dépendances lourdes
+# (onnxruntime…) inutiles ici, et très longues à télécharger (journal, G4).
+pymupdf>=1.24,<2

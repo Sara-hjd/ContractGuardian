@@ -73,6 +73,82 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 
 ## Séances
 
+## 2026-11-22 → 2026-11-23 — Séance 1/3 (mode « Claude exécute tout ») : extraction PDF
+
+- **Qui** : Sara-hjd (avec Claude Code, mode temporaire, séance **1/3**)
+- **Branche** : `feat/ingestion-pdf` (PR #5)
+- **Objectif** : vérifier qu'on peut lire les PDF de CUAD avec PyMuPDF, garder la page de chaque
+  segment, et retrouver les annotations CUAD dans ce texte.
+
+### Fait
+- PyMuPDF **1.28.2** installé (série 1.x : la 2.1 tirait `onnxruntime`, beaucoup trop long à
+  télécharger ; arrêt et relance décidés par Sara).
+- `src/cg/ingestion/pdf.py` (texte page par page, modes « texte » et « blocs », segments avec
+  page), `src/cg/ingestion/alignement.py` (normalisation avec lien vers les positions d'origine),
+  deux scripts dans `evaluation/`, 8 tests (suite : **21 passent**).
+- Mesures sur le **train** puis **train + validation** (test fermé) ; rapport
+  `docs/analyses/verification_pdf_pymupdf.md`.
+- **D-007 acceptée** (Sara) : alignement exact après normalisation étendue, 98,3 % des annotations
+  de nos 9 catégories retrouvées sur le train ; les autres sont comptées et exclues.
+- **D-008 proposée** : segmentation des PDF par **blocs** PyMuPDF (2 % de segments au plafond
+  contre 18,8 % en texte brut ; 92,0 % d'annotations entières dans un segment). Sara décidera.
+- Numérotation : exemples négatifs de ContractNLI → **D-009**.
+
+### Résultats clés
+- 510 PDF retrouvés ; 46 pages sans texte dans le train (39 blanches, 7 images), aucun contrat
+  entièrement scanné.
+- Normalisation « espaces » : 70,7 % ; « étendue » : **98,3 %** (les guillemets typographiques du
+  PDF expliquent l'écart).
+- **Correction** : l'échantillon de 10 contrats avait exagéré la longueur des segments PDF
+  (médiane 1 422) ; sur 408 contrats, la médiane est 148, proche de CUAD (153).
+
+### Avancement
+
+| Fonctionnalité | Statut | Commentaire |
+|---|---|---|
+| F1 Ingestion PDF et provenance | En cours | Extraction PyMuPDF avec pages ; alignement D-007 ; segmentation PDF à décider (D-008). |
+| F2 Extraction de clauses | En cours | Baselines sur segments CUAD ; à réentraîner sur segments PDF après D-008. |
+| F3 à F6 | À faire | |
+| F7 Traçabilité | En cours | Traçabilité page + positions vérifiée sur 141 240 segments PDF (train + val). |
+
+- **Étape du planning** : étape 2, partie « vérification PDF » faite. Reste : D-008, Docker,
+  PostgreSQL, pgvector (séance 2/3) ; ContractNLI (séance 3/3).
+
+### Ce que j'ai compris
+<!-- Rédigé par Claude en fin de séance, relu et corrigé par Sara. -->
+- **Extraire un PDF n'est pas « lire un fichier texte »** : PyMuPDF donne le texte page par page,
+  avec sa propre façon de couper les lignes, ses guillemets typographiques, parfois des pages
+  vides. Le texte obtenu n'est jamais exactement celui de CUAD.
+- **Garder la page** : on met les pages bout à bout en notant où chacune commence et finit ;
+  une ligne vide entre deux pages garantit qu'un segment ne chevauche jamais deux pages.
+- **Normaliser sans perdre la trace** : pour comparer deux textes, on les « simplifie » (espaces,
+  minuscules, guillemets), mais on garde pour chaque caractère sa position d'origine. On cherche
+  dans la version simplifiée, on cite dans la version d'origine.
+- **Exact plutôt qu'approximatif** : une recherche approximative retrouverait quelques passages
+  de plus, mais pourrait citer le mauvais endroit. Pour la traçabilité, une annotation manquante
+  vaut mieux qu'une annotation mal placée (D-007).
+- **Un petit échantillon peut tromper** : 10 contrats suggéraient des segments PDF dix fois trop
+  longs ; 408 contrats ont montré que ce n'était vrai que pour quelques documents. On mesure sur
+  tout le train + validation avant de décider, et on corrige par écrit quand on s'est trompé.
+- **Mesurer avant de choisir** : pour D-008, on compare les deux segmentations avec les mêmes
+  critères (longueur, traçabilité, annotations entières), et c'est Sara qui décide.
+- *Relu par Sara : à faire*
+
+### Problèmes et solutions
+- Installation de PyMuPDF 2.1 trop lente (dépendances lourdes) → version 1.x.
+- Conclusion trop rapide sur 10 contrats → mesure sur 408 contrats et correction écrite.
+
+### Décisions
+- D-007 acceptée (Sara). D-008 proposée. D-009 réservée (exemples négatifs ContractNLI).
+
+### Prochaine étape
+- Sara : décider D-008 ; relire « Ce que j'ai compris ».
+- Séance 2/3 : Docker, PostgreSQL et pgvector ; si D-008 est décidée, préparer les segments PDF
+  étiquetés et réentraîner la baseline sur la validation.
+- Séance 3/3 : ContractNLI (D-002, D-009).
+
+---
+
 ## 2026-11-22 (suite 4) — PR #2 et #3 fusionnées ; début du mode « Claude exécute tout » (séance 1/3)
 
 - **Qui** : Sara-hjd (avec Claude Code)

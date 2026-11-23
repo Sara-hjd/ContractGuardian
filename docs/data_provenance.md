@@ -142,6 +142,8 @@ data[]                        → un élément par contrat (510)
    - **vérifié le 2026-11-22** (`notebooks/01_exploration_cuad.ipynb`, sections a.4 et h) :
      les 13 823 positions retombent exactement sur le texte annoté, et `context` est **identique
      caractère pour caractère** au fichier de `full_contract_txt/` pour les 510 contrats.
+   - **alignement sur le texte PyMuPDF mesuré le 2026-11-23** (347 contrats du train) : 98,3 % des annotations
+     de nos 9 catégories retrouvées après normalisation étendue (D-007, `docs/analyses/verification_pdf_pymupdf.md`).
 4. **Le texte converti est imparfait.** D'après le README, la conversion PDF → TXT ne conserve
    ni la mise en page ni les tableaux, et les espaces entre mots et paragraphes sont parfois
    irréguliers. Le texte contient aussi des pieds de page, des numéros de page et des
