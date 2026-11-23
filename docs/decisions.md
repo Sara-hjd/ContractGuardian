@@ -353,3 +353,54 @@ pour F2 et un protocole d'évaluation qui respecte la règle 2, avec un fort dé
   viendra du test, ouvert une seule fois à la fin de F2.
 - Résultat 2026-11-22 : C = 10 (bord de la grille) retenu pour les 3 familles ; élargir la grille
   serait une nouvelle expérience, notée comme telle.
+
+---
+
+## D-007 — Méthode d'alignement des annotations CUAD sur le texte PDF (PyMuPDF)
+
+- **Date** : 2026-11-23
+- **Statut** : **Proposée, à décider par Sara**
+
+### Contexte
+Les positions des annotations CUAD portent sur le texte `context` de CUAD, pas sur le texte que
+PyMuPDF extrait des PDF (limite 3 de `data_provenance.md`). Pour entraîner ou évaluer sur des
+segments PDF avec leur page (règle 1), il faut retrouver chaque passage annoté dans le texte
+PyMuPDF. Mesures sur les **347 contrats du train** (voir `docs/analyses/verification_pdf_pymupdf.md`).
+
+### Options envisagées
+1. **Correspondance exacte, normalisation des espaces seulement** : 70,7 % des annotations de nos
+   9 catégories retrouvées.
+   - ➕ La plus simple. ➖ Rate près d'un tiers des annotations (guillemets typographiques du PDF).
+2. **Correspondance exacte, normalisation étendue** (espaces, minuscules, guillemets et tirets
+   unifiés, ligatures, césures) : **98,3 %** (2 230 / 2 269) ; 99,3 % sur les 41 catégories.
+   - ➕ Aucune position inventée : un passage est retrouvé tel quel, ou pas du tout.
+   - ➕ Simple à expliquer et à tester ; ~0,1 s par contrat.
+   - ➖ 1,7 % d'annotations perdues (39), dont des défauts du texte CUAD lui-même.
+3. **Option 2 + repli approximatif** (recherche de la zone la plus ressemblante, par exemple avec
+   `difflib`) pour les annotations restantes.
+   - ➕ Récupérerait une partie des 1,7 %.
+   - ➖ Risque de positions **fausses** (une zone qui ressemble n'est pas forcément la bonne), donc
+     risque pour la traçabilité ; plus complexe ; il faudrait un seuil de ressemblance à régler.
+4. **Ne pas aligner** : entraîner et évaluer uniquement sur le texte CUAD ; les PDF ne servent que
+   dans l'application.
+   - ➕ Aucun travail d'alignement.
+   - ➖ Aucune mesure des modèles sur de vrais segments PDF, alors que c'est ce que verra l'application.
+
+### Proposition de Claude
+**Option 2.** Les annotations non retrouvées sont **comptées, listées (références seulement) et
+exclues**, jamais placées approximativement. Le taux d'alignement est recalculé et affiché à
+chaque préparation de données. L'option 3 pourra être réexaminée si le taux baisse sur d'autres
+données.
+
+### Décision
+*À prendre par Sara.*
+
+### Conséquences (si l'option 2 est retenue)
+- `cg.ingestion.alignement` (niveau `"etendue"`) devient la méthode de référence ; ses tests
+  font partie de la suite.
+- **Point lié, à décider séparément** : la segmentation v1 donne des segments PDF bien plus longs
+  que les segments CUAD (médiane 1 422 contre 136 caractères), car PyMuPDF laisse peu de lignes
+  vides. Piste : segmenter les PDF à partir des **blocs** de PyMuPDF. À faire avant d'appliquer la
+  baseline à des PDF.
+- Les pages sans texte (46 dans le train, aucun contrat entièrement scanné) sont signalées ; l'OCR
+  reste hors périmètre.
