@@ -34,3 +34,8 @@ pymupdf>=1.24,<2
 
 # Pilote PostgreSQL (base de l'application, D-010). « binary » : version précompilée.
 psycopg[binary]>=3.2
+
+# Modèles Transformer (F2, puis F4 et F5) : PyTorch (calcul, puce graphique du Mac via MPS)
+# et Transformers (modèles préentraînés de Hugging Face).
+torch>=2.4
+transformers>=4.44,<5

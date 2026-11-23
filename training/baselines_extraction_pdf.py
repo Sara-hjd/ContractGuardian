@@ -29,14 +29,12 @@ import mlflow
 import numpy as np
 import pandas as pd
 
-from cg.datasets.cuad import FAMILLE_DE, FAMILLES, SEUIL_CHEVAUCHEMENT, charger_cuad, chevauchement
+from cg.datasets.cuad import FAMILLE_DE, FAMILLES, charger_cuad
 from cg.datasets.segments import charger_segments, etiquettes
 from cg.datasets.splits import lire_splits
+from cg.extraction.evaluation import rappel_par_annotation
 from cg.extraction.metriques import choisir_seuil, tableau_metriques
 from cg.extraction.tfidf import creer_vectoriseur, entrainer_classifieur
-from cg.ingestion.alignement import aligner, normaliser
-from cg.ingestion.pdf import extraire_pdf, segmenter_pdf, trouver_pdf
-from cg.ingestion.segmentation import fusionner_fragments
 
 RACINE = Path(__file__).resolve().parents[1]
 DOSSIER_CUAD = RACINE / "data" / "raw" / "cuad" / "CUAD_v1"
@@ -90,49 +88,6 @@ def regler(train: pd.DataFrame, val: pd.DataFrame) -> tuple[dict[str, np.ndarray
     return predictions, meilleurs
 
 
-def rappel_par_annotation(
-    val: pd.DataFrame, predictions: dict[str, np.ndarray], seuil_fusion: int,
-    textes: dict[str, str], annotations_val: dict[str, list],
-) -> dict[str, float]:
-    """Part des annotations de la validation dont au moins un segment est détecté (bonne famille).
-
-    Args:
-        val: Segments PDF de validation, dans l'ordre des prédictions.
-        predictions: Prédictions par famille, alignées sur ``val``.
-        seuil_fusion: Seuil de fusion utilisé pour produire ``val`` (pour refaire les mêmes segments).
-        textes: Textes CUAD (pour lire les passages annotés).
-        annotations_val: Annotations de nos catégories, par contrat de validation.
-
-    Returns:
-        Le rappel par annotation pour chaque famille et ``"macro"`` (moyenne des familles).
-    """
-    detecte: dict[tuple[str, int, int], dict[str, bool]] = {
-        (t, d, f): {fam: bool(predictions[fam][i]) for fam in FAMILLES}
-        for i, (t, d, f) in enumerate(zip(val["titre"], val["debut"], val["fin"]))
-    }
-    trouvees = {f: 0 for f in FAMILLES}
-    totales = {f: 0 for f in FAMILLES}
-    for titre, annotations in annotations_val.items():
-        document = extraire_pdf(trouver_pdf(DOSSIER_CUAD / "full_contract_pdf", titre), titre, mode="blocs")
-        segments = fusionner_fragments(document.texte, segmenter_pdf(document), seuil_fusion)
-        cible = normaliser(document.texte, "etendue")
-        contexte = textes[titre]
-        for a in annotations:
-            position = aligner(contexte[a.debut:a.fin], cible, "etendue", a.debut / len(contexte))
-            if position is None:
-                continue  # D-007 : exclue
-            famille = FAMILLE_DE[a.categorie]
-            totales[famille] += 1
-            debut, fin = position
-            seuil = min(SEUIL_CHEVAUCHEMENT, fin - debut)
-            if any(chevauchement(s.debut, s.fin, debut, fin) >= seuil
-                   and detecte[(titre, s.debut, s.fin)][famille] for s in segments):
-                trouvees[famille] += 1
-    rappels = {f: trouvees[f] / totales[f] for f in FAMILLES}
-    rappels["macro"] = float(np.mean(list(rappels.values())))
-    return rappels
-
-
 def main() -> None:
     """Règle, évalue et journalise chaque configuration ; affiche la comparaison."""
     textes, annotations = charger_cuad(DOSSIER_CUAD / "CUAD_v1.json")
@@ -153,7 +108,8 @@ def main() -> None:
         train = charger_segments(source_train, {"train"})
         predictions, reglages = regler(train, val)
         tableau = tableau_metriques(etiquettes(val), predictions)
-        rappels = rappel_par_annotation(val, predictions, seuil_fusion, textes, annotations_val)
+        rappels = rappel_par_annotation(val, predictions, seuil_fusion, textes, annotations_val,
+                                        DOSSIER_CUAD / "full_contract_pdf")
 
         with mlflow.start_run(run_name=nom):
             mlflow.log_params({"configuration": nom, "seuil_fusion": seuil_fusion,

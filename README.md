@@ -107,7 +107,8 @@ Prérequis déjà identifiés : Homebrew, Python 3.11, Git, Docker Desktop, Node
 | F2 · durée | Validation | F1 (P / R) | Mots-clés 0,180 (0,10 / 0,80) · TF-IDF **0,727** (0,79 / 0,67) | — | 2026-11-22 |
 | F2 · résiliation | Validation | F1 (P / R) | Mots-clés 0,304 (0,21 / 0,53) · TF-IDF **0,521** (0,51 / 0,54) | — | 2026-11-22 |
 | F2 Extraction (segments PDF, blocs) | **Validation** (61 contrats, 11 465 segments PDF) | Macro-F1 · macro rappel par annotation | TF-IDF entraîné sur CUAD : 0,643 · 0,719 — entraîné sur PDF : **0,656 · 0,724** | — | 2026-11-23 |
-| F2 · confidentialité | **Dev** ContractNLI (61 NDA, 2 872 segments) | F1 (P / R) | Mots-clés : 0,580 (0,43 / 0,88) | — | 2026-11-23 |
+| F2 · confidentialité | **Dev** ContractNLI (61 NDA, 2 872 segments) | F1 (P / R) | Mots-clés : 0,580 (0,43 / 0,88) · TF-IDF : 0,830 | Transformer (legal-bert-small) : **0,862** (0,85 / 0,87) | 2026-11-23 |
+| F2 Extraction (segments PDF, 3 familles) | **Validation** | Macro-F1 · macro rappel par annotation | TF-IDF : 0,656 · 0,724 | Transformer (legal-bert-small, poids atténué) : 0,625 · **0,773** | 2026-11-23 |
 | F2 · responsabilité | Validation | F1 (P / R) | Mots-clés 0,257 (0,16 / 0,71) · TF-IDF **0,758** (0,89 / 0,66) | — | 2026-11-22 |
 
 *Chiffres de **validation**, optimistes car les seuils y sont réglés (D-006). Le jeu de test n'a

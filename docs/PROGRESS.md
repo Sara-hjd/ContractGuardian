@@ -73,6 +73,58 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 
 ## Séances
 
+## 2026-11-23 — Séance 1/5 (second mode) : Transformer pour F2
+
+- **Qui** : Sara-hjd (avec Claude Code, second mode temporaire, séance **1/5**)
+- **Branche** : `exp/transformer-f2`
+- **Plan des 5 séances validé par Sara** : F2 → F4 → F5 → F3 → F6, avec : F5 = réponse extractive
+  + petit LLM local orchestré par LangGraph (citations vérifiées mot pour mot, abstention) ;
+  F3 = 30 à 50 paires annotées par Sara et Ilyas (kappa de Cohen), Claude prépare seulement.
+
+### Fait
+- PyTorch 2.15 + Transformers 4.57 installés ; puce graphique du Mac (MPS) utilisée.
+- `src/cg/extraction/transformer.py` (boucle d'entraînement écrite à la main, perte pondérée),
+  `src/cg/extraction/evaluation.py` (rappel par annotation, partagé), 2 scripts, 3 tests (**32 passent**).
+- Deux modèles (D-013 proposée) entraînés, 2 expériences sur CUAD ; modèles dans `models/` (non commité).
+- D-012 (modèle, réglages) et D-013 proposées ; analyse `docs/analyses/transformer_f2_val.md`.
+
+### Résultats (validation ; tests fermés)
+- Confidentialité : **F1 0,862** (TF-IDF 0,830, mots-clés 0,580).
+- 3 familles CUAD : macro-F1 0,625 (TF-IDF 0,656), rappel par annotation **0,773** (TF-IDF 0,724).
+
+### Avancement
+
+| Fonctionnalité | Statut | Commentaire |
+|---|---|---|
+| F1 | En cours | Inchangé. |
+| F2 Extraction de clauses | En cours | Transformer entraîné pour les 4 familles ; D-012, D-013 à décider ; test à ouvrir plus tard (décision écrite). |
+| F3 à F6 | À faire | F4 à la séance 2/5. |
+| F7 | En cours | Expériences dans MLflow (`F2-transformer`). |
+
+### Ce que j'ai compris
+<!-- Rédigé par Claude en fin de séance, relu et corrigé par Sara. -->
+- **Affiner un modèle préentraîné** : Legal-BERT connaît déjà la langue juridique ; on lui ajoute une
+  petite « tête » de classification qu'on entraîne sur nos segments étiquetés.
+- **Une époque** = un passage complet sur le train ; après chacune, on mesure sur la validation et
+  on garde la meilleure.
+- **Le poids des positifs** compense le déséquilibre, mais **trop fort, il fait dire « oui » trop
+  souvent** : 156 fausses alertes en résiliation avec un poids ≈ 100, 74 avec ≈ 10.
+- **Un seuil au bord de la grille** est un signal d'alerte ; ici, élargir la grille n'a pas suffi :
+  la cause était ailleurs (le poids). On cherche la cause avant de corriger.
+- **Deux mesures, deux lectures** : TF-IDF est un peu plus précis par segment, le Transformer
+  retrouve plus de clauses. Le choix dépend de ce qui compte pour l'utilisateur (ne rien rater ou
+  ne pas déranger), et c'est une décision.
+- *Relu par Sara : à faire*
+
+### Décisions
+- D-012 et D-013 proposées.
+
+### Prochaine étape
+- Sara : décider D-012 et D-013.
+- Séance 2/5 : F4, NLI sur ContractNLI.
+
+---
+
 ## 2026-11-23 — Séance 3/3 (mode « Claude exécute tout ») : ContractNLI, confidentialité, diagnostic — fin du mode
 
 - **Qui** : Sara-hjd (avec Claude Code, mode temporaire, séance **3/3**, la dernière)
