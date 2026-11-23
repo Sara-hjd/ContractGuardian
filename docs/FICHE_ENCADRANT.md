@@ -79,6 +79,14 @@
   on ne prend pas les négatifs dans CUAD (D-009, acceptée).
 - **Bilan complet de la période : `docs/DIAGNOSTIC_2026-11-16_au_2026-11-23.md`.**
 
+## Transformer pour F2 (Legal-BERT small, validation)
+
+- **Confidentialité** : F1 **0,862** (TF-IDF 0,830 ; mots-clés 0,580).
+- **3 familles CUAD** : macro-F1 0,625 (TF-IDF 0,656) mais **rappel par annotation 0,773** (TF-IDF
+  0,724) : le Transformer trouve plus de clauses, TF-IDF reste un peu plus précis par segment.
+- Leçon : un poids des positifs trop fort (≈ 100) fait dire « oui » trop souvent (F1 0,506) ;
+  atténué (racine, ≈ 10) → 0,625.
+
 ## Décisions prises par Sara le 2026-11-22, à présenter pour validation
 
 | | Sujet | Décision |
@@ -92,6 +100,8 @@
 | **D-008** | Segmentation des PDF | Blocs PyMuPDF (Sara, 2026-11-23) ; fusion testée en expérience |
 | **D-010** | Base de données | PostgreSQL 17 + pgvector, Docker, `.env`, SQL sans ORM (Sara, 2026-11-23) |
 | **D-011** | Données d'entraînement F2 | Segments PDF blocs, sans fusion (Sara, 2026-11-23) |
+| **D-012** | Modèle Transformer F2 | *Proposée* : legal-bert-small, poids atténué (CUAD) |
+| **D-013** | CUAD + ContractNLI | *Proposée* : deux modèles |
 | **D-009** | Confidentialité : segmentation, négatifs | Coupe aux lignes, sans nda-18, négatifs dans les NDA (Sara, 2026-11-23) ; annotation CUAD plus tard |
 
 Point à discuter pour D-002 : dans un NDA, presque tout le texte parle de confidentialité ;

@@ -1105,3 +1105,97 @@ diagnostic complet après la 5e ; proposer le plan des 5 séances et attendre sa
   gh pr merge <n> --merge --delete-branch
   git pull
   ```
+- **Résultat de J2** : PR #8 fusionnée (`d990568`) ; 29 tests passent ; compteur 0/5.
+
+---
+
+## Séance 1/5 du second mode — 2026-11-23 — Transformer pour F2
+
+**Plan validé par Sara** : F2 → F4 → F5 → F3 → F6, avec deux corrections : F5 = réponse extractive
+(base et comparaison) + petit LLM local (Ollama par exemple) orchestré avec LangGraph (chercher →
+vérifier la preuve → répondre ou s'abstenir), citations vérifiées mot pour mot ; F3 = 30 à 50 paires
+annotées **par Sara et Ilyas** (pas par Claude), kappa de Cohen. Rappeler à chaque fin de séance ce
+qu'Ilyas doit relire (PR #2 à #8).
+
+**Plan de la séance** : installer PyTorch + Transformers ; proposer D-012 (modèle) et D-013
+(combiner CUAD et ContractNLI) ; entraîner (train), régler (val / dev), comparer à TF-IDF ;
+tests ; MLflow ; PR ; clôture (résumé de 10 lignes, rappel Ilyas).
+
+### K1 — 01:46 — Branche et installation
+
+- **Commandes** : `git switch -c exp/transformer-f2` ;
+  `.venv/bin/python -m pip install --retries 10 --timeout 120 --resume-retries 50 --progress-bar off "torch>=2.4" "transformers>=4.44,<5"`.
+- **Explication** : PyTorch fait les calculs (sur la puce graphique du Mac, « MPS ») ; Transformers
+  fournit les modèles préentraînés. `<5` évite une future version 5 aux changements incompatibles.
+- **Résultat** : torch 2.15.0, transformers 4.57.6, MPS disponible ; moins d'une minute (réseau rapide).
+
+### K2 — Candidats pour D-012 (lecture)
+
+- **Commande** : `curl -s "https://huggingface.co/api/models/<modèle>?blobs=true" | jq …` pour 3 modèles.
+- **Résultat** : legal-bert-small-uncased 141 Mo (CC BY-SA 4.0) ; legal-bert-base-uncased 440 Mo
+  (CC BY-SA 4.0) ; deberta-v3-small 286 Mo (MIT).
+
+### K3 — Code
+
+- `src/cg/extraction/evaluation.py` : `rappel_par_annotation` **déplacée** depuis
+  `training/baselines_extraction_pdf.py` (paramètre `dossier_pdf` explicite), script mis à jour et
+  vérifié par import.
+- `src/cg/extraction/transformer.py` (chargement, boucle d'entraînement à la main, perte pondérée,
+  prédiction, MPS) ; `training/transformer_extraction.py` (2 tâches, réglages fixés avant, meilleure
+  époque et seuils choisis sur la validation, comparaison TF-IDF, MLflow, sauvegarde dans `models/`).
+- `tests/test_transformer.py` : 2 tests avec un minuscule BERT créé localement (aucun téléchargement) → 2 passed.
+- `requirements.txt` : `torch>=2.4`, `transformers>=4.44,<5` ; README de `extraction/`.
+
+### K4 — 01:48 — Entraînement lancé
+
+- **Commande** : `MLFLOW_DISABLE_AGENT_HINT=1 PYTHONPATH=src .venv/bin/python training/transformer_extraction.py --tache les-deux`
+  (en arrière-plan ; confidentialité puis CUAD). Résultats : K5.
+
+### K5 — 03:07 — Résultats du premier entraînement (validation, tests fermés)
+
+- **Durée** : 01:48 → 03:07 (1 h 19). Modèles dans `models/f2-confidentialite-legal-bert-small` et
+  `models/f2-cuad-legal-bert-small` (dossier ignoré par Git).
+- **Confidentialité** (dev ContractNLI) : époques 0,851 / 0,845 / **0,862** ; P 0,852, R 0,873,
+  **F1 0,862** ; TF-IDF 0,830 ; mots-clés 0,580.
+- **CUAD** (validation) : époques 0,385 / 0,501 / 0,506 ; F1 durée 0,673, résiliation 0,344,
+  responsabilité 0,502, **macro 0,506** (TF-IDF : 0,656) ; rappel par annotation **0,786** (TF-IDF : 0,724).
+- **Défaut de protocole constaté** : tous les seuils choisis valent 0,95, le maximum de la grille.
+- **Erreur de Claude** : Python lancé sans `-u` → progression invisible pendant l'entraînement.
+
+### K6 — 03:08 — Réévaluation avec une grille de seuils élargie (sans réentraîner)
+
+- **Fichier créé** : `evaluation/reevaluer_seuils_transformer.py` (recharge les modèles sauvegardés ;
+  seuils 0,05…0,95 + 0,96, 0,97, 0,98, 0,99, 0,995, 0,999 ; validation seulement ; runs MLflow
+  `…-seuils-elargis`).
+- **Commande** : `MLFLOW_DISABLE_AGENT_HINT=1 PYTHONPATH=src .venv/bin/python -u evaluation/reevaluer_seuils_transformer.py`
+- **Résultat** : confidentialité inchangée (seuil 0,95, F1 0,862) ; CUAD macro-F1 0,531 (seuils 0,96 /
+  0,95 / 0,98), rappel par annotation 0,717. **Le bord de la grille n'était pas la cause principale.**
+- **Diagnostic** : la confidentialité (21 % de positifs, poids ≈ 4) marche bien ; CUAD (≈ 1 % de
+  positifs, poids ≈ 100) donne beaucoup de fausses alertes → le poids des positifs est trop fort.
+
+### K7 — 03:09 — Expérience 2 : poids des positifs atténué (racine carrée), décidée avant de lancer
+
+- **Fichiers modifiés** : `src/cg/extraction/transformer.py` (`poids_positifs(..., racine=True)`,
+  paramètre `poids_racine` ; `perte.detach()` pour supprimer l'avertissement) ;
+  `training/transformer_extraction.py` (option `--poids-racine`, modèle et run suffixés
+  `-poids-racine`). Test ajouté : `test_poids_positifs_racine` → **32 passed**.
+- **Commande** (détachée, progression visible en direct) :
+  ```bash
+  MLFLOW_DISABLE_AGENT_HINT=1 PYTHONPATH=src nohup .venv/bin/python -u training/transformer_extraction.py --tache cuad --poids-racine > data/processed/progression_transformer_poids_racine.log 2>&1 &
+  ```
+- **Explication** : `nohup … &` lance le programme en arrière-plan, sans dépendre du terminal ;
+  `-u` écrit chaque message immédiatement dans le fichier de progression. Tout le reste est identique.
+
+### K8 — 03:56 — Résultats de l'expérience 2 (validation)
+
+- Époques : 0,510 / 0,614 / **0,625** ; seuils 0,85 / 0,70 / 0,90 (à l'intérieur de la grille) ;
+  F1 durée 0,732, résiliation 0,473, responsabilité 0,670 ; rappel par annotation **0,773**
+  (TF-IDF 0,724). Modèle : `models/f2-cuad-legal-bert-small-poids-racine`.
+- Lignes `MallocStackLogging` dans le journal de progression : messages système de macOS, sans effet.
+
+### K9 — Analyse, décisions proposées, clôture de la séance 1/5
+
+- `docs/analyses/transformer_f2_val.md` ; `docs/decisions.md` : **D-012** et **D-013 « Proposées »** ;
+  `README.md` (résultats), `docs/FICHE_ENCADRANT.md`, `docs/PROGRESS.md`, `CLAUDE.md` (compteur 1/5).
+- **Commandes** : `pytest` ; `git add` ; `git commit` ; `git push -u origin exp/transformer-f2` ;
+  `gh pr create` ; `gh pr merge <n> --merge --delete-branch` ; `git pull`.

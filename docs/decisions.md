@@ -613,3 +613,69 @@ avec la baseline par mots-clés **figée avant toute évaluation** (commit `e44c
 
 ### Décision
 **Acceptée telle que proposée** (Sara, 2026-11-23) : segmentation de ContractNLI **coupée à chaque saut de ligne** ; **16 hypothèses sur 17** (nda-18 exclue) ; **négatifs pris dans les NDA** (option A). L'**option D** (annotation manuelle d'un échantillon CUAD par Sara et Ilyas, D-003) est **prévue plus tard**, comme jeu d'évaluation complémentaire.
+
+---
+
+## D-012 — Modèle Transformer pour F2 et ses réglages
+
+- **Date** : 2026-11-23
+- **Statut** : **Proposée, à décider par Sara** (implémentation provisoire en place)
+
+### Contexte
+Après les baselines (D-006, D-011), F2 doit utiliser un modèle de langage préentraîné (stack :
+PyTorch + Transformers), entraînable gratuitement sur le Mac de Sara (M4 Pro, 24 Go, puce
+graphique MPS ; règle 4). Mesures : `docs/analyses/transformer_f2_val.md` (validation, tests fermés).
+
+### Options envisagées (modèle)
+1. **`nlpaueb/legal-bert-small-uncased`** (141 Mo, CC BY-SA 4.0) : BERT préentraîné sur des textes
+   juridiques (dont des contrats EDGAR). ➕ Spécialisé, petit, ≈ 45 min pour 3 époques sur CUAD.
+   ➖ Petit modèle ; contamination possible du préentraînement par des contrats EDGAR.
+2. **`nlpaueb/legal-bert-base-uncased`** (440 Mo) : même famille, plus grand. ➕ Probablement
+   meilleur. ➖ ≈ 3 fois plus long à entraîner.
+3. **`microsoft/deberta-v3-small`** (286 Mo, MIT) : très bon en général, non spécialisé.
+
+### Options envisagées (poids des positifs)
+- Rapport négatifs / positifs (≈ 100 sur CUAD) : trop de fausses alertes (macro-F1 0,506).
+- **Racine carrée du rapport** (≈ 10) : macro-F1 0,625, rappel par annotation 0,773.
+
+### Proposition de Claude
+- **Modèle** : legal-bert-small (option 1), réglages fixes (5e-5, 3 époques, lots de 32,
+  256 tokens, graine 0), **poids des positifs = racine carrée du rapport** pour CUAD.
+- Pour la confidentialité, garder le poids = rapport (≈ 4) : F1 0,862, meilleur que TF-IDF.
+- **Garder TF-IDF comme référence** : sur les 3 familles CUAD, les deux sont proches (F1 par
+  segment 0,656 contre 0,625 ; rappel par annotation 0,724 contre 0,773).
+- Plus tard, si le temps le permet (expériences sur la validation) : plus d'époques (le modèle
+  progressait encore), legal-bert-base.
+- **Le choix du modèle évalué une seule fois sur le test** sera une décision séparée, à la fin de F2.
+
+### Décision
+*À prendre par Sara.*
+
+---
+
+## D-013 — Combiner CUAD et ContractNLI pour F2 : un modèle ou deux ?
+
+- **Date** : 2026-11-23
+- **Statut** : **Proposée, à décider par Sara** (implémentation provisoire : deux modèles)
+
+### Contexte
+Les 3 familles viennent de CUAD (segments PDF, D-011) ; la confidentialité vient de ContractNLI
+(D-009). Les segments CUAD n'ont **pas** d'étiquette de confidentialité (et en contiennent souvent,
+non annotée) ; les NDA de ContractNLI n'ont **pas** d'étiquettes de durée, résiliation ou responsabilité.
+
+### Options envisagées
+1. **Deux modèles** : un modèle 3 familles (CUAD), un modèle confidentialité (ContractNLI).
+   ➕ Chaque modèle n'apprend que sur des étiquettes connues ; simple à expliquer. ➖ Deux modèles
+   à charger dans l'application.
+2. **Un seul modèle à 4 sorties, perte masquée** : on ignore la perte d'une famille quand sa source
+   ne l'annote pas. ➕ Un seul modèle. ➖ Plus complexe ; risque d'apprendre « NDA ou non » plutôt
+   que la clause.
+3. **Un seul modèle, étiquettes manquantes considérées négatives**. ➖ Faux négatifs certains
+   (D-009) : à écarter.
+
+### Proposition de Claude
+**Option 1** pour l'instant (implémentée et mesurée) ; l'option 2 pourra être testée plus tard
+comme expérience, si charger deux modèles pose problème dans l'application.
+
+### Décision
+*À prendre par Sara.*

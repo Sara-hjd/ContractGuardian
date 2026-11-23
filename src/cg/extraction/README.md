@@ -12,8 +12,10 @@ plusieurs familles, ou d'aucune (environ 97 % des segments).
 | `tfidf.py` | Baseline 2 : vectoriseur TF-IDF, régression logistique pondérée (`class_weight="balanced"`), mots les plus lourds. |
 | `metriques.py` | Précision, rappel, F1 par famille, macro-F1 ; choix du seuil (sur la validation seulement). |
 | `mots_cles_confidentialite.py` | Baseline par mots-clés de la confidentialité (D-002), figée avant évaluation (commit `e44cdf8`). |
+| `transformer.py` | Transformer multi-étiquette (D-012) : chargement, boucle d'entraînement écrite à la main (perte pondérée), prédiction ; puce graphique du Mac (MPS) si disponible. |
+| `evaluation.py` | `rappel_par_annotation` : mesure indépendante de la segmentation (une clause annotée est-elle trouvée ?). |
 
-L'entraînement se lance avec `training/baselines_extraction.py` (voir ce fichier).
+Entraînement : `training/baselines_extraction.py`, `training/baselines_extraction_pdf.py`, `training/baseline_confidentialite.py`, `training/transformer_extraction.py`. Les modèles entraînés sont écrits dans `models/` (jamais commité).
 
 ## Règles
 
