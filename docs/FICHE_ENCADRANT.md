@@ -62,6 +62,14 @@
 - Segmentation des PDF à choisir (D-008) : par **blocs** PyMuPDF, 2 % de segments coupés au plafond
   contre 18,8 % en texte brut.
 
+## Base de données et segments PDF (étape 2)
+
+- **PostgreSQL 17 + pgvector 0.8.7** dans Docker, accès local seulement, mot de passe hors dépôt.
+  408 contrats (train + val) importés : 96 244 segments, **traçabilité vérifiée en SQL (0 erreur)**.
+- Baseline réentraînée sur les **segments PDF** (blocs) : macro rappel par annotation 0,724, contre
+  0,719 pour le modèle entraîné sur le texte CUAD (écart = 1 à 2 annotations, non significatif).
+  La fusion des fragments n'apporte rien de mesurable.
+
 ## Décisions prises par Sara le 2026-11-22, à présenter pour validation
 
 | | Sujet | Décision |
@@ -72,7 +80,9 @@
 | **D-005** | Fichier des splits | Commité (titres seulement), exception de la règle 5 étendue |
 | **D-006** | Protocole des baselines ; planning | Baseline avant l'étape 2 (ingestion PDF, base de données) |
 | **D-007** | Alignement des annotations sur le texte PDF | Exact après normalisation étendue (Sara, 2026-11-23) |
-| **D-008** | Segmentation des PDF | *Proposée* : blocs PyMuPDF (Sara décidera) |
+| **D-008** | Segmentation des PDF | Blocs PyMuPDF (Sara, 2026-11-23) ; fusion testée en expérience |
+| **D-010** | Base de données | PostgreSQL 17 + pgvector, Docker, `.env`, SQL sans ORM (Sara, 2026-11-23) |
+| **D-011** | Données d'entraînement F2 | Segments PDF blocs, sans fusion (Sara, 2026-11-23) |
 
 Point à discuter pour D-002 : dans un NDA, presque tout le texte parle de confidentialité ;
 d'où viendront les exemples **négatifs** ?

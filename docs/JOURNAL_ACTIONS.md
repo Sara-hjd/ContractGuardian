@@ -809,3 +809,153 @@ diagnostic total depuis le 16/11.
   gh pr merge 5 --merge --delete-branch
   git pull
   ```
+- **Résultat de G14** : commit `8708b02` poussé ; commentaire sur la PR #5 (correction de la
+  médiane) ; PR #5 **fusionnée** (commit de fusion `2b7340f`) ; branche supprimée ; `main` à jour ;
+  **21 passed** sur `main`. **Fin de la séance 1/3.** Ce paragraphe sera commité au début de la
+  séance 2/3 (sur la première branche de la séance), pour ne pas commiter directement sur `main`.
+
+---
+
+## Séance 2/3 du mode temporaire — 2026-11-23 — Docker, PostgreSQL, pgvector ; segments PDF ; réentraînement
+
+**Plan annoncé** : (1) D-008 acceptée + commit du journal en attente ; (2) Docker, PostgreSQL,
+pgvector (priorité) — décisions de fond **proposées** (D-010) ; (3) segments PDF étiquetés
+(blocs) ; (4) réentraînement de la baseline sur ces segments, comparaison sur la validation, avec
+l'expérience « fusion des fragments » ; (5) clôture.
+
+### H1 — 00:52 — État de Docker et branche
+
+- **Commandes** : `docker --version` ; `docker compose version` ; `docker info --format …` ;
+  `git switch -c infra/postgres-pgvector`.
+- **Résultat** : Docker Desktop 29.8.2 installé **et lancé** ; Compose v5.6.0.
+
+### H2 — 00:52 — Choisir et télécharger l'image
+
+- **Commandes** :
+  ```bash
+  curl -s "https://hub.docker.com/v2/repositories/pgvector/pgvector/tags?page_size=40&ordering=last_updated" | jq …
+  docker pull pgvector/pgvector:0.8.7-pg17
+  ```
+- **Explication** : la première commande lit (GET) la liste des versions de l'image officielle ;
+  `docker pull` télécharge l'image choisie. Version figée pour la reproductibilité (D-010).
+- **Résultat** : `0.8.7-pg17` (164 Mo compressés) ; téléchargement lancé en arrière-plan (réseau lent).
+
+### H3 — 00:52 — Installer psycopg 3
+
+- **Commande** : `.venv/bin/python -m pip install --retries 10 --timeout 120 --resume-retries 50 --progress-bar off "psycopg[binary]>=3.2"`
+- **Explication** : psycopg est le pilote qui permet à Python de parler à PostgreSQL ; « binary »
+  = version précompilée, sans compilation sur la machine.
+- **Résultat** : `psycopg 3.3.9`.
+
+### H4 — D-008 acceptée
+
+- **Action** : `docs/decisions.md`, D-008 « Acceptée (Sara, 2026-11-23) » : option 2 (blocs) ;
+  option 3 testée comme expérience lors du réentraînement, réglée et comparée sur la validation.
+
+### H5 — Fichiers de la base
+
+- **Créés** : `docker-compose.yml`, `.env.example`, `db/init/001_schema.sql`,
+  `src/cg/stockage/` (`__init__.py`, `connexion.py`, `depot.py`, `ingerer_pdf.py`, `README.md`),
+  `tests/test_stockage.py`.
+- **`.env` local** (jamais commité) :
+  ```bash
+  if [ -e .env ]; then echo "existe déjà"; else sed "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$(openssl rand -hex 16)/" .env.example > .env && chmod 600 .env; fi
+  git check-ignore -v .env .env.example
+  ```
+  **Explication** : on ne crée `.env` que s'il n'existe pas (pas d'écrasement) ; `openssl rand -hex 16`
+  tire un mot de passe aléatoire (32 caractères hexadécimaux) ; `chmod 600` = lisible par ton seul
+  compte. Le mot de passe n'a été affiché nulle part. **Résultat** : `.env` ignoré, `.env.example` suivi.
+
+### H6 — Fusion des fragments (option 3 de D-008)
+
+- **Fichier modifié** : `src/cg/ingestion/segmentation.py`, fonction `fusionner_fragments`
+  (fragment < seuil rattaché au suivant de la même page, sans dépasser le plafond).
+- **Test ajouté** : `test_fusionner_fragments` ; suite : 23 passed, 2 skipped (base pas encore lancée).
+
+### H7 — 00:57 — Segments PDF étiquetés (train + val)
+
+- **Fichier créé** : `src/cg/datasets/preparer_segments_pdf.py`.
+- **Commande** : `for s in 0 20 40 80; do PYTHONPATH=src .venv/bin/python -m cg.datasets.preparer_segments_pdf --seuil-fusion $s; done`
+- **Grille des seuils fixée avant tout entraînement** : {0, 20, 40, 80}.
+- **Résultats** : seuil 0 : 96 244 segments, médiane 83, < 20 car. 24,6 % ; seuil 20 : 79 733, médiane 133,
+  3,4 % ; seuil 40 : 70 719, médiane 169 ; seuil 80 : 61 819, médiane 216. Annotations (nos 9) :
+  2 691, alignées 2 643, **exclues 48 (1,8 %)**, références dans
+  `data/processed/cuad_pdf_annotations_exclues.jsonl`. Tous les fichiers dans `data/processed/` (ignoré).
+
+### H8 — Réentraînement sur segments PDF (lancé)
+
+- **Fichier créé** : `training/baselines_extraction_pdf.py` (configurations `cuad->pdf` et
+  `pdf-fusion{0,20,40,80}` ; même grille que D-006 ; F1 par segment + **rappel par annotation**).
+- **Commande** : `MLFLOW_DISABLE_AGENT_HINT=1 PYTHONPATH=src .venv/bin/python training/baselines_extraction_pdf.py`
+  (en arrière-plan). Résultat : H9.
+
+### H8 bis — D-010 proposée
+
+- `docs/decisions.md` : **D-010 « Proposée »** (image figée, accès local, `.env`, volume, schéma,
+  pgvector sans colonne pour l'instant, SQL numérotés sans Alembic, psycopg sans ORM). Sara décidera.
+
+### H9 — 01:04 — Démarrer la base
+
+- **Résultat de H2** : image `pgvector/pgvector:0.8.7-pg17` téléchargée (≈ 12 minutes ; 485 Mo une fois décompressée).
+- **Commandes** :
+  ```bash
+  docker compose config --quiet          # vérifie que docker-compose.yml est valide
+  docker compose up -d                   # crée et démarre le conteneur en arrière-plan (-d)
+  docker inspect -f '{{.State.Health.Status}}' cg-postgres    # répété jusqu'à « healthy »
+  docker compose ps
+  ```
+- **Résultat** : `cg-postgres Up (healthy) 127.0.0.1:5432->5432/tcp`.
+
+### H10 — 01:04 — Vérifier le schéma et lancer les tests
+
+- **Commandes** :
+  ```bash
+  docker exec cg-postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\dt" -c "SELECT extname, extversion FROM pg_extension WHERE extname = '\''vector'\'';" -c "SELECT version();"'
+  .venv/bin/python -m pytest -q -rs
+  ```
+- **Explication** : `docker exec` lance une commande **dans** le conteneur ; `psql` est le client
+  en ligne de commande de PostgreSQL ; `\dt` liste les tables. Les identifiants sont lus dans les
+  variables du conteneur, jamais écrits dans la commande.
+- **Résultat** : 4 tables (`contrats`, `pages`, `segments`, `resultats`) ; `vector 0.8.7` ;
+  PostgreSQL 17.12 ; **25 passed** (dont les 3 tests de la base).
+
+### H11 — 01:05 — Importer les 408 PDF de train + validation dans la base
+
+- **Commande** : script Python court (boucle sur les titres train + val : `extraire_pdf(mode="blocs")`,
+  `segmenter_pdf`, `enregistrer_document(source="cuad")`, `compter_segments_non_tracables`), puis
+  `SELECT pg_size_pretty(pg_database_size(current_database()))`.
+- **Pourquoi** : test de robustesse réel (caractères refusés par PostgreSQL, gros contrats) ; le test
+  n'est pas importé.
+- **Résultat** : **408/408 contrats**, 7 625 pages, **96 244 segments** (identique au fichier
+  préparé en H7), **0 non traçable (vérifié en SQL)**, 0 erreur, 211 s ; base : 51 Mo.
+
+### H12 — 01:09 — Résultats du réentraînement (H8)
+
+- **Commande de lecture** : `mlflow.search_runs(experiment_names=['F2-extraction-segments-pdf'])`
+  (l'affichage du script était tronqué par pandas).
+- **Résultats (validation)** : `cuad->pdf` macro-F1 0,643, macro rappel par annotation 0,719 ;
+  `pdf-fusion0` 0,656 / 0,724 ; fusion 20 / 40 / 80 : 0,657 / 0,665 / 0,669 (segments différents) et
+  0,720 / 0,720 / 0,723. Annotations de validation alignées : durée 208, résiliation 89,
+  responsabilité 116 → 1 annotation = 0,5 / 1,1 / 0,9 point : écarts non significatifs.
+
+### H13 — Analyse, D-011 proposée, clôture
+
+- `docs/analyses/baseline_segments_pdf_val.md` créé ; **D-011 « Proposée »** (segments PDF blocs,
+  sans fusion) ; `requirements.txt` : `psycopg[binary]>=3.2`.
+- `README.md` (F1, tableau des résultats), `docs/FICHE_ENCADRANT.md`, `docs/PROGRESS.md` (séance 2/3),
+  `CLAUDE.md` (compteur : **2/3 terminée**) — modifiés par un script Python de remplacement
+  vérifiant chaque repère.
+
+### H14 — Commit, push, PR (fusion après les décisions de Sara sur D-010 et D-011)
+
+- **Commandes** : `.venv/bin/python -m pytest -q` ; `git add …` ;
+  `git commit -m "feat(stockage): PostgreSQL + pgvector, segments PDF et réentraînement (D-008 ; D-010, D-011 proposées)"` ;
+  `git push -u origin infra/postgres-pgvector` ; `gh pr create …`.
+- La base reste démarrée (`docker compose ps`) ; pour l'arrêter : `docker compose down`.
+
+### H15 — Décisions de Sara : D-010 et D-011 acceptées ; fusion de la PR #6
+
+- **Décisions** : D-010 acceptée telle quelle ; D-011 option 2 (segments PDF blocs, sans fusion).
+- **Fichiers** : `docs/decisions.md`, `docs/FICHE_ENCADRANT.md`, `docs/PROGRESS.md` (script Python
+  de remplacement vérifiant chaque repère).
+- **Commandes** : `git commit` ; `git push` ; `gh pr merge 6 --merge --delete-branch` ; `git pull`.
