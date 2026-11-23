@@ -73,6 +73,63 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 
 ## Séances
 
+## 2026-11-23 — Séance 3/3 (mode « Claude exécute tout ») : ContractNLI, confidentialité, diagnostic — fin du mode
+
+- **Qui** : Sara-hjd (avec Claude Code, mode temporaire, séance **3/3**, la dernière)
+- **Branche** : `exp/contractnli`
+
+### Fait
+- D-010 et D-011 acceptées (Sara) ; PR #6 fusionnée.
+- **ContractNLI** téléchargé (65,4 Mo, SHA-256 noté), provenance, licence et conditions documentées.
+- `src/cg/datasets/contractnli.py` (test fermé dans le code), segments « confidentialité » pour
+  train (18 355) et dev (2 872), traçabilité 100 %.
+- **Liste de mots-clés figée et commitée avant toute évaluation** (`e44cdf8`).
+- Segmentation : option « coupe aux lignes » (le texte de ContractNLI n'a aucune ligne vide).
+- Mesures pour **D-009 (proposée)** ; 3 runs MLflow (`F2-confidentialite`).
+- **29 tests passent**. **Diagnostic total** : `docs/DIAGNOSTIC_2026-11-16_au_2026-11-23.md`.
+- **Fin du mode temporaire** : la règle « Sara exécute les commandes » reprend.
+
+### Résultats (dev ContractNLI, test fermé)
+- Mots-clés, négatifs pris dans les NDA : précision 0,433, rappel 0,877, F1 0,580.
+- Négatifs pris dans CUAD : F1 0,462 ou 0,355, mais **faussé** : 51 contrats CUAD de validation sur
+  61 contiennent des clauses de confidentialité non annotées.
+
+### Avancement
+
+| Fonctionnalité | Statut | Commentaire |
+|---|---|---|
+| F1 Ingestion PDF et provenance | En cours | PDF par blocs, pages, alignement, base de données. |
+| F2 Extraction de clauses | En cours | 3 familles : TF-IDF (validation) ; confidentialité : mots-clés (dev). Transformer à faire. |
+| F3, F4, F6 | À faire | ContractNLI prêt pour F4. |
+| F5 | À faire | pgvector prêt. |
+| F7 Traçabilité | En cours | Tests + vérification SQL ; MLflow. |
+
+- **Étape du planning** : étapes 1, 2 et 3 (baseline) en place ; confidentialité commencée.
+
+### Ce que j'ai compris
+<!-- Rédigé par Claude en fin de séance, relu et corrigé par Sara. -->
+- **Un deuxième jeu de données réel** (ContractNLI) comble le trou de CUAD (pas de confidentialité),
+  sans données synthétiques (règle 3). Ses « évidences » sont les phrases qui justifient une
+  hypothèse : elles deviennent nos annotations.
+- **Chaque source a ses pièges** : ici, un texte sans lignes vides. Une même règle de segmentation
+  ne convient pas à tous les textes : on mesure avant de choisir.
+- **Figer avant de mesurer** : la liste de mots-clés est commitée avant le premier calcul ; la date
+  du commit le prouve.
+- **Des négatifs « propres »** : prendre des négatifs dans des contrats qui contiennent en réalité
+  la clause cherchée fausse l'évaluation et l'apprentissage.
+- **Un bug qui donne 0 %** est un signal à prendre au sérieux : on vérifie avant de conclure.
+- *Relu par Sara : à faire*
+
+### Décisions
+- D-010, D-011 acceptées. D-009 proposée.
+
+### Prochaine étape
+- Sara : décider D-009 ; lire le diagnostic ; refaire les exercices de sa section 9.
+- Ilyas : relecture a posteriori des PR #2 à #7.
+- Encadrant : valider les décisions ; planning (D-006).
+
+---
+
 ## 2026-11-23 — Séance 2/3 (mode « Claude exécute tout ») : base de données, segments PDF, réentraînement
 
 - **Qui** : Sara-hjd (avec Claude Code, mode temporaire, séance **2/3**)

@@ -120,6 +120,32 @@ def chevauchement(debut_a: int, fin_a: int, debut_b: int, fin_b: int) -> int:
     return max(0, min(fin_a, fin_b) - max(debut_a, debut_b))
 
 
+def categories_par_segment(
+    segments: list[Segment],
+    annotations: list[Annotation],
+    seuil: int = SEUIL_CHEVAUCHEMENT,
+) -> list[list[str]]:
+    """Règle de chevauchement, pour n'importe quelles catégories (CUAD, hypothèses ContractNLI…).
+
+    Un segment reçoit la catégorie C si son chevauchement avec une annotation de C atteint au
+    moins ``min(seuil, longueur de l'annotation)`` caractères. Les annotations vides sont ignorées.
+
+    Args:
+        segments: Segments d'un seul document.
+        annotations: Annotations de ce même document.
+        seuil: Chevauchement minimal, plafonné à la longueur de l'annotation.
+
+    Returns:
+        Pour chaque segment (même ordre), la liste triée de ses catégories.
+    """
+    utiles = [a for a in annotations if a.fin > a.debut]
+    return [
+        sorted({a.categorie for a in utiles
+                if chevauchement(s.debut, s.fin, a.debut, a.fin) >= min(seuil, a.fin - a.debut)})
+        for s in segments
+    ]
+
+
 def projeter_annotations(
     segments: list[Segment],
     annotations: list[Annotation],

@@ -133,3 +133,15 @@ def test_fusionner_fragments() -> None:
     for s in fusionnes:
         assert texte[s.debut:s.fin] == s.texte
     assert fusionner_fragments(texte, segments, seuil=0) == segments  # seuil 0 : aucune fusion
+
+
+def test_segmenter_coupe_aux_lignes() -> None:
+    """Texte sans ligne vide : la v1 garde un bloc, l'option coupe_aux_lignes donne un segment par ligne."""
+    from cg.ingestion.segmentation import segmenter
+
+    texte = "1. Definitions. Confidential Information means...\n2. Use. Recipient shall not disclose.\n"
+    assert len(segmenter("t", texte)) == 1
+    segments = segmenter("t", texte, coupe_aux_lignes=True)
+    assert [s.texte[:2] for s in segments] == ["1.", "2."]
+    for s in segments:
+        assert texte[s.debut:s.fin] == s.texte

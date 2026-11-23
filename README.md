@@ -15,7 +15,7 @@ Projet de fin d'année (PFA), EMSI.
 | ID | Fonctionnalité | Description | Statut |
 |---|---|---|---|
 | F1 | Ingestion PDF et provenance | Lire un contrat PDF et le découper en segments, chacun avec sa page et ses positions. | En cours (extraction PDF PyMuPDF par blocs avec pages, alignement D-007, base PostgreSQL + pgvector dans Docker) |
-| F2 | Extraction de clauses | Repérer les clauses (durée, résiliation, responsabilité, confidentialité) : d'abord une baseline classique, puis un modèle Transformer. | En cours (données prêtes, baseline à faire) |
+| F2 | Extraction de clauses | Repérer les clauses (durée, résiliation, responsabilité, confidentialité) : d'abord une baseline classique, puis un modèle Transformer. | En cours (baselines mots-clés et TF-IDF sur la validation ; segments PDF ; confidentialité via ContractNLI) |
 | F3 | Comparaison de paires de clauses | Comparer deux clauses pour signaler, avec prudence, une incohérence possible. | À faire |
 | F4 | NLI | Inférence en langage naturel (implication / contradiction / neutre), évaluée sur ContractNLI. | À faire |
 | F5 | Recherche hybride et RAG avec abstention | Recherche par mots-clés + recherche vectorielle, puis réponse citant le texte exact, ou abstention. | À faire |
@@ -107,6 +107,7 @@ Prérequis déjà identifiés : Homebrew, Python 3.11, Git, Docker Desktop, Node
 | F2 · durée | Validation | F1 (P / R) | Mots-clés 0,180 (0,10 / 0,80) · TF-IDF **0,727** (0,79 / 0,67) | — | 2026-11-22 |
 | F2 · résiliation | Validation | F1 (P / R) | Mots-clés 0,304 (0,21 / 0,53) · TF-IDF **0,521** (0,51 / 0,54) | — | 2026-11-22 |
 | F2 Extraction (segments PDF, blocs) | **Validation** (61 contrats, 11 465 segments PDF) | Macro-F1 · macro rappel par annotation | TF-IDF entraîné sur CUAD : 0,643 · 0,719 — entraîné sur PDF : **0,656 · 0,724** | — | 2026-11-23 |
+| F2 · confidentialité | **Dev** ContractNLI (61 NDA, 2 872 segments) | F1 (P / R) | Mots-clés : 0,580 (0,43 / 0,88) | — | 2026-11-23 |
 | F2 · responsabilité | Validation | F1 (P / R) | Mots-clés 0,257 (0,16 / 0,71) · TF-IDF **0,758** (0,89 / 0,66) | — | 2026-11-22 |
 
 *Chiffres de **validation**, optimistes car les seuils y sont réglés (D-006). Le jeu de test n'a

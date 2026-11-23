@@ -221,3 +221,82 @@ commun aux deux fichiers ; leur union est exactement l'ensemble des 510 titres d
   (minimum : 13 contrats *Uncapped Liability* dans le test).
 - Il n'y a **pas de validation officielle** : la nôtre (61 contrats) est tirée du train officiel
   (D-004). Nos résultats ne seront pas directement comparables à ceux de l'article (tâche différente).
+
+---
+
+## ContractNLI — accords de confidentialité annotés (D-002)
+
+### Identification
+
+| | |
+|---|---|
+| **Nom** | ContractNLI: A Dataset for Document-level Natural Language Inference for Contracts |
+| **Producteur** | Hitachi America, Ltd. / Stanford NLP (Yuta Koreeda, Christopher Manning) |
+| **Source officielle** | https://stanfordnlp.github.io/contract-nli/ (fichier `resources/contract-nli.zip`) |
+| **Version** | pas de numéro ; publication initiale 2021-10-05 ; fichier modifié le 2022-02-11 (en-tête HTTP) |
+| **Article** | Koreeda & Manning, *Findings of EMNLP 2021*, p. 1907–1919, https://aclanthology.org/2021.findings-emnlp.164 |
+
+### Téléchargement
+
+| | |
+|---|---|
+| **Date** | 2026-11-23 |
+| **Par** | Claude Code, mode temporaire décidé par Sara (journal, I3) |
+| **Fichier** | `data/raw/contractnli/contract-nli.zip` (ignoré par Git, **non extrait** : lu directement dans le zip) |
+| **Taille** | 65 362 913 octets (identique à la taille annoncée par le serveur) |
+| **MD5** | `d1ab038c2d6d771959a75bbb28792c56` (calculée ; aucune empreinte officielle publiée) |
+| **SHA-256** | `e03fc77bbf8b53e2976a250e81d8a294bc3d5e5fb014521e477dee9340d6287b` |
+
+```bash
+curl -sSL --retry 10 --retry-delay 5 -C - --create-dirs -o data/raw/contractnli/contract-nli.zip "https://stanfordnlp.github.io/contract-nli/resources/contract-nli.zip"
+shasum -a 256 data/raw/contractnli/contract-nli.zip
+```
+
+### Licence, conditions et citation
+
+- **Licence** : CC BY 4.0 (fichier `LICENSE` du zip).
+- **Conditions d'utilisation** (fichier `TERMS`, Hitachi America) : accéder au jeu de données vaut
+  acceptation de ces conditions ; l'usage est régi par CC BY 4.0. **À lire par Sara et Ilyas.**
+- **Citation** :
+
+```bibtex
+@inproceedings{koreeda-manning-2021-contractnli-dataset,
+  title     = {ContractNLI: A Dataset for Document-level Natural Language Inference for Contracts},
+  author    = {Koreeda, Yuta and Manning, Christopher},
+  booktitle = {Findings of the Association for Computational Linguistics: EMNLP 2021},
+  year      = {2021},
+  pages     = {1907--1919}
+}
+```
+
+### Contenu et format
+
+- **607 accords de confidentialité (NDA)**, **17 hypothèses** fixes (par exemple « Receiving Party
+  shall not reverse engineer… »). Découpage officiel : **train 423**, **dev 61**, test 123
+  (déduit par soustraction : le test n'a pas été ouvert).
+- Pour chaque document : texte, *spans* (phrases ou éléments de liste, positions en caractères),
+  et pour chaque hypothèse un choix (`Entailment`, `Contradiction`, `NotMentioned`) et les indices
+  des spans d'**évidence**. Positions vérifiées valides sur train et dev.
+- Train : 3 530 Entailment, 841 Contradiction, 2 820 NotMentioned ; 18,7 % des spans servent
+  d'évidence (au moins une hypothèse).
+
+### Usage dans ContractGuardian
+
+| Usage | Détail |
+|---|---|
+| **F2 — famille confidentialité** | Évidences des hypothèses (sauf nda-18, D-009) projetées sur nos segments. |
+| **F4 — NLI** | Jeu d'entraînement et d'évaluation prévu. |
+
+### Limites connues
+
+1. **Uniquement des NDA** : des contrats dont la confidentialité est l'objet même. Une clause de
+   confidentialité dans un contrat commercial (CUAD) peut être rédigée autrement.
+2. **Les évidences répondent aux 17 hypothèses**, pas à « toute clause de confidentialité » : un
+   segment qui parle de confidentialité sans servir d'évidence est compté négatif (25,8 % des
+   segments négatifs du dev contiennent un mot-clé de confidentialité).
+3. **Texte sans lignes vides** : un paragraphe par ligne ; la segmentation v1 doit couper à chaque
+   saut de ligne (D-009), sinon les segments font ~1 300 caractères.
+4. **nda-18 (« No solicitation »)** n'est pas de la confidentialité : exclue de la famille (D-009).
+5. **CUAD n'annote pas la confidentialité**, alors que 51 contrats de validation CUAD sur 61
+   contiennent des mots de la confidentialité : on ne peut pas utiliser CUAD comme source de
+   négatifs « propres » (D-009).

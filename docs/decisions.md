@@ -557,3 +557,59 @@ reste disponible et testée si un modèle Transformer en tirait profit.
 
 ### Décision
 **Option 2** (Sara, 2026-11-23) : F2 est entraînée sur les **segments PDF par blocs, sans fusion** (`cuad_pdf_segments_fusion0.jsonl`), avec les annotations alignées selon D-007. La fusion des fragments n'est pas retenue pour la baseline.
+
+---
+
+## D-009 — Famille « confidentialité » : adapter ContractNLI et choisir les exemples négatifs
+
+- **Date** : 2026-11-23
+- **Statut** : **Proposée, à décider par Sara**
+
+### Contexte
+D-002 : ContractNLI est la source réelle de la famille confidentialité. Trois questions restent :
+quelles hypothèses comptent, comment segmenter son texte, et **d'où viennent les négatifs**.
+Mesures sur le **train** et le **dev** de ContractNLI et la **validation** CUAD (tests fermés),
+avec la baseline par mots-clés **figée avant toute évaluation** (commit `e44cdf8`).
+
+### Faits mesurés
+- **Segmentation** (train ContractNLI) : le texte n'a **aucune ligne vide** (un paragraphe par
+  ligne). v1 telle quelle : médiane 1 285 caractères, 31,6 % au plafond, 55 % de positifs.
+  v1 **coupée à chaque saut de ligne** : médiane 132, 90 % sous 674, 2,0 % au plafond (proche des
+  segments PDF par blocs : 83 / 647 / 2,0 %), 21,1 % de positifs ; 98,4 % des évidences entières
+  dans un segment. Spans ContractNLI (phrases) : médiane 101.
+- **Baseline par mots-clés**, dev, segmentation coupée aux lignes :
+
+| Option de négatifs | Segments | Positifs | Précision | Rappel | F1 |
+|---|---|---|---|---|---|
+| A. NDA seulement (négatifs = segments sans évidence) | 2 872 | 18,3 % | 0,433 | 0,877 | **0,580** |
+| B. Positifs NDA + négatifs = segments PDF val CUAD | 11 992 | 4,4 % | 0,313 | 0,877 | 0,462 |
+| C. Tous les segments NDA + segments PDF val CUAD | 14 337 | 3,7 % | 0,222 | 0,877 | 0,355 |
+
+- **Bruit dans CUAD** : 8,8 % des segments PDF de validation CUAD contiennent un mot-clé de
+  confidentialité, dans **51 contrats sur 61**. Les contrats commerciaux ont presque tous une
+  clause de confidentialité, que CUAD n'annote pas.
+
+### Options envisagées (négatifs)
+1. **A — négatifs pris dans les NDA** (segments sans évidence).
+   - ➕ Étiquettes cohérentes : une seule source, un seul protocole d'annotation (ContractNLI).
+   - ➖ Seulement des NDA ; un segment qui parle de confidentialité sans être évidence d'une des 16
+     hypothèses est compté négatif (bruit modéré).
+2. **B ou C — négatifs pris dans CUAD**.
+   - ➕ Plus proche de l'application (contrats commerciaux variés).
+   - ➖ **Faux négatifs certains** : de vraies clauses de confidentialité de CUAD seraient étiquetées
+     « non » ; l'évaluation serait faussement pessimiste et un modèle apprendrait surtout à
+     distinguer « NDA » de « contrat commercial ».
+3. **D — annotation humaine** (D-003) d'un échantillon de segments CUAD pour la confidentialité,
+   par Sara et Ilyas avec un guide, pour un jeu d'évaluation **propre** dans des contrats
+   commerciaux. ➕ La seule mesure fiable dans le domaine de l'application. ➖ Du temps d'annotation.
+
+### Proposition de Claude
+- **Hypothèses retenues** : les 16 hypothèses, **sans nda-18** (non-sollicitation).
+- **Segmentation** : v1 **coupée à chaque saut de ligne** pour le texte de ContractNLI.
+- **Négatifs** : **option A** pour l'entraînement et l'évaluation principale ; **option D** plus tard,
+  comme jeu d'évaluation complémentaire dans des contrats commerciaux (à planifier avec l'encadrant).
+- Ne pas utiliser CUAD comme réservoir de négatifs (B, C) tant qu'il n'est pas annoté pour la
+  confidentialité.
+
+### Décision
+*À prendre par Sara.*

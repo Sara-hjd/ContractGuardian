@@ -12,6 +12,9 @@ jeux train / val / test (D-004), puis étiqueter les segments (D-001) par famill
 | `creer_splits.py` | Script : crée `data/splits/cuad_v1_splits.json`. |
 | `preparer_segments.py` | Script : crée `data/processed/cuad_segments_v1.jsonl` et affiche les statistiques. |
 | `segments.py` | `charger_segments` (refuse le test sans `ouvrir_test=True`, règle 2) et `etiquettes`. |
+| `preparer_segments_pdf.py` | Script : segments PDF par blocs étiquetés (D-007, D-008), train + val ; option `--seuil-fusion`. |
+| `contractnli.py` | Lecture de ContractNLI dans le zip (test fermé) ; évidences → annotations de confidentialité (sans nda-18). |
+| `preparer_segments_contractnli.py` | Script : segments ContractNLI étiquetés « confidentialité » (train + dev), coupe aux lignes. |
 
 ## Utilisation (depuis la racine, avec le `.venv`)
 

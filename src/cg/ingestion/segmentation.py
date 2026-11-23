@@ -25,6 +25,9 @@ MAX_CARACTERES: int = 1500
 # Une ligne vide : un saut de ligne, éventuellement des espaces ou tabulations, puis un autre
 # saut de ligne. Les textes CUAD contiennent souvent des lignes « vides » faites d'espaces.
 _LIGNE_VIDE = re.compile(r"\n[^\S\n]*\n")
+# Variante : chaque saut de ligne sépare deux paragraphes (textes sans lignes vides,
+# comme ceux de ContractNLI, où un paragraphe tient sur une ligne).
+_SAUT_DE_LIGNE = re.compile(r"\n")
 
 
 @dataclass(frozen=True)
@@ -64,18 +67,19 @@ def _retirer_bords(texte: str, debut: int, fin: int) -> tuple[int, int]:
     return debut, fin
 
 
-def _blocs_paragraphes(texte: str) -> list[tuple[int, int]]:
+def _blocs_paragraphes(texte: str, coupe_aux_lignes: bool = False) -> list[tuple[int, int]]:
     """Étapes 1 et 2 : intervalles des paragraphes séparés par des lignes vides.
 
     Args:
         texte: Texte source complet.
+        coupe_aux_lignes: Si vrai, chaque saut de ligne sépare deux paragraphes.
 
     Returns:
         Les intervalles (debut, fin) non vides, sans espaces aux bords, dans l'ordre du texte.
     """
     intervalles: list[tuple[int, int]] = []
     debut = 0
-    for separateur in _LIGNE_VIDE.finditer(texte):
+    for separateur in (_SAUT_DE_LIGNE if coupe_aux_lignes else _LIGNE_VIDE).finditer(texte):
         intervalles.append((debut, separateur.start()))
         debut = separateur.end()
     intervalles.append((debut, len(texte)))
@@ -149,13 +153,17 @@ def _recouper_bloc(texte: str, debut: int, fin: int, maximum: int) -> list[tuple
     return morceaux
 
 
-def segmenter(titre: str, texte: str, maximum: int = MAX_CARACTERES) -> list[Segment]:
+def segmenter(
+    titre: str, texte: str, maximum: int = MAX_CARACTERES, coupe_aux_lignes: bool = False
+) -> list[Segment]:
     """Découpe le texte d'un contrat en segments selon la règle v1.
 
     Args:
         titre: Identifiant du contrat, recopié dans chaque segment.
         texte: Texte complet du contrat (pour CUAD : le champ ``context``).
         maximum: Longueur maximale d'un segment, en caractères.
+        coupe_aux_lignes: Si vrai, couper à chaque saut de ligne au lieu des seules lignes vides
+            (textes sans lignes vides, comme ContractNLI). Par défaut : règle v1 inchangée.
 
     Returns:
         Les segments dans l'ordre du texte. Ils ne se chevauchent pas, et pour chacun
@@ -168,7 +176,7 @@ def segmenter(titre: str, texte: str, maximum: int = MAX_CARACTERES) -> list[Seg
         raise ValueError(f"maximum doit être strictement positif, reçu : {maximum}")
 
     segments: list[Segment] = []
-    for debut_bloc, fin_bloc in _blocs_paragraphes(texte):
+    for debut_bloc, fin_bloc in _blocs_paragraphes(texte, coupe_aux_lignes):
         for debut, fin in _recouper_bloc(texte, debut_bloc, fin_bloc, maximum):
             segments.append(Segment(titre=titre, debut=debut, fin=fin, texte=texte[debut:fin]))
     return segments

@@ -70,6 +70,15 @@
   0,719 pour le modèle entraîné sur le texte CUAD (écart = 1 à 2 annotations, non significatif).
   La fusion des fragments n'apporte rien de mesurable.
 
+## Confidentialité (ContractNLI, D-002)
+
+- 607 accords de confidentialité, 17 hypothèses ; évidences → segments « confidentialité »
+  (sans nda-18, non-sollicitation). Train 423 / dev 61 ; test fermé.
+- Mots-clés figés avant évaluation : rappel **0,877**, précision 0,433, F1 0,580 (dev).
+- 51 contrats CUAD de validation sur 61 contiennent une clause de confidentialité **non annotée** :
+  on ne prend pas les négatifs dans CUAD (D-009, proposée).
+- **Bilan complet de la période : `docs/DIAGNOSTIC_2026-11-16_au_2026-11-23.md`.**
+
 ## Décisions prises par Sara le 2026-11-22, à présenter pour validation
 
 | | Sujet | Décision |
@@ -83,6 +92,7 @@
 | **D-008** | Segmentation des PDF | Blocs PyMuPDF (Sara, 2026-11-23) ; fusion testée en expérience |
 | **D-010** | Base de données | PostgreSQL 17 + pgvector, Docker, `.env`, SQL sans ORM (Sara, 2026-11-23) |
 | **D-011** | Données d'entraînement F2 | Segments PDF blocs, sans fusion (Sara, 2026-11-23) |
+| **D-009** | Confidentialité : segmentation, négatifs | *Proposée* : coupe aux lignes, sans nda-18, négatifs dans les NDA |
 
 Point à discuter pour D-002 : dans un NDA, presque tout le texte parle de confidentialité ;
 d'où viendront les exemples **négatifs** ?

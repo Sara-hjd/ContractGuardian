@@ -61,10 +61,11 @@ Sara est **en apprentissage**. Concrètement :
   - pourquoi,
   - comment le tester (commande exacte et résultat attendu).
 
-## ⚠️ Mode temporaire : « Claude exécute tout » (3 séances)
+## Mode temporaire « Claude exécute tout » (3 séances) — ✅ TERMINÉ le 2026-11-23
 
-> **À lire en premier à chaque début de séance.** Tant que ce mode est actif, il **remplace**
-> la section « Qui exécute les commandes » ci-dessous. Il ne change **aucune règle absolue**.
+> **Ce mode est terminé.** La règle habituelle de la section « Qui exécute les commandes »
+> s'applique de nouveau : **Sara exécute toutes les commandes**. Cette section est gardée pour
+> l'historique (et pour le diagnostic : `docs/DIAGNOSTIC_2026-11-16_au_2026-11-23.md`).
 
 - **Décidé par** : Sara, le 2026-11-22.
 - **Début** : 2026-11-22 (la suite de la séance du 22/11, après la fusion des PR #2 et #3,
@@ -75,7 +76,7 @@ Sara est **en apprentissage**. Concrètement :
   |---|---|---|
   | 1/3 | 2026-11-22 → 2026-11-23 | **terminée** (fusions PR #2 à #5, extraction PDF, D-007) |
   | 2/3 | 2026-11-23 | **terminée** (PostgreSQL + pgvector, segments PDF, réentraînement ; D-008 acceptée, D-010 et D-011 proposées) |
-  | 3/3 | — | — |
+  | 3/3 | 2026-11-23 | **terminée** (ContractNLI, D-009 proposée, diagnostic total) — **fin du mode** |
 
 - **Fin** : **automatiquement à la fin de la séance 3/3**. Claude supprime alors cette section
   (ou la marque « terminée ») et la règle habituelle « Sara exécute les commandes » reprend.
