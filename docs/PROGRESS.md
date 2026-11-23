@@ -73,6 +73,74 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 
 ## Séances
 
+## 2026-11-23 — Séance 2/3 (mode « Claude exécute tout ») : base de données, segments PDF, réentraînement
+
+- **Qui** : Sara-hjd (avec Claude Code, mode temporaire, séance **2/3**)
+- **Branche** : `infra/postgres-pgvector`
+
+### Fait
+- **D-008 acceptée** (Sara) : segmentation des PDF par blocs ; fusion testée en expérience.
+- **PostgreSQL 17.12 + pgvector 0.8.7** dans Docker (`docker-compose.yml`, image figée, port
+  local seulement, volume nommé) ; `.env` local avec mot de passe aléatoire (jamais commité) et
+  `.env.example` ; schéma `contrats`, `pages`, `segments`, `resultats` (`db/init/001_schema.sql`).
+- `src/cg/stockage/` (connexion, dépôt, script d'import) ; psycopg 3.3.9 ; 3 tests d'intégration.
+- **408 contrats (train + val) importés** dans la base : 96 244 segments, **0 non traçable (SQL)**.
+- `fusionner_fragments` (option 3 de D-008) ; segments PDF étiquetés pour 4 seuils de fusion.
+- Réentraînement de la baseline sur segments PDF : 5 configurations, comparées sur la validation
+  avec le **rappel par annotation** (mesure indépendante de la segmentation).
+- **D-010** (base de données) et **D-011** (données d'entraînement : segments PDF sans fusion)
+  **proposées** ; Sara décidera.
+
+### Résultats (validation, test fermé)
+- Entraîné sur CUAD et appliqué aux PDF : macro-F1 0,643, macro rappel par annotation 0,719.
+- Entraîné sur segments PDF (sans fusion) : **0,656 et 0,724**.
+- Avec fusion (20, 40, 80) : rappel par annotation 0,720 à 0,723 — rien de significatif
+  (1 annotation = 0,5 à 1,1 point de rappel selon la famille).
+- Suite de tests : **25 passent**.
+
+### Avancement
+
+| Fonctionnalité | Statut | Commentaire |
+|---|---|---|
+| F1 Ingestion PDF et provenance | En cours | Extraction par blocs, pages, alignement, **stockage en base** avec traçabilité vérifiée en SQL. |
+| F2 Extraction de clauses | En cours | Baseline réentraînée sur segments PDF (validation) ; D-011 à décider ; confidentialité (ContractNLI) à venir. |
+| F3, F4, F6 | À faire | |
+| F5 Recherche hybride et RAG | À faire | pgvector prêt ; colonne de vecteurs à ajouter avec le choix du modèle d'embeddings. |
+| F7 Traçabilité | En cours | Vérifiée en Python et **dans la base** ; expériences dans MLflow. |
+
+- **Étape du planning** : étape 2 (ingestion PDF + base de données) **en place** ; reste à écrire
+  les résultats d'analyse dans la table `resultats` (avec l'API, F6).
+
+### Ce que j'ai compris
+<!-- Rédigé par Claude en fin de séance, relu et corrigé par Sara. -->
+- **Docker** fait tourner un logiciel (ici PostgreSQL) dans un « conteneur » isolé, à partir d'une
+  **image** figée : tout le monde obtient exactement la même base, sans l'installer sur sa machine.
+  `docker-compose.yml` décrit le conteneur ; `docker compose up -d` le démarre.
+- **Un volume** garde les données hors du conteneur : on peut arrêter et relancer la base sans rien
+  perdre (`docker compose down -v` effacerait tout : à éviter).
+- **Les secrets restent hors du dépôt** : le mot de passe est dans `.env` (ignoré par Git) ; le dépôt
+  ne contient que `.env.example`, un modèle sans vraie valeur.
+- **Le schéma** décrit les tables et leurs liens : un contrat a des pages, une page des segments, un
+  segment des résultats. Les contraintes (`fin > debut`, page existante) empêchent d'enregistrer
+  une provenance incohérente.
+- **Vérifier la traçabilité dans la base** : `substring(texte from debut + 1 for fin - debut)` en SQL
+  est l'équivalent de `texte[debut:fin]` en Python (SQL compte à partir de 1).
+- **Une transaction** : soit tout le contrat est enregistré (contrat, pages, segments), soit rien.
+- **Comparer des segmentations différentes** : le F1 par segment change quand la segmentation change ;
+  le **rappel par annotation** (la clause a-t-elle été trouvée ?) permet de comparer équitablement.
+- **Un écart n'est pas forcément un progrès** : quand une annotation vaut un point de rappel, un
+  écart d'un point ne prouve rien ; à résultat égal, on choisit le plus simple.
+- *Relu par Sara : à faire*
+
+### Décisions
+- D-008 acceptée (Sara). D-010 et D-011 proposées.
+
+### Prochaine étape
+- Sara : décider D-010 et D-011 ; puis fusion de la PR de cette séance.
+- Séance 3/3 : ContractNLI (D-002, D-009) et baseline par mots-clés pour la confidentialité.
+
+---
+
 ## 2026-11-22 → 2026-11-23 — Séance 1/3 (mode « Claude exécute tout ») : extraction PDF
 
 - **Qui** : Sara-hjd (avec Claude Code, mode temporaire, séance **1/3**)

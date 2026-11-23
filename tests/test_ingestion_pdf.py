@@ -114,3 +114,22 @@ def test_mode_blocs_coupe_a_chaque_paragraphe(tmp_path: Path) -> None:
         for s in segments:
             assert s.page == 1
             assert extrait.texte[s.debut:s.fin] == s.texte
+
+
+def test_fusionner_fragments() -> None:
+    """Un fragment court rejoint le suivant (même page) ; jamais à travers deux pages."""
+    from cg.ingestion.segmentation import Segment, fusionner_fragments
+
+    texte = "12.\n\nLiability is capped at fees paid.\n\n3\n\nNext page text here."
+    def seg(mot: str, page: int) -> Segment:
+        d = texte.index(mot)
+        return Segment("t", d, d + len(mot), mot, page)
+    segments = [seg("12.", 1), seg("Liability is capped at fees paid.", 1), seg("3", 1),
+                seg("Next page text here.", 2)]
+
+    fusionnes = fusionner_fragments(texte, segments, seuil=5)
+    assert [s.texte for s in fusionnes] == [
+        "12.\n\nLiability is capped at fees paid.", "3", "Next page text here."]
+    for s in fusionnes:
+        assert texte[s.debut:s.fin] == s.texte
+    assert fusionner_fragments(texte, segments, seuil=0) == segments  # seuil 0 : aucune fusion

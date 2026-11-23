@@ -74,7 +74,7 @@ Sara est **en apprentissage**. Concrètement :
   | Séance | Date | État |
   |---|---|---|
   | 1/3 | 2026-11-22 → 2026-11-23 | **terminée** (fusions PR #2 à #5, extraction PDF, D-007) |
-  | 2/3 | — | — |
+  | 2/3 | 2026-11-23 | **terminée** (PostgreSQL + pgvector, segments PDF, réentraînement ; D-008 acceptée, D-010 et D-011 proposées) |
   | 3/3 | — | — |
 
 - **Fin** : **automatiquement à la fin de la séance 3/3**. Claude supprime alors cette section

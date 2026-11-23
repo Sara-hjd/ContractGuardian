@@ -417,7 +417,7 @@ approximativement.
 ## D-008 — Segmentation des PDF : texte brut (v1) ou blocs PyMuPDF
 
 - **Date** : 2026-11-23
-- **Statut** : **Proposée, à décider par Sara**
+- **Statut** : **Acceptée (Sara, 2026-11-23)**, à présenter à l'encadrant
 
 ### Contexte
 La baseline (D-006) a été entraînée sur des segments du **texte CUAD**. L'application segmentera
@@ -462,7 +462,12 @@ elle garde le plus d'annotations entières ; elle est aussi simple que l'option 
 paramètre `mode`).
 
 ### Décision
-*À prendre par Sara.*
+**Option 2** (Sara, 2026-11-23) : les PDF sont segmentés à partir des **blocs** PyMuPDF
+(`extraire_pdf(..., mode="blocs")`, puis segmentation v1).
+
+L'**option 3** (fusion des fragments très courts) sera testée **comme expérience** lors du
+réentraînement de la baseline sur les segments PDF : son seuil sera réglé, et la comparaison faite,
+**sur la validation uniquement**.
 
 ### Conséquences (quelle que soit l'option)
 - **Aucune des deux segmentations PDF ne ressemble exactement aux segments CUAD.** Pour que le
@@ -470,3 +475,85 @@ paramètre `mode`).
   d'entraînement à partir des PDF** (segments PDF + annotations alignées, D-007), puis
   **réentraîner et réévaluer la baseline** sur ces segments (validation seulement).
 - Les segments PDF gardent leur page et leurs positions ; le test de traçabilité couvre les deux modes.
+
+---
+
+## D-010 — Base de données de l'application : PostgreSQL + pgvector dans Docker
+
+- **Date** : 2026-11-23
+- **Statut** : **Proposée, à décider par Sara** (implémentation provisoire en place, modifiable)
+
+### Contexte
+La stack prévoit PostgreSQL + pgvector, lancés avec Docker, pour la base de l'application :
+contrats importés, segments avec provenance, résultats d'analyse, et plus tard vecteurs (F5).
+C'est le « monde de l'application », distinct des données d'entraînement (`data/`).
+
+### Choix proposés (chacun peut être changé)
+1. **Image Docker figée** : `pgvector/pgvector:0.8.7-pg17` (PostgreSQL 17 + pgvector 0.8.7),
+   pas `latest`. ➕ Même base pour tout le monde. ➖ Mise à jour = changement explicite du fichier.
+2. **Accès local uniquement** : port publié sur `127.0.0.1:5432`, pas sur le réseau.
+3. **Identifiants** : dans `.env` (jamais commité, mot de passe aléatoire), modèle sans vraie
+   valeur dans `.env.example` (commité). Règle 5 respectée.
+4. **Données persistantes** dans un volume Docker nommé (`cg_pgdata`) : elles survivent à
+   `docker compose down` ; `docker compose down -v` les efface (action destructrice, à éviter).
+5. **Schéma** (`db/init/001_schema.sql`) :
+   - `contrats` : titre, source (`cuad` / `import`), nom et empreinte SHA-256 du fichier, mode
+     d'extraction, **texte complet**, nombre de pages ;
+   - `pages` : numéro, début, fin dans le texte complet ;
+   - `segments` : page, début, fin, texte ; contraintes : `fin > debut`, page existante ;
+   - `resultats` : rattachés à un segment (tâche, étiquette, score, modèle).
+   Le texte complet est stocké pour que la traçabilité soit **vérifiable dans la base** :
+   `substring(texte from debut + 1 for fin - debut) = texte du segment`.
+6. **pgvector activé, sans colonne de vecteurs pour l'instant** : sa dimension dépend du modèle
+   d'embeddings, qui sera choisi avec F5.
+7. **Évolution du schéma** : fichiers SQL numérotés dans `db/init/` (exécutés à la création du
+   volume). Pas d'outil de migration (Alembic) tant que le schéma est jeune ; à reconsidérer dès
+   qu'une base contiendra des données à conserver.
+8. **Accès depuis Python** : `psycopg` 3 (pilote officiel), requêtes SQL écrites à la main, **sans
+   ORM** (SQLAlchemy) : plus simple à lire et à expliquer ; à reconsidérer avec l'API (F6).
+
+### Alternatives écartées
+- **SQLite** : plus simple, mais pas d'extension vectorielle prévue par la stack (pgvector) et
+  différent de ce que l'application utilisera.
+- **Image `latest`** : non reproductible.
+- **Mot de passe dans `docker-compose.yml`** : il serait commité dans un dépôt public.
+
+### Décision
+*À prendre par Sara.*
+
+---
+
+## D-011 — Données d'entraînement de F2 : segments du texte CUAD ou segments PDF ?
+
+- **Date** : 2026-11-23
+- **Statut** : **Proposée, à décider par Sara**
+
+### Contexte
+L'application segmentera des PDF par blocs (D-008). La baseline a été entraînée sur des segments
+du texte CUAD. Comparaison sur la **validation** (test fermé), même protocole que D-006 : voir
+`docs/analyses/baseline_segments_pdf_val.md`.
+
+| Configuration | macro-F1 (mêmes segments PDF de validation) | macro rappel par annotation |
+|---|---|---|
+| entraîné sur CUAD, appliqué aux PDF | 0,643 | 0,719 |
+| entraîné sur PDF blocs, sans fusion | 0,656 | 0,724 |
+| entraîné sur PDF blocs, fusion 20 / 40 / 80 | (segments différents) | 0,720 / 0,720 / 0,723 |
+
+Les écarts de rappel par annotation tiennent à 1 ou 2 annotations par famille : non significatifs.
+
+### Options envisagées
+1. **Garder l'entraînement sur le texte CUAD.** ➕ Rien à changer. ➖ Le modèle apprend sur des
+   segments qui ne sont pas ceux de l'application ; F1 un peu plus bas (0,643).
+2. **Entraîner sur les segments PDF blocs, sans fusion.** ➕ Mêmes segments à l'entraînement et
+   dans l'application, avec la page (traçabilité) ; meilleur F1 sur les mêmes segments (0,656) ;
+   aucune règle de plus. ➖ Dépend de l'alignement (1,8 % d'annotations exclues, D-007).
+3. **Entraîner sur les segments PDF blocs, avec fusion** (seuil à choisir). ➕ Moins de fragments.
+   ➖ Pas de gain mesurable sur le rappel par annotation ; une règle de plus à expliquer et à tester.
+
+### Proposition de Claude
+**Option 2.** À résultats équivalents, c'est la plus cohérente avec l'application et la plus
+simple. La fusion (option 3) n'est pas retenue pour l'instant ; la fonction `fusionner_fragments`
+reste disponible et testée si un modèle Transformer en tirait profit.
+
+### Décision
+*À prendre par Sara.*

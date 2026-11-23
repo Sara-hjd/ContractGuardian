@@ -1,0 +1,35 @@
+# Base de données de l'application ContractGuardian : PostgreSQL 17 + pgvector (D-010).
+#
+# Démarrer :   docker compose up -d        (Docker Desktop doit être lancé : open -a Docker)
+# État :       docker compose ps
+# Arrêter :    docker compose down         (les données restent dans le volume cg_pgdata)
+#
+# Les identifiants viennent du fichier .env (jamais commité). Modèle : .env.example.
+# Les scripts de db/init/ ne s'exécutent qu'à la PREMIÈRE création du volume.
+
+services:
+  db:
+    # Version figée (pas « latest ») : tout le monde obtient exactement la même base.
+    image: pgvector/pgvector:0.8.7-pg17
+    container_name: cg-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      # 127.0.0.1 : la base n'est joignable que depuis cet ordinateur, pas depuis le réseau.
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # Volume nommé : les données survivent à « docker compose down ».
+      - cg_pgdata:/var/lib/postgresql/data
+      # Schéma initial, en lecture seule dans le conteneur.
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # Prêt quand PostgreSQL accepte les connexions.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  cg_pgdata:

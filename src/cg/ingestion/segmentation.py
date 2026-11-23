@@ -172,3 +172,42 @@ def segmenter(titre: str, texte: str, maximum: int = MAX_CARACTERES) -> list[Seg
         for debut, fin in _recouper_bloc(texte, debut_bloc, fin_bloc, maximum):
             segments.append(Segment(titre=titre, debut=debut, fin=fin, texte=texte[debut:fin]))
     return segments
+
+
+def fusionner_fragments(
+    texte: str, segments: list[Segment], seuil: int, maximum: int = MAX_CARACTERES
+) -> list[Segment]:
+    """Rattache chaque segment trop court au segment suivant (option 3 de D-008, expérience).
+
+    Un segment de moins de ``seuil`` caractères (titre, numéro, ligne isolée) est fusionné avec
+    le segment qui le suit, si les deux sont sur la **même page** et si le résultat ne dépasse
+    pas ``maximum``. Le segment fusionné couvre ``[debut du premier, fin du second)`` : il reste
+    traçable (``texte[debut:fin] == segment.texte``).
+
+    Args:
+        texte: Texte complet sur lequel portent les positions des segments.
+        segments: Segments dans l'ordre du texte, sans chevauchement.
+        seuil: Longueur en dessous de laquelle un segment est rattaché au suivant ;
+            0 = aucune fusion.
+        maximum: Longueur maximale d'un segment fusionné.
+
+    Returns:
+        Les segments après fusion, dans l'ordre du texte.
+    """
+    resultat: list[Segment] = []
+    en_attente: Segment | None = None  # fragment court qui attend d'être rattaché au suivant
+    for segment in segments:
+        if en_attente is not None:
+            if en_attente.page == segment.page and segment.fin - en_attente.debut <= maximum:
+                segment = Segment(titre=segment.titre, debut=en_attente.debut, fin=segment.fin,
+                                  texte=texte[en_attente.debut:segment.fin], page=segment.page)
+            else:
+                resultat.append(en_attente)  # impossible à rattacher : on le garde tel quel
+            en_attente = None
+        if segment.fin - segment.debut < seuil:
+            en_attente = segment
+        else:
+            resultat.append(segment)
+    if en_attente is not None:
+        resultat.append(en_attente)
+    return resultat
