@@ -73,6 +73,51 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 
 ## Séances
 
+## 2026-11-23 — Séance 2/5 (second mode) : critère de F2, puis NLI (F4)
+
+- **Qui** : Sara-hjd (avec Claude Code, second mode temporaire, séance **2/5**)
+- **Branche** : `exp/nli-f4`
+
+### Fait
+- D-012 acceptée (Sara) avec un **critère de sélection fixé avant le test** : rappel par annotation
+  sous précision ≥ 0,50 par famille, appliqué **sur la validation** (règle 2) ; calcul refait à la
+  lettre, famille par famille ; **choix final pour CUAD en attente** (la condition de Sara n'est
+  pas remplie : TF-IDF meilleur en résiliation et en moyenne, Transformer en durée).
+- D-013 acceptée (deux modèles).
+- **F4** : `src/cg/nli/` (paires, modèle, décision du document, métriques), script, 4 tests
+  (**36 passent**) ; modèle `models/f4-nli-legal-bert-small` ; D-014 proposée.
+
+### Résultats (dev ContractNLI ; test fermé)
+- Classe majoritaire : exactitude 0,681, macro-F1 0,633.
+- Transformer (paires) : **exactitude 0,778, macro-F1 0,717** ; évidences P 0,678, R 0,588, F1 0,630.
+
+### Avancement
+
+| Fonctionnalité | Statut | Commentaire |
+|---|---|---|
+| F2 | En cours | Critère fixé ; choix du modèle CUAD en attente de Sara ; test à ouvrir ensuite (décision écrite). |
+| F4 NLI | En cours | Transformer sur le dev ; D-014 à décider. |
+| F3, F5, F6 | À faire | F5 à la séance 3/5. |
+
+### Ce que j'ai compris
+<!-- Rédigé par Claude en fin de séance, relu et corrigé par Sara. -->
+- **Choisir un modèle, c'est le régler** : le critère s'applique sur la validation ; le test ne sert
+  qu'à rapporter le chiffre du modèle déjà choisi.
+- **Comparer à précision égale** : un modèle qui « trouve plus » en faisant plus de fausses alertes
+  n'est pas meilleur ; on fixe la précision minimale, puis on compare ce que chacun trouve.
+- **La NLI** : on présente au modèle une hypothèse et une phrase du contrat ; il dit « implique »,
+  « contredit » ou « rien à voir ». Pour tout le contrat, on garde la phrase la plus probante et on
+  la cite ; si aucune n'est assez probante, on s'abstient (*NotMentioned*).
+- **Une baseline forte** : répondre toujours la réponse la plus fréquente donne déjà 68 % de bonnes
+  réponses ; le modèle doit faire nettement mieux pour être utile (78 %).
+- **La contradiction** est le cas le plus rare et le plus dur : souvent une exception rédigée en « sauf si ».
+- *Relu par Sara : à faire*
+
+### Décisions
+- D-012 (critère) et D-013 acceptées ; choix du modèle CUAD en attente ; D-014 proposée.
+
+---
+
 ## 2026-11-23 — Séance 1/5 (second mode) : Transformer pour F2
 
 - **Qui** : Sara-hjd (avec Claude Code, second mode temporaire, séance **1/5**)
