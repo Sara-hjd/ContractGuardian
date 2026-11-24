@@ -3,6 +3,10 @@
 Place dans le projet : le Transformer (D-012, D-014) lit l'hypothèse et la phrase ensemble
 (« [CLS] hypothèse [SEP] phrase [SEP] ») et donne trois probabilités : neutre, implique, contredit.
 
+Troncature : ``longest_first`` (on raccourcit la plus longue des deux parties) ; pour F4
+l'hypothèse est toujours la plus courte, donc seule la phrase est raccourcie, comme avant ; pour F3,
+deux clauses longues sont raccourcies chacune à leur tour.
+
 Décision au niveau du document (règle fixée avant le réglage, D-014) :
 - ``s_E`` = probabilité « implique » maximale sur les phrases, ``s_C`` = probabilité « contredit »
   maximale ;
@@ -69,7 +73,7 @@ def entrainer_paires(
         lots = decouper_en_lots(len(paires), taille_lot, melanger=True, graine=graine + epoque)
         for lot in lots:
             entree = tokeniseur([paires[i].texte_hypothese for i in lot], [paires[i].texte_span for i in lot],
-                                truncation="only_second", max_length=longueur_max, padding=True,
+                                truncation="longest_first", max_length=longueur_max, padding=True,
                                 return_tensors="pt").to(appareil)
             perte = perte_fn(modele(**entree).logits, cibles[lot].to(appareil))
             optimiseur.zero_grad()
@@ -102,7 +106,7 @@ def probas_paires(
     sorties = []
     for lot in decouper_en_lots(len(paires), taille_lot, melanger=False, graine=0):
         entree = tokeniseur([paires[i].texte_hypothese for i in lot], [paires[i].texte_span for i in lot],
-                            truncation="only_second", max_length=longueur_max, padding=True,
+                            truncation="longest_first", max_length=longueur_max, padding=True,
                             return_tensors="pt").to(appareil)
         sorties.append(torch.softmax(modele(**entree).logits, dim=-1).float().cpu().numpy())
     return np.concatenate(sorties) if sorties else np.zeros((0, len(ETIQUETTES)))

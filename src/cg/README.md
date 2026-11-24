@@ -22,6 +22,9 @@ Ce qui n'est **pas** ici :
 | `retrieval/` | F5 | Recherche hybride et réponses avec citation exacte ou abstention. |
 | `api/` | F6 | API FastAPI utilisée par l'interface. |
 | `datasets/` | F2 (données) | Lire CUAD, fixer les splits (D-004), étiqueter les segments par famille. |
+| `stockage/` | F1, F7 | Base PostgreSQL + pgvector : contrats, pages, segments, résultats. |
+| `recherche/` | F5 | Recherche hybride, réponse extractive, RAG LangGraph avec LLM local. |
+| `annotation/` | F3, F5 | Préparer et contrôler les annotations humaines (paires, questions), kappa de Cohen. |
 
 La traçabilité (F7) n'a pas de dossier à elle : c'est une règle que **tous** les modules
 respectent, puisque chaque sortie référence un segment avec sa provenance.

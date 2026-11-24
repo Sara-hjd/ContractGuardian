@@ -96,12 +96,20 @@
 
 ## Questions-réponses (F5, validation)
 
-- **Recherche hybride** (mots + sens, PostgreSQL + pgvector) : la bonne réponse est dans les 10 premiers
-  segments pour **68 %** des questions (mots seuls 64 %, sens seul 64 %).
+- **Recherche hybride** (mots + sens, PostgreSQL + pgvector) : **Recall@5 = 0,586** (métrique du cahier
+  des charges ; mots seuls 0,518, sens seul 0,543) et Recall@10 = 0,682 (mots 0,638, sens 0,642).
 - **Réponse extractive avec abstention** : exactitude équilibrée 0,521, à peine mieux que « toujours
   s'abstenir » (0,5) : la similarité ne suffit pas pour savoir s'il faut répondre.
 - **RAG avec LLM local** (qwen3-vl:8b, LangGraph) : chaque citation est vérifiée mot pour mot, sinon
   abstention ; évaluation complète à faire (le Mac s'est mis en veille pendant le calcul).
+
+## Alertes entre clauses (F3) — annotation humaine en cours
+
+- **47 paires** de clauses d'un même contrat (validation), en 4 types de tension ; grille de 4
+  étiquettes ; annotation **indépendante** par Sara et Ilyas, accord mesuré par le **kappa de Cohen**.
+- **Règle d'alerte v1 figée avant les annotations** (preuve : date du commit) : 41 alertes sur 47,
+  très peu sélective (les formules d'exception sont partout) ; le NLI de F4 ne se transfère pas.
+- Les annotations ne contiennent jamais de texte de contrat (test automatique).
 
 ## Décisions prises par Sara le 2026-11-22, à présenter pour validation
 
@@ -121,7 +129,8 @@
 | **D-014** | Méthode NLI (F4) | Paires hypothèse-phrase + agrégation, seuils réglés sur le dev (Sara) |
 | **D-015** | Embeddings et recherche hybride (F5) | bge-small-en-v1.5 ; texte intégral PostgreSQL + pgvector, fusion RRF (Sara) |
 | **D-016** | LLM local (F5) | qwen3-vl:8b via Ollama (déjà présent), paramétrable ; qwen3:8b cible ; lien avec l'OCR (Sara) |
-| **D-017** | Réglages de F5 | *Proposée* : exactitude équilibrée pour l'abstention ; citations vérifiées mot pour mot |
+| **D-017** | Réglages de F5 | Exactitude équilibrée (choisie après l'échec de l'exactitude, sur la validation seulement) ; 5 passages ; citations vérifiées mot pour mot, ≥ 15 caractères, sinon abstention (Sara) |
+| **D-018** | Protocole F3 et alertes v1 | *Proposée* : 47 paires, grille, kappa, consensus ; règle v1 figée ; 25 questions F5 |
 | **D-009** | Confidentialité : segmentation, négatifs | Coupe aux lignes, sans nda-18, négatifs dans les NDA (Sara, 2026-11-23) ; annotation CUAD plus tard |
 
 Point à discuter pour D-002 : dans un NDA, presque tout le texte parle de confidentialité ;

@@ -16,7 +16,7 @@ Projet de fin d'année (PFA), EMSI.
 |---|---|---|---|
 | F1 | Ingestion PDF et provenance | Lire un contrat PDF et le découper en segments, chacun avec sa page et ses positions. | En cours (extraction PDF PyMuPDF par blocs avec pages, alignement D-007, base PostgreSQL + pgvector dans Docker) |
 | F2 | Extraction de clauses | Repérer les clauses (durée, résiliation, responsabilité, confidentialité) : d'abord une baseline classique, puis un modèle Transformer. | En cours (baselines mots-clés et TF-IDF sur la validation ; segments PDF ; confidentialité via ContractNLI) |
-| F3 | Comparaison de paires de clauses | Comparer deux clauses pour signaler, avec prudence, une incohérence possible. | À faire |
+| F3 | Comparaison de paires de clauses | Comparer deux clauses pour signaler, avec prudence, une incohérence possible. | En cours (47 paires et grille prêtes, annotation par Sara et Ilyas ; règle d'alerte v1 figée) |
 | F4 | NLI | Inférence en langage naturel (implication / contradiction / neutre), évaluée sur ContractNLI. | En cours (Transformer sur paires hypothèse-phrase, dev ; D-014 proposée) |
 | F5 | Recherche hybride et RAG avec abstention | Recherche par mots-clés + recherche vectorielle, puis réponse citant le texte exact, ou abstention. | En cours (recherche hybride + extractif mesurés ; RAG LangGraph + LLM local en place, évaluation à terminer) |
 | F6 | Interface analyste | Interface web (React) pour importer un contrat, consulter les clauses et poser des questions. | À faire |
