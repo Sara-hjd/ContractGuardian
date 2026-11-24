@@ -15,6 +15,7 @@ Lancement, depuis la racine du projet, avec le .venv, la base démarrée et Olla
 
 import argparse
 import json
+import unicodedata
 import random
 import time
 from collections import Counter
@@ -67,6 +68,8 @@ def main() -> None:
     parseur = argparse.ArgumentParser(description="Extractif contre RAG avec LLM (F5).")
     parseur.add_argument("--seuil-extractif", type=float, required=True)
     parseur.add_argument("--modele", default=config.LLM_MODELE)
+    parseur.add_argument("--taille", type=int, default=TAILLE_ECHANTILLON,
+                         help="N premières questions de l'échantillon (graine 0) : évaluation indicative si N < 200.")
     arguments = parseur.parse_args()
 
     jeu_de = lire_splits(RACINE / "data" / "splits" / "cuad_v1_splits.json")
@@ -74,7 +77,7 @@ def main() -> None:
         curseur.execute("SELECT titre, id FROM contrats WHERE source = 'cuad'")
         contrats = dict(curseur.fetchall())
     validation = sorted(t for t in contrats if jeu_de.get(t) == "val")
-    echantillon = random.Random(0).sample(questions(contrats, validation), TAILLE_ECHANTILLON)
+    echantillon = random.Random(0).sample(questions(contrats, validation), TAILLE_ECHANTILLON)[:arguments.taille]
     print(f"{len(echantillon)} questions (avec réponse : {sum(q['avec_reponse'] for q in echantillon)}) ; "
           f"modèle : {arguments.modele}", flush=True)
 
@@ -103,6 +106,7 @@ def main() -> None:
                 deja[cle] = {"modele": arguments.modele, "titre": q["titre"], "categorie": q["categorie"],
                              "abstention": r.abstention, "raison": r.raison or "réponse vérifiée",
                              "segments_cites": [c.segment_id for c in r.citations],
+                             "reponse": r.reponse,
                              "duree": time.perf_counter() - debut}
                 with open(CHEMIN_REPRISE, "a", encoding="utf-8") as sortie:
                     sortie.write(json.dumps(deja[cle], ensure_ascii=False) + "\n")
@@ -114,7 +118,31 @@ def main() -> None:
             if n % 20 == 0:
                 print(f"  {n} questions ({np.mean(durees):.1f} s par question en moyenne)", flush=True)
 
-    m_ext, m_rag = mesures(extractif), mesures(rag)
+    # Piste NLI (D-017) : garder une réponse vérifiée seulement si le passage cité « implique » la phrase
+    # de réponse selon le modèle de F4 (seuil 0,5 fixé d'avance) ; sinon abstention.
+    from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+    from cg.extraction.transformer import choisir_appareil
+    from cg.nli.modele import probas_paires
+    from cg.nli.paires import INDICE, Paire
+    dossier_nli = RACINE / "models" / "f4-nli-legal-bert-small"
+    appareil = choisir_appareil()
+    modele_nli = AutoModelForSequenceClassification.from_pretrained(dossier_nli).to(appareil)
+    tokeniseur_nli = AutoTokenizer.from_pretrained(dossier_nli)
+    rag_nli = []
+    with connecter() as connexion, connexion.cursor() as curseur:
+        for q, ligne in zip(echantillon, rag):
+            r = deja[(arguments.modele, q["titre"], q["categorie"])]
+            garde = False
+            if not r["abstention"] and r.get("reponse"):
+                curseur.execute("SELECT texte FROM segments WHERE id = ANY(%s)", (r["segments_cites"],))
+                passages = [t for (t,) in curseur.fetchall()]
+                p = probas_paires(modele_nli, tokeniseur_nli, [Paire("", "f5", 0, r["reponse"], t, 0) for t in passages],
+                                  appareil, 256)[:, INDICE["Entailment"]]
+                garde = bool((p >= 0.5).any())
+            rag_nli.append({"avec_reponse": q["avec_reponse"], "abstention": not garde, "juste": garde and ligne["juste"]})
+    m_ext, m_rag, m_nli = mesures(extractif), mesures(rag), mesures(rag_nli)
+    print("RAG + LLM + vérification NLI :", {k: round(v, 3) for k, v in m_nli.items()})
     print("\nExtractif :", {k: round(v, 3) for k, v in m_ext.items()})
     print("RAG + LLM  :", {k: round(v, 3) for k, v in m_rag.items()})
     print("Issues du RAG :", dict(raisons))
@@ -122,14 +150,19 @@ def main() -> None:
 
     mlflow.set_tracking_uri(f"sqlite:///{RACINE / 'mlflow.db'}")
     mlflow.set_experiment("F5-questions-reponses")
-    for nom, m, params in (("extractif-echantillon200", m_ext, {"seuil": arguments.seuil_extractif}),
-                           (f"rag-{arguments.modele}-echantillon200", m_rag,
+    taille = f"echantillon{arguments.taille}"
+    for nom, m, params in ((f"extractif-{taille}", m_ext, {"seuil": arguments.seuil_extractif}),
+                           (f"rag-{arguments.modele}-{taille}", m_rag,
                             {"modele": arguments.modele, "passages": NB_PASSAGES, "temps_moyen_s": round(float(np.mean(durees)), 1),
-                             **{f"issue_{k}": v for k, v in raisons.items()}})):
+                             **{"issue_" + "".join(ch if ch.isascii() and (ch.isalnum() or ch in "_-") else "_" for ch in
+                                           unicodedata.normalize("NFKD", k)): v for k, v in raisons.items()}})):
         with mlflow.start_run(run_name=nom):
-            mlflow.log_params({"evaluation": "200 questions de validation (graine 0)", **params})
+            mlflow.log_params({"evaluation": f"{arguments.taille} questions de validation (graine 0)", **params})
             mlflow.log_metrics({k.replace(" ", "_").replace("/", "sur").replace("(", "").replace(")", ""): v
                                 for k, v in m.items()})
+    with mlflow.start_run(run_name=f"rag-{arguments.modele}-verification-nli-{taille}"):
+        mlflow.log_params({"evaluation": f"{arguments.taille} questions de validation (graine 0)", "seuil_nli": 0.5})
+        mlflow.log_metrics({k.replace(" ", "_").replace("/", "sur").replace("(", "").replace(")", ""): v for k, v in m_nli.items()})
 
 
 if __name__ == "__main__":

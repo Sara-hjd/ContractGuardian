@@ -4,8 +4,12 @@ Place dans le projet : le LLM tourne **sur le Mac**, via le serveur local d'Olla
 (``http://127.0.0.1:11434``) ; aucun service payant, aucune donnée envoyée à l'extérieur (règle 4).
 Le nom du modèle vient de la configuration (``cg.config.LLM_MODELE``, variable ``CG_LLM_MODELE``).
 
-Réglages fixés : température 0 (même question → même réponse), mode « réflexion » désactivé,
-réponse demandée en JSON.
+Réglages (``cg.config``) : graine fixe (même question → même réponse), échantillonnage recommandé par
+Qwen pour les modèles « thinking » (température 0,6, top_p 0,95, top_k 20 ; à température 0 le modèle
+réfléchit en boucle), mode « réflexion » demandé désactivé,
+réponse demandée en JSON, longueur bornée par ``config.LLM_NUM_PREDICT`` (un JSON tronqué conduit à
+une abstention). **Attention** : ``qwen3-vl:8b`` (variante « thinking ») réfléchit toujours, même avec
+``think: false`` (constaté le 2026-11-24) ; sa réflexion consomme une partie de cette longueur.
 """
 
 import json
@@ -40,7 +44,8 @@ def discuter(
         "stream": False,
         "format": "json",
         "think": False,
-        "options": {"temperature": 0, "num_ctx": 8192, "seed": 0},
+        "options": {"temperature": config.LLM_TEMPERATURE, "top_p": config.LLM_TOP_P, "top_k": config.LLM_TOP_K,
+                    "num_ctx": 8192, "seed": 0, "num_predict": config.LLM_NUM_PREDICT},
     }).encode("utf-8")
     requete = urllib.request.Request(f"{config.LLM_URL}/api/chat", data=corps,
                                      headers={"Content-Type": "application/json"})

@@ -74,3 +74,6 @@ node_modules/
 # --- macOS ----------------------------------------------------------------------
 # Fichier caché créé par le Finder dans chaque dossier ouvert ; inutile au projet.
 .DS_Store
+
+# Interface compilée (régénérée par « npm run build »).
+frontend/dist/

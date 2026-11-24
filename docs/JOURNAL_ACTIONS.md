@@ -1471,3 +1471,126 @@ tests ; MLflow ; PR ; clôture (résumé de 10 lignes, rappel Ilyas).
   `docs/PROGRESS.md`, `CLAUDE.md` (compteur 4/5).
 - **Commandes** : `git add` ; `git commit` ; `git push -u origin feat/f3-annotation` ; `gh pr create` ;
   `gh pr merge <n> --merge --delete-branch` ; `git pull`.
+- **Résultat de N5** : PR #12 fusionnée (`f5fd709`) ; 45 tests passent ; compteur 4/5.
+
+---
+
+## Séance 5/5 du second mode — 2026-11-24 — F6 (API, interface), évaluation du LLM, diagnostic
+
+**Plan** : D-018 acceptée ; lancer d'abord l'évaluation du LLM (Mac ouvert, sur secteur) ; API FastAPI
+et interface React ; piste « vérification par le NLI » ; clôture, fin du mode, diagnostic complet.
+
+### O1 — 20:58 — D-018 acceptée ; évaluation du LLM lancée
+
+- `git switch -c feat/api-interface-f6` ; D-018 acceptée, avec le lien au **risque n°1 du cahier des
+  charges** et son plan de repli (F3 présentée comme étude expérimentale si la faiblesse se confirme).
+- `evaluation/evaluer_rag_llm_f5.py` enregistre aussi la phrase de réponse du LLM (pour la piste NLI).
+- Préchauffage (`curl … /api/generate … "keep_alive":"60m"`, 4 s) puis lancement sous `caffeinate -i`.
+
+### O2 — Modèle TF-IDF de la résiliation sauvegardé
+
+- **Constat** : le choix de D-012 (TF-IDF pour la résiliation) n'avait jamais été sauvegardé.
+- **Fichier créé** : `training/sauvegarder_tfidf_resiliation.py` → `models/f2-resiliation-tfidf.joblib`
+  (6,5 Mo, ignoré par Git ; bigrammes, C = 10, train).
+
+### O3 — API et interface
+
+- **Fichiers créés** : `src/cg/extraction/pipeline.py` (modèles et seuils de D-012 / D-013),
+  `src/cg/api/` (`services.py`, `app.py`, README), `tests/test_api.py` (4 tests, faux services → passed).
+- **Interface** : `npm create vite@5.5.5 frontend -- --template react` puis `npm install` (React 18.3,
+  Vite 5.4) ; `frontend/src/App.jsx`, `App.css`, `index.css`, `vite.config.js` (relais `/api` → port
+  8000), `index.html` (titre, langue) ; fichiers d'exemple de Vite supprimés ; `npm run build` réussi
+  (148 Ko de JavaScript) ; `frontend/dist/` ajouté au `.gitignore`.
+- **Documentation** : README de l'API et de l'interface ; section **« Installation »** du README principal
+  enfin rédigée ; `requirements.txt` (langgraph, fastapi, uvicorn, python-multipart).
+
+### O4 — Seuil de la confidentialité (critère de D-012, dev)
+
+- **Fichier créé** : `evaluation/seuil_confidentialite.py` ; **résultat** : seuil **0,07** (précision
+  0,510, rappel par évidence 0,988, F1 0,671) contre 0,95 (F1 0,862) → **D-019 proposée**.
+
+### O5 — Erreur de Claude : calculs simultanés sur la puce graphique
+
+- La première réponse du LLM a pris 204 s et n'était pas du JSON (texte tronqué) ; Ollama déchargeait
+  le modèle. **Cause** : le calcul du seuil (O4) et la compilation de l'interface ont été lancés
+  pendant l'évaluation. **Corrections** : `src/cg/recherche/llm.py` → `num_predict = 512` (borne la
+  longueur ; un JSON tronqué donne une abstention motivée) ; évaluation arrêtée, fichier de reprise
+  vidé, modèle rechargé (18 s), **relance de zéro** à 21:05 ; plus aucun autre calcul GPU en parallèle.
+
+### O6 — D-019 acceptée
+
+- Seuil de la confidentialité **0,95** : exception explicite au critère de D-012 (différence de
+  domaine NDA → contrats commerciaux), décidée sur le dev avant tout test ; architecture de F6
+  acceptée. `docs/decisions.md`, docstring de `src/cg/extraction/pipeline.py`.
+
+### O7 — 21:12 — Diagnostic : le LLM réfléchit toujours
+
+- **Constat** : après 7 questions, 4 réponses « illisibles », 54 s par question. Sortie brute
+  (`/api/chat` appelé directement sur une vraie question) : 512 tokens **tous dans la réflexion**,
+  contenu vide. Trois variantes (`think: false` sans JSON ; JSON + `/no_think` ; les deux) : la
+  réflexion continue (≈ 920 caractères à 200 tokens), contenu vide.
+- **Explication** : `qwen3-vl:8b` est la variante « thinking » (moteur de rendu `qwen3-vl-thinking`).
+- **Changement de modèle impossible** : débit mesuré ≈ 53 Ko/s (`curl -r 0-5242879 …`) → 5 Go ≈ 27 h ;
+  tags Ollama lus (`curl https://ollama.com/library/qwen3-vl/tags`) : une variante `2b-instruct` existe
+  (≈ 10 h). Rien n'a été téléchargé.
+
+### O8 — Essai de bout en bout de l'application (API)
+
+- `src/cg/config.py` : `CG_LLM_NUM_PREDICT` ; serveur :
+  `PYTHONPATH=src nohup .venv/bin/python -m uvicorn cg.api.app:app --port 8000 > data/processed/api.log 2>&1 &`
+- **Premier import : erreur 500** (titre déjà présent : le contrat de validation est dans la base en
+  tant que contrat CUAD ; `UniqueViolation`). **Correction** : `titre_libre` dans
+  `src/cg/api/services.py` (suffixe « (import n) ») + test (`tests/test_stockage.py`) → 8 passed.
+- **Import** (contrat de validation, `curl -F "fichier=@…;type=application/pdf" http://127.0.0.1:8000/contrats`) :
+  11 s, 9 pages, 139 segments, **23 clauses** (confidentialité 6, durée 6, responsabilité 8,
+  résiliation 3), **0 segment non traçable** ; question extractive → citation page 6 ; alertes
+  (expérimental) : 11 ; NLI (« Some obligations … may survive termination ») → Entailment 0,988,
+  3 évidences (pages 1, 6, 7) ; question RAG → abstention « illisible » (boucle de réflexion).
+
+### O9 — Réflexion sans fin à température 0 ; réglages recommandés
+
+- Sortie brute à 2 048 tokens : réflexion de 9 350 caractères, jamais terminée (avec ou sans JSON).
+- **Essai** avec les réglages recommandés par Qwen (température 0,6, top_p 0,95, top_k 20, graine 0,
+  4 096 tokens) : 73 s, 2 760 tokens, JSON valide, **citation vérifiée** (page 6).
+- **Fichiers** : `src/cg/config.py` (`CG_LLM_TEMPERATURE`, `CG_LLM_TOP_P`, `CG_LLM_TOP_K`,
+  `CG_LLM_NUM_PREDICT` = 4096), `src/cg/recherche/llm.py`, `.env.example`, `docs/decisions.md`
+  (D-016 : constat technique, à valider par Sara).
+
+### O10 — 21:32 — Évaluation indicative (20 questions) avec la piste NLI
+
+- `evaluation/evaluer_rag_llm_f5.py` : option `--taille` ; **piste NLI** (réponse gardée seulement si
+  le modèle de F4 juge que le passage cité « implique » la phrase de réponse, seuil 0,5 fixé d'avance).
+- Serveur de l'API arrêté (`pkill -f "uvicorn cg.api.app"`) pour libérer la mémoire ; fichier de reprise vidé.
+- **Commande** : `… nohup caffeinate -i .venv/bin/python -u evaluation/evaluer_rag_llm_f5.py --seuil-extractif 0.71 --taille 20 …`
+
+### O11 — D-016 : correction acceptée ; téléchargement de `qwen3-vl:8b-instruct`
+
+- **Décision de Sara** : réglages recommandés par Qwen acceptés ; 20 questions = évaluation INDICATIVE ;
+  télécharger un modèle sans réflexion obligatoire.
+- **Vérification** : `curl -s https://ollama.com/library/qwen3-vl/tags` → `qwen3-vl:8b-instruct` existe
+  (6,2 Go) ; choisi (garde la vision, utile pour l'OCR).
+- **Commande** (21:44) : `nohup caffeinate -i ollama pull qwen3-vl:8b-instruct > data/processed/ollama_pull.log 2>&1 &`
+  → ≈ 336 Ko/s, ≈ 4 h ; fichier principal `a0c1f7c1356e` (5,0 Go). Disque libre : 226 Go.
+- **Constat** : des fichiers `-partial` d'un autre téléchargement (22/11, 23:56, antérieur aux séances)
+  sont présents dans `~/.ollama/models/blobs/` : non touchés.
+- `docs/decisions.md` : plan ajouté à D-016 (configurer `CG_LLM_MODELE`, refaire les 200 questions).
+
+### O12 — 21:59 — Résultats de l'évaluation indicative (20 questions)
+
+- Extractif : exactitude équilibrée 0,423 (0/7 bonnes réponses, 11/13 abstentions, 2 réponses fausses
+  sur 2) ; **RAG + LLM : 0,643** (2/7, 13/13, **0 réponse fausse**) ; RAG + vérification NLI : identique.
+  Issues : 2 réponses vérifiées, 12 abstentions du LLM, 5 sorties illisibles, 1 citation non retrouvée ;
+  82,3 s par question.
+- **Erreur de Claude** : enregistrement MLflow refusé (nom de paramètre accentué) ; corrigé (noms en
+  ASCII, run NLI ajouté) ; relance immédiate grâce au fichier de reprise (aucun nouvel appel au LLM).
+
+### O13 — Clôture, fin du mode, diagnostic
+
+- `pytest` → **50 passed**. `docs/analyses/qr_f5_val.md` (section indicative), `README.md` (F5, F6,
+  résultats), `docs/FICHE_ENCADRANT.md`, `docs/PROGRESS.md` (séance 5/5), `CLAUDE.md` (compteur 5/5 ;
+  **mode marqué TERMINÉ**), **`docs/DIAGNOSTIC_2026-11-23_au_2026-11-24.md`** (avec « Comment lancer la
+  démonstration », questions et hypothèse qui ont fonctionné).
+- **Commandes** : `git add` ; `git commit` ; `git push -u origin feat/api-interface-f6` ; `gh pr create` ;
+  `gh pr merge <n> --merge --delete-branch` ; `git pull`.
+- **En cours au moment de la clôture** : téléchargement de `qwen3-vl:8b-instruct` (≈ 3 %, ≈ 4 h restantes).
+- **Après cette fusion, la règle habituelle reprend : Sara exécute les commandes.**

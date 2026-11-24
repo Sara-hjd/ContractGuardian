@@ -61,10 +61,11 @@ Sara est **en apprentissage**. Concrètement :
   - pourquoi,
   - comment le tester (commande exacte et résultat attendu).
 
-## ⚠️ Mode temporaire « Claude exécute tout » (5 séances)
+## Mode temporaire « Claude exécute tout » (5 séances) — ✅ TERMINÉ le 2026-11-24
 
-> **À lire en premier à chaque début de séance.** Tant que ce mode est actif, il **remplace**
-> la section « Qui exécute les commandes » ci-dessous. Il ne change **aucune règle absolue**.
+> **Ce mode est terminé.** La règle habituelle de la section « Qui exécute les commandes »
+> s'applique de nouveau : **Sara exécute toutes les commandes**. Section gardée pour l'historique ;
+> bilan : `docs/DIAGNOSTIC_2026-11-23_au_2026-11-24.md`.
 
 - **Décidé par** : Sara, le 2026-11-23 (mêmes règles et interdits que le premier mode).
 - **Historique** : un premier mode de 3 séances a eu lieu du 2026-11-22 au 2026-11-23 ; bilan dans
@@ -80,7 +81,7 @@ Sara est **en apprentissage**. Concrètement :
   | 2/5 | 2026-11-23 | **terminée** (D-012 critère + calcul équitable, D-013 ; F4 NLI ; D-014 proposée) |
   | 3/5 | 2026-11-23 | **terminée** (F5 : recherche hybride, extractif, RAG LangGraph en place ; évaluation LLM reportée à 5/5 ; D-015, D-016 acceptées, D-017 proposée) |
   | 4/5 | 2026-11-24 | **terminée** (F3 : 47 paires, grille, kappa, alertes v1 figées ; format des 25 questions F5 ; D-017 acceptée, D-018 proposée) |
-  | 5/5 | — | — |
+  | 5/5 | 2026-11-24 | **terminée** (F6 API + interface, LLM indicatif, D-018, D-019 ; diagnostic complet) — **fin du mode** |
 
 - **Fin** : **automatiquement à la fin de la séance 5/5**. Claude marque alors cette section
   « terminée » et la règle habituelle « Sara exécute les commandes » reprend.

@@ -44,7 +44,7 @@ du cahier des charges) : **0,586** en hybride, contre 0,518 (mots) et 0,543 (sen
 3. Une bonne réponse exige ici de citer **un** segment annoté par CUAD parmi ~200 : mesure stricte
    (un segment voisin, pertinent mais non annoté, compte comme faux).
 
-## RAG + LLM local (LangGraph) — évaluation complète reportée
+## RAG + LLM local (LangGraph)
 
 - Graphe en place (chercher → générer → vérifier mot pour mot → répondre ou s'abstenir), testé
   avec un faux LLM et essayé avec `qwen3-vl:8b` (réponse citée et vérifiée ; abstention correcte).
@@ -52,3 +52,23 @@ du cahier des charges) : **0,586** en hybride, contre 0,518 (mots) et 0,543 (sen
   sous forte charge mémoire, puis **mise en veille du Mac** pendant le calcul (journal système :
   *Sleep / Deep Idle* jusqu'au réveil par l'utilisatrice). Script désormais **reprenable**.
 - **À faire (séance 5/5)** : relancer Mac ouvert et branché (`caffeinate -i` ne suffit pas écran fermé).
+
+## Évaluation INDICATIVE du RAG + LLM (2026-11-24, 20 questions)
+
+*`qwen3-vl:8b` (variante « thinking » : réflexion obligatoire ; réglages recommandés par Qwen :
+température 0,6, top_p 0,95, top_k 20, graine 0 ; D-016). 20 premières questions de l'échantillon
+de validation (graine 0) : 7 avec réponse, 13 sans réponse. **Trop peu de questions pour conclure** :
+la mesure de référence (200 questions, `qwen3-vl:8b-instruct`) reste à faire.*
+
+| Système | Exactitude équilibrée | Bonnes réponses (sur 7) | Bonnes abstentions (sur 13) | Réponses fausses / données |
+|---|---|---|---|---|
+| Extractif (seuil 0,71) | 0,423 | 0 | 11 | 2 sur 2 |
+| **RAG + LLM** | **0,643** | **2** | **13** | **0 sur 2** |
+| RAG + LLM + vérification NLI (piste D-017) | 0,643 | 2 | 13 | 0 sur 2 |
+
+- Issues du RAG : 2 réponses vérifiées, 12 abstentions du LLM, 5 sorties illisibles (JSON invalide),
+  1 citation non retrouvée mot pour mot (abstention). Temps moyen : **82 s par question**.
+- **Lecture** : sur ces 20 questions, le LLM **ne s'est jamais trompé** quand il a répondu, et s'est
+  abstenu à chaque question sans réponse ; mais il ne trouve que 2 réponses sur 7, et 1 sortie sur 4
+  est inutilisable. La **vérification NLI** n'a rien changé ici (les 2 réponses vérifiées sont
+  « impliquées » par leur passage) : trop peu de cas pour juger.

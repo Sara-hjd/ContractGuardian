@@ -111,6 +111,16 @@
   très peu sélective (les formules d'exception sont partout) ; le NLI de F4 ne se transfère pas.
 - Les annotations ne contiennent jamais de texte de contrat (test automatique).
 
+## Application (F6) et LLM local (F5, indicatif)
+
+- **API FastAPI + interface React** : importer un PDF (≈ 10 s pour 9 pages), lire les clauses (4 familles),
+  poser une question (extractif immédiat, ou LLM ≈ 1 min), alertes F3 (expérimental), hypothèse NLI.
+  Chaque passage cité a sa **page et ses positions** ; un **avertissement** est présent partout.
+- **LLM local** (qwen3-vl:8b, 20 questions, **indicatif**) : exactitude équilibrée **0,643** contre 0,423
+  pour l'extractif ; **0 réponse fausse** ; 13 abstentions correctes sur 13 ; mais 2 réponses trouvées
+  sur 7 et 82 s par question. Mesure de référence à refaire avec `qwen3-vl:8b-instruct` (en téléchargement).
+- **Bilan complet de la période : `docs/DIAGNOSTIC_2026-11-23_au_2026-11-24.md`**, avec la démonstration pas à pas.
+
 ## Décisions prises par Sara le 2026-11-22, à présenter pour validation
 
 | | Sujet | Décision |
@@ -130,7 +140,8 @@
 | **D-015** | Embeddings et recherche hybride (F5) | bge-small-en-v1.5 ; texte intégral PostgreSQL + pgvector, fusion RRF (Sara) |
 | **D-016** | LLM local (F5) | qwen3-vl:8b via Ollama (déjà présent), paramétrable ; qwen3:8b cible ; lien avec l'OCR (Sara) |
 | **D-017** | Réglages de F5 | Exactitude équilibrée (choisie après l'échec de l'exactitude, sur la validation seulement) ; 5 passages ; citations vérifiées mot pour mot, ≥ 15 caractères, sinon abstention (Sara) |
-| **D-018** | Protocole F3 et alertes v1 | *Proposée* : 47 paires, grille, kappa, consensus ; règle v1 figée ; 25 questions F5 |
+| **D-018** | Protocole F3 et alertes v1 | 47 paires, grille, kappa, consensus ; règle v1 figée ; risque n°1 du cahier des charges → plan de repli : F3 présentée comme étude expérimentale si la faiblesse est confirmée (Sara) |
+| **D-019** | Seuil confidentialité ; architecture F6 | 0,95 (exception au critère de D-012, différence de domaine NDA → contrats commerciaux) ; API + interface (Sara) |
 | **D-009** | Confidentialité : segmentation, négatifs | Coupe aux lignes, sans nda-18, négatifs dans les NDA (Sara, 2026-11-23) ; annotation CUAD plus tard |
 
 Point à discuter pour D-002 : dans un NDA, presque tout le texte parle de confidentialité ;
