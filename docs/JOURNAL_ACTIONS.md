@@ -1427,3 +1427,47 @@ tests ; MLflow ; PR ; clôture (résumé de 10 lignes, rappel Ilyas).
   `docs/FICHE_ENCADRANT.md` ; `docs/PROGRESS.md` ; `CLAUDE.md` (compteur 3/5) ; `pytest` → 40 passed.
 - **Commandes** : `git add` ; `git commit` ; `git push -u origin feat/rag-f5` ; `gh pr create` ;
   `gh pr merge <n> --merge --delete-branch` ; `git pull`.
+- **Résultat de M14** : PR #11 fusionnée (`5a3698f`) ; 40 tests passent ; compteur 3/5.
+
+---
+
+## Séance 4/5 du second mode — 2026-11-24 — F3 : préparation de l'annotation humaine
+
+### N1 — D-017 acceptée ; Recall@5 ; piste NLI
+
+- `git switch -c feat/f3-annotation` ; `docs/decisions.md` (D-017 acceptée, deux précisions, piste
+  NLI pour la séance 5) ; Recall@5 ajouté (`docs/FICHE_ENCADRANT.md`, `docs/analyses/qr_f5_val.md`,
+  `docs/PROGRESS.md`) — scripts Python de remplacement vérifiant chaque repère.
+
+### N2 — Paires candidates
+
+- **Comptage** (validation, annotations CUAD alignées) : T1 12 paires / 6 contrats ; T2 29 / 14 ;
+  T3 70 / 10 ; T4 52 / 12.
+- **Fichiers créés** : `src/cg/annotation/` (`creer_paires_f3.py`, `accord.py`, `positions.py`, README).
+- **Commande** : `PYTHONPATH=src .venv/bin/python -m cg.annotation.creer_paires_f3`
+- **Résultat** : **47 paires** (T1 11, T2 12, T3 12, T4 12 ; 24 contrats) ;
+  `data/annotations/f3_paires/paires_v1.csv` (suivi par Git) ; `data/processed/f3_paires_a_lire.md` (ignoré).
+
+### N3 — Guides, modèles, tests
+
+- `docs/annotation/GUIDE_F3_PAIRES.md`, `docs/annotation/GUIDE_F5_QUESTIONS.md` (exemples inventés) ;
+  modèles vides `MODELE_annotations.csv`, `MODELE_questions.csv` ; `tests/test_annotations.py`
+  (colonnes autorisées, longueurs, étiquettes ; kappa contre scikit-learn ; règle d'alerte).
+
+### N4 — Alertes v1 figées avant les annotations
+
+- **Fichiers créés** : `src/cg/comparison/` (`alertes.py`, `predire_alertes.py`, README).
+- **Premier essai** : erreur « Sequence to truncate too short » (une clause en position d'hypothèse
+  dépasse la limite avec `truncation="only_second"`) → `src/cg/nli/modele.py` : `longest_first`
+  (sans effet pour F4, où l'hypothèse est toujours la plus courte).
+- **Commande** : `PYTHONPATH=src .venv/bin/python -m cg.comparison.predire_alertes`
+- **Résultat** : 41 alertes sur 47 ; raisons : R3 seule 27, R2+R3 12, R2 seule 2, aucune 6 ; R1 jamais.
+  `docs/analyses/f3_alertes_v1_predictions.csv` (sans texte), commité avant toute annotation.
+- `pytest` → **45 passed**.
+
+### N5 — Clôture de la séance 4/5
+
+- `docs/decisions.md` (**D-018 proposée**) ; `README.md`, `src/cg/README.md`, `docs/FICHE_ENCADRANT.md`,
+  `docs/PROGRESS.md`, `CLAUDE.md` (compteur 4/5).
+- **Commandes** : `git add` ; `git commit` ; `git push -u origin feat/f3-annotation` ; `gh pr create` ;
+  `gh pr merge <n> --merge --delete-branch` ; `git pull`.

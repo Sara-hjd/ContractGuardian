@@ -73,6 +73,45 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 
 ## Séances
 
+## 2026-11-24 — Séance 4/5 (second mode) : F3, préparation de l'annotation humaine
+
+- **Qui** : Sara-hjd (avec Claude Code, second mode temporaire, séance **4/5**)
+- **Branche** : `feat/f3-annotation`
+
+### Fait
+- **D-017 acceptée** (Sara) avec ses deux précisions ; **Recall@5** ajouté partout (0,586 en hybride) ;
+  piste pour la séance 5 : vérifier les réponses de F5 avec le NLI de F4.
+- **47 paires** de clauses (validation, 4 types, 24 contrats) : références commitées
+  (`data/annotations/f3_paires/paires_v1.csv`), texte dans un fichier de lecture local non commité.
+- **Grille et guide** (`docs/annotation/GUIDE_F3_PAIRES.md`), modèle de fichier, **script du kappa de
+  Cohen** (vérifié contre scikit-learn).
+- **Format et guide des 25 questions de F5** (`docs/annotation/GUIDE_F5_QUESTIONS.md`), outil de positions.
+- **Test** : aucun fichier de `data/annotations/` ne contient de texte de contrat.
+- **Alertes v1 figées avant les annotations** : 41 alertes sur 47 (R3 « exception » quasi partout ;
+  R1 NLI jamais). Troncature NLI passée à `longest_first` (sans effet sur F4).
+- **45 tests passent.** D-018 proposée.
+
+### À faire par Sara et Ilyas
+- Annoter les 47 paires **chacun de son côté** (`annotations_<identifiant>.csv`), puis lancer le kappa.
+- Rédiger les **25 questions** (au moins 8 sans réponse).
+
+### Ce que j'ai compris
+<!-- Rédigé par Claude en fin de séance, relu et corrigé par Sara. -->
+- **Une référence humaine** est nécessaire pour évaluer des alertes : il n'existe pas de jeu tout fait.
+- **Le kappa de Cohen** corrige l'accord brut de ce que le hasard donnerait : deux annotateurs qui
+  disent presque toujours « à vérifier » sont souvent d'accord… par hasard.
+- **Annoter sans se concerter**, sinon on mesure l'influence de l'un sur l'autre, pas la clarté de la grille.
+- **Figer la règle avant de voir les étiquettes** : la date du commit le prouve ; une règle ajustée
+  sur les étiquettes qui servent à l'évaluer serait trop optimiste.
+- **Une règle trop large** (presque tout déclenche une alerte) aura un bon rappel mais une mauvaise
+  précision ; c'est ce que l'évaluation montrera.
+- *Relu par Sara : à faire*
+
+### Décisions
+- D-017 acceptée ; D-018 proposée.
+
+---
+
 ## 2026-11-23 — Séance 3/5 (second mode) : F5, recherche hybride et réponse avec abstention
 
 - **Qui** : Sara-hjd (avec Claude Code, second mode temporaire, séance **3/5**)
@@ -91,7 +130,7 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 - Tests : **40 passent**. D-017 proposée.
 
 ### Résultats (validation ; réglage sur 60 contrats du train ; test fermé)
-- Recherche hybride : rappel@10 **0,682** (mots 0,638, sens 0,642).
+- Recherche hybride : **Recall@5 0,586** (mots 0,518, sens 0,543) ; Recall@10 0,682 (mots 0,638, sens 0,642).
 - Extractif avec abstention : exactitude équilibrée **0,521** (toujours s'abstenir : 0,500).
 - RAG + LLM : en place et essayé ; **évaluation complète reportée à la séance 5/5** (Mac en veille).
 
@@ -119,7 +158,8 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 - *Relu par Sara : à faire*
 
 ### Décisions
-- D-012 (option 2), D-014, D-015, D-016 acceptées ; D-017 proposée.
+- D-012 (option 2), D-014, D-015, D-016 acceptées ; D-017 proposée, puis **acceptée par Sara le 2026-11-24**.
+- **Piste pour la séance 5/5** : vérifier la réponse avec le modèle NLI de F4, et comparer avec la vérification mot pour mot.
 
 ---
 

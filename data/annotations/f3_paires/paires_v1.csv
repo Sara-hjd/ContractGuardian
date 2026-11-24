@@ -1,0 +1,48 @@
+id_paire,type,titre,page_a,debut_a,fin_a,categories_a,page_b,debut_b,fin_b,categories_b
+P01,T1,AMERICANPHYSICIANSCAPITALINC_03_31_2003-EX-10.26-AGENCY AGREEMENT,2,9153,9332,Expiration Date,2,9574,9929,Notice Period To Terminate Renewal|Renewal Term
+P02,T1,AMERICANPHYSICIANSCAPITALINC_03_31_2003-EX-10.26-AGENCY AGREEMENT,2,9352,9563,Expiration Date,2,9574,9929,Notice Period To Terminate Renewal|Renewal Term
+P03,T1,ATMOSENERGYCORP_11_22_2002-EX-10.17-TRANSPORTATION SERVICE AGREEMENT,1,4070,4447,Effective Date|Expiration Date,2,4467,4688,Notice Period To Terminate Renewal|Renewal Term
+P04,T1,ATMOSENERGYCORP_11_22_2002-EX-10.17-TRANSPORTATION SERVICE AGREEMENT,1,4070,4447,Effective Date|Expiration Date,2,4708,4840,Notice Period To Terminate Renewal|Renewal Term
+P05,T1,BNLFINANCIALCORP_03_30_2007-EX-10.8-OUTSOURCING AGREEMENT,12,28333,28477,Effective Date|Expiration Date,12,28713,28948,Notice Period To Terminate Renewal|Renewal Term
+P06,T1,BNLFINANCIALCORP_03_30_2007-EX-10.8-OUTSOURCING AGREEMENT,12,28333,28477,Effective Date|Expiration Date,12,28562,28711,Notice Period To Terminate Renewal|Renewal Term
+P07,T1,"ETELOS,INC_03_09_2004-EX-10.8-DISTRIBUTOR AGREEMENT",1,1564,1703,Expiration Date,6,18410,18879,Expiration Date|Notice Period To Terminate Renewal|Renewal Term
+P08,T1,EUROPEANMICROHOLDINGSINC_03_06_1998-EX-10.6-DISTRIBUTOR AGREEMENT,3,11974,12195,Expiration Date,3,12197,12892,Notice Period To Terminate Renewal|Renewal Term
+P09,T1,EUROPEANMICROHOLDINGSINC_03_06_1998-EX-10.6-DISTRIBUTOR AGREEMENT,6,23850,23940,Expiration Date,3,12197,12892,Notice Period To Terminate Renewal|Renewal Term
+P10,T1,PareteumCorp_20081001_8-K_EX-99.1_2654808_EX-99.1_Hosting Agreement,24,53728,53927,Effective Date|Expiration Date,24,54345,54486,Renewal Term
+P11,T1,PareteumCorp_20081001_8-K_EX-99.1_2654808_EX-99.1_Hosting Agreement,24,53728,53927,Effective Date|Expiration Date,24,53929,54341,Renewal Term|Termination For Convenience
+P12,T2,ANIXABIOSCIENCESINC_06_09_2020-EX-10.1-COLLABORATION AGREEMENT,5,14722,14895,Expiration Date,5,14897,15039,Termination For Convenience
+P13,T2,CardlyticsInc_20180112_S-1_EX-10.16_11002987_EX-10.16_Maintenance Agreement1,9,26408,26576,Expiration Date,9,26597,26992,Termination For Convenience
+P14,T2,CardlyticsInc_20180112_S-1_EX-10.16_11002987_EX-10.16_Maintenance Agreement1,9,26408,26576,Expiration Date,9,30407,30796,Termination For Convenience
+P15,T2,"ETELOS,INC_03_09_2004-EX-10.8-DISTRIBUTOR AGREEMENT",6,18410,18879,Expiration Date|Notice Period To Terminate Renewal|Renewal Term,6,18881,18985,Termination For Convenience
+P16,T2,EtonPharmaceuticalsInc_20191114_10-Q_EX-10.1_11893941_EX-10.1_Development Agreement,13,36338,37657,Effective Date|Expiration Date,14,40873,41113,Termination For Convenience
+P17,T2,FIBROGENINC_10_01_2014-EX-10.11-COLLABORATION AGREEMENT,43,132235,132399,Expiration Date,45,138221,138377,Termination For Convenience
+P18,T2,"KIROMICBIOPHARMA,INC_05_11_2020-EX-10.23-CONSULTING AGREEMENT",3,7645,7775,Expiration Date,3,7777,7888,Termination For Convenience
+P19,T2,LiquidmetalTechnologiesInc_20200205_8-K_EX-10.1_11968198_EX-10.1_Development Agreement,2,2709,4178,Notice Period To Terminate Renewal|Renewal Term,11,36144,36805,Notice Period To Terminate Renewal|Termination For Convenience
+P20,T2,PareteumCorp_20081001_8-K_EX-99.1_2654808_EX-99.1_Hosting Agreement,24,54345,54486,Renewal Term,24,53929,54341,Renewal Term|Termination For Convenience
+P21,T2,RaeSystemsInc_20001114_10-Q_EX-10.57_2631790_EX-10.57_Co-Branding Agreement,4,16372,16675,Expiration Date|Renewal Term,4,16682,17221,Termination For Convenience
+P22,T2,RevolutionMedicinesInc_20200117_S-1_EX-10.1_11948417_EX-10.1_Development Agreement,58,184903,185219,Expiration Date,58,185269,185778,Termination For Convenience
+P23,T2,SMITHELECTRICVEHICLESCORP_04_04_2012-EX-10.26-FLEET MAINTENANCE AGREEMENT,19,50440,50611,Expiration Date,19,50638,51448,Expiration Date|Termination For Convenience
+P24,T3,BNLFINANCIALCORP_03_30_2007-EX-10.8-OUTSOURCING AGREEMENT,10,22722,24219,Cap On Liability,8,18857,20296,Cap On Liability|Uncapped Liability
+P25,T3,CHANGEPOINTCORP_03_08_2000-EX-10.6-LICENSE AND HOSTING AGREEMENT,24,131462,131765,Cap On Liability,10,55435,56267,Cap On Liability|Uncapped Liability
+P26,T3,CHANGEPOINTCORP_03_08_2000-EX-10.6-LICENSE AND HOSTING AGREEMENT,29,157247,157405,Cap On Liability,10,55435,56267,Cap On Liability|Uncapped Liability
+P27,T3,ENTRUSTINC_07_24_1998-EX-10.5-STRATEGIC ALLIANCE AGREEMENT,3,13008,13285,Cap On Liability,8,40679,41310,Cap On Liability|Uncapped Liability
+P28,T3,ENTRUSTINC_07_24_1998-EX-10.5-STRATEGIC ALLIANCE AGREEMENT,4,16850,17411,Cap On Liability,8,40679,41310,Cap On Liability|Uncapped Liability
+P29,T3,EdietsComInc_20001030_10QSB_EX-10.4_2606646_EX-10.4_Co-Branding Agreement,7,36741,36931,Cap On Liability,8,41955,42661,Cap On Liability|Uncapped Liability
+P30,T3,"IOVANCEBIOTHERAPEUTICS,INC_08_03_2017-EX-10.1-STRATEGIC ALLIANCE AGREEMENT",21,67818,68564,Cap On Liability|Uncapped Liability,20,64392,65078,Uncapped Liability
+P31,T3,ImpresseCorp_20000322_S-1A_EX-10.11_5199234_EX-10.11_Co-Branding Agreement,6,33820,34474,Cap On Liability|Uncapped Liability,4,24712,24847,Cap On Liability|Uncapped Liability
+P32,T3,ImpresseCorp_20000322_S-1A_EX-10.11_5199234_EX-10.11_Co-Branding Agreement,6,33820,34474,Cap On Liability|Uncapped Liability,5,24890,25147,Cap On Liability|Uncapped Liability
+P33,T3,PareteumCorp_20081001_8-K_EX-99.1_2654808_EX-99.1_Hosting Agreement,21,42051,42538,Cap On Liability,21,42899,42973,Uncapped Liability
+P34,T3,ReynoldsConsumerProductsInc_20191115_S-1_EX-10.18_11896469_EX-10.18_Supply Agreement,3,11308,12187,Cap On Liability,7,26155,27632,Cap On Liability|Uncapped Liability
+P35,T3,TodosMedicalLtd_20190328_20-F_EX-4.10_11587157_EX-4.10_Marketing Agreement_ Reseller Agreement,8,22903,23906,Cap On Liability,9,23956,25382,Cap On Liability|Uncapped Liability
+P36,T4,ANIXABIOSCIENCESINC_06_09_2020-EX-10.1-COLLABORATION AGREEMENT,5,14897,15039,Termination For Convenience,5,16665,17349,Post-Termination Services
+P37,T4,ANIXABIOSCIENCESINC_06_09_2020-EX-10.1-COLLABORATION AGREEMENT,5,14897,15039,Termination For Convenience,3,9202,10169,Post-Termination Services
+P38,T4,CardlyticsInc_20180112_S-1_EX-10.16_11002987_EX-10.16_Maintenance Agreement1,9,26597,26992,Termination For Convenience,10,31954,33185,Post-Termination Services
+P39,T4,CardlyticsInc_20180112_S-1_EX-10.16_11002987_EX-10.16_Maintenance Agreement1,9,26597,26992,Termination For Convenience,32,123813,124061,Post-Termination Services
+P40,T4,"ETELOS,INC_03_09_2004-EX-10.8-DISTRIBUTOR AGREEMENT",6,18881,18985,Termination For Convenience,6,19176,19405,Post-Termination Services
+P41,T4,FIBROGENINC_10_01_2014-EX-10.11-COLLABORATION AGREEMENT,45,138221,138377,Termination For Convenience,20,48095,48319,Post-Termination Services
+P42,T4,LiquidmetalTechnologiesInc_20200205_8-K_EX-10.1_11968198_EX-10.1_Development Agreement,11,36144,36805,Notice Period To Terminate Renewal|Termination For Convenience,20,65290,66708,Post-Termination Services
+P43,T4,LiquidmetalTechnologiesInc_20200205_8-K_EX-10.1_11968198_EX-10.1_Development Agreement,11,36144,36805,Notice Period To Terminate Renewal|Termination For Convenience,12,38209,39452,Post-Termination Services
+P44,T4,NmfSlfIInc_20200115_10-12GA_EX-10.5_11946987_EX-10.5_Trademark License Agreement,3,10260,11174,Expiration Date|Termination For Convenience,3,11176,11939,Post-Termination Services
+P45,T4,PelicanDeliversInc_20200211_S-1_EX-10.3_11975895_EX-10.3_Development Agreement2,10,23246,24692,Termination For Convenience,11,24852,26207,Post-Termination Services
+P46,T4,RevolutionMedicinesInc_20200117_S-1_EX-10.1_11948417_EX-10.1_Development Agreement,58,185269,185778,Termination For Convenience,64,205455,206273,Post-Termination Services
+P47,T4,RevolutionMedicinesInc_20200117_S-1_EX-10.1_11948417_EX-10.1_Development Agreement,58,185269,185778,Termination For Convenience,65,210730,211286,Post-Termination Services

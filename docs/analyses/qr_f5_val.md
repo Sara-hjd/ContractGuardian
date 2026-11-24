@@ -19,7 +19,8 @@ Scripts : `evaluation/evaluer_qr_f5.py`, `evaluation/evaluer_rag_llm_f5.py`. Tes
 | Par le sens (bge-small + pgvector) | 0,313 | 0,543 | 0,642 |
 | **Hybride (fusion RRF)** | **0,323** | **0,586** | **0,682** |
 
-La fusion fait mieux que chacune des deux recherches : elles se complètent.
+La fusion fait mieux que chacune des deux recherches : elles se complètent. **Recall@5** (métrique
+du cahier des charges) : **0,586** en hybride, contre 0,518 (mots) et 0,543 (sens).
 
 ## Réponse extractive avec abstention (validation)
 

@@ -824,7 +824,7 @@ passages retrouvés ; chaque citation est vérifiée **mot pour mot** dans le se
 ## D-017 — Réglages de F5 : critère d'abstention et graphe RAG
 
 - **Date** : 2026-11-23
-- **Statut** : **Proposée, à décider par Sara**
+- **Statut** : **Acceptée (Sara, 2026-11-24)**, à présenter à l'encadrant
 
 ### Contexte
 F5 doit répondre en citant exactement, ou s'abstenir. Mesures : `docs/analyses/qr_f5_val.md`
@@ -842,6 +842,50 @@ F5 doit répondre en citant exactement, ou s'abstenir. Mesures : `docs/analyses/
    sinon **abstention** ; chaque citation vérifiée reçoit ses positions dans le contrat.
 4. **Comparaison extractif / LLM** sur les mêmes 200 questions de validation (graine 0), avec
    l'exactitude équilibrée comme mesure principale et le taux de réponses fausses en complément.
+
+### Décision
+**Acceptée** (Sara, 2026-11-24), avec deux précisions :
+- **Le critère d'exactitude équilibrée a été choisi APRÈS l'échec du premier critère**
+  (l'exactitude simple), en regardant **la validation uniquement** ; **le test n'a pas été touché**.
+- **Réglages du graphe** : **5 passages** ; citations **vérifiées mot pour mot**, d'**au moins
+  15 caractères** ; sinon **abstention**.
+
+### Piste d'amélioration (séance 5/5)
+Utiliser le **modèle NLI de F4** pour vérifier qu'un passage contient bien la réponse avant de
+répondre (le passage « implique »-t-il la réponse du LLM ?), et **comparer** avec la vérification
+actuelle (citation mot pour mot), sur les mêmes questions de validation.
+
+---
+
+## D-018 — Protocole de F3 (paires, annotation, kappa) et règle d'alerte v1
+
+- **Date** : 2026-11-24
+- **Statut** : **Proposée, à décider par Sara**
+
+### Contexte
+Le cahier des charges prévoit un mini-jeu de 30 à 50 paires de clauses annoté par Sara et Ilyas,
+avec mesure du kappa de Cohen ; les alertes de F3 sont évaluées sur ces annotations. Claude prépare,
+**n'annote pas**.
+
+### Proposition de Claude
+1. **Paires** : 47 paires de deux segments d'un même contrat de **validation** (test fermé), en
+   4 types (fin du contrat ↔ renouvellement / préavis ; durée ↔ résiliation sans motif ; plafond ↔
+   non plafonné ; résiliation sans motif ↔ obligations après la fin), choisies grâce aux annotations
+   CUAD alignées (indépendant de tout modèle) ; 12 par type au plus, 2 par contrat et par type au
+   plus, graine 0. Références dans `data/annotations/f3_paires/paires_v1.csv`.
+2. **Grille** : `COMPATIBLES`, `A_VERIFIER`, `CONTRADICTION_APPARENTE`, `NON_COMPARABLE`
+   (`docs/annotation/GUIDE_F3_PAIRES.md`) ; en cas de doute, `A_VERIFIER`. Annotation **indépendante**,
+   puis kappa (4 étiquettes et « alerte oui/non »), discussion des désaccords, **étiquette de consensus**.
+3. **Règle d'alerte v1, figée avant les annotations** (`docs/analyses/f3_alertes_v1_predictions.csv`,
+   commité avant toute étiquette) : R1 NLI (≥ 0,5), R2 délais différents, R3 formule d'exception.
+   Résultat brut : **41 alertes sur 47 paires** (R3 seule : 27 ; R1 : jamais) → règle **très peu
+   sélective**, attendue avec une précision faible. Elle sert de **référence v1**, non modifiée.
+4. **Évaluation** : précision, rappel et F1 de « alerte oui/non » contre le consensus ; et les mêmes
+   mesures pour la référence triviale « toujours alerter ».
+5. **Règle v2 éventuelle** : à concevoir après l'évaluation, mais **sans** la régler sur ces 47
+   paires (elles serviraient alors deux fois) : il faudrait un nouveau lot de paires annotées.
+6. **25 questions de F5** : rédigées par Sara et Ilyas (au moins 8 sans réponse), contrats de
+   validation, références seulement (`docs/annotation/GUIDE_F5_QUESTIONS.md`).
 
 ### Décision
 *À prendre par Sara.*
