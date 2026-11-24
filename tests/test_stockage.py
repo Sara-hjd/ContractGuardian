@@ -82,3 +82,21 @@ def test_enregistrer_relire_et_tracer(connexion, tmp_path: Path) -> None:
     with connecter() as autre, autre.cursor() as curseur:
         curseur.execute("SELECT count(*) FROM segments WHERE contrat_id = %s", (contrat_id,))
         assert curseur.fetchone()[0] == 0  # la suppression en cascade a tout effacé
+
+
+def test_titre_libre_evite_les_doublons(connexion) -> None:
+    """Un titre déjà pris reçoit un suffixe « (import n) » (cas d'un même fichier importé deux fois)."""
+    pytest.importorskip("fastapi")
+    from cg.api.services import titre_libre
+
+    titre = f"test-{uuid.uuid4()}"
+    assert titre_libre(connexion, titre) == titre
+    with connexion.transaction(), connexion.cursor() as c:
+        c.execute("INSERT INTO contrats (titre, source, mode_extraction, texte_complet, nb_pages) "
+                  "VALUES (%s, 'import', 'test', 'x', 0) RETURNING id", (titre,))
+        cid = c.fetchone()[0]
+    try:
+        assert titre_libre(connexion, titre) == f"{titre} (import 2)"
+    finally:
+        with connexion.transaction(), connexion.cursor() as c:
+            c.execute("DELETE FROM contrats WHERE id = %s", (cid,))

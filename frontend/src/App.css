@@ -1,0 +1,22 @@
+/* Mise en page simple et lisible de l'interface ContractGuardian. */
+.page { max-width: 1200px; margin: 0 auto; padding: 16px; font-family: system-ui, sans-serif; }
+header h1 { margin: 0 0 4px; }
+.avertissement { background: #fff4d6; border-left: 4px solid #e0a800; padding: 8px 12px; margin: 0 0 16px; }
+.corps { display: grid; grid-template-columns: 280px 1fr; gap: 24px; }
+@media (max-width: 800px) { .corps { grid-template-columns: 1fr; } }
+aside ul { list-style: none; padding: 0; }
+aside li { padding: 8px; border-radius: 6px; cursor: pointer; word-break: break-word; }
+aside li:hover, aside li.choisi { background: #eef3ff; }
+.import { display: block; padding: 10px; border: 1px dashed #888; border-radius: 6px; cursor: pointer; }
+.import input { display: block; margin-top: 6px; }
+nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+nav button { padding: 6px 12px; border: 1px solid #ccc; background: white; border-radius: 6px; cursor: pointer; }
+nav button.actif { background: #2b59c3; color: white; border-color: #2b59c3; }
+.citation { margin: 6px 0 14px; padding: 8px 12px; background: #f6f6f6; border-left: 3px solid #2b59c3; white-space: pre-wrap; }
+.provenance { font-size: 0.8em; color: #555; margin-bottom: 4px; }
+.question { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.question input { flex: 1 1 320px; padding: 6px; }
+.abstention { color: #7a4b00; }
+.experimental { background: #fde8e8; padding: 8px 12px; border-left: 4px solid #c0392b; }
+.erreur { color: #c0392b; }
+.message { font-size: 0.9em; }

@@ -39,3 +39,11 @@ psycopg[binary]>=3.2
 # et Transformers (modèles préentraînés de Hugging Face).
 torch>=2.4
 transformers>=4.44,<5
+
+# Orchestration du RAG (F5) : graphe chercher → générer → vérifier → répondre ou s'abstenir.
+langgraph>=0.2
+
+# API de l'application (F6) : FastAPI, serveur Uvicorn, envoi de fichiers (python-multipart).
+fastapi>=0.110
+uvicorn>=0.29
+python-multipart>=0.0.9

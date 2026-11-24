@@ -73,6 +73,53 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 
 ## Séances
 
+## 2026-11-24 — Séance 5/5 (second mode) : F6, LLM indicatif — fin du mode
+
+- **Qui** : Sara-hjd (avec Claude Code, second mode temporaire, séance **5/5**, la dernière)
+- **Branche** : `feat/api-interface-f6`
+
+### Fait
+- D-018 acceptée (risque n°1 du cahier des charges → plan de repli) ; **D-019 acceptée** (seuil 0,95
+  pour la confidentialité, exception au critère ; architecture de F6).
+- **F6** : `src/cg/extraction/pipeline.py` (modèles et seuils de D-012/D-013/D-019), modèle TF-IDF de la
+  résiliation sauvegardé, **API FastAPI** (`src/cg/api/`), **interface React** (`frontend/`), tests de
+  l'API ; **essai de bout en bout réussi** (import 11 s, 23 clauses, 0 segment non traçable ; question,
+  alertes, NLI). Défaut corrigé : titres en double à l'import.
+- **LLM** : `qwen3-vl:8b` réfléchit toujours et boucle à température 0 → réglages recommandés par Qwen
+  (correction de D-016 acceptée) ; **évaluation indicative sur 20 questions** ; téléchargement de
+  `qwen3-vl:8b-instruct` lancé (≈ 4 h) pour la mesure de référence.
+- Piste « vérification par le NLI » mesurée (aucun effet sur ces 20 questions).
+- README : section **Installation** rédigée. **50 tests passent.** **Fin du mode** ; diagnostic complet.
+
+### Résultats (validation ; tests fermés)
+- RAG + LLM (20 questions, indicatif) : exactitude équilibrée **0,643** (extractif 0,423) ; 0 réponse
+  fausse ; 13/13 abstentions correctes ; 2/7 réponses trouvées ; 82 s par question.
+- Confidentialité au critère de D-012 : seuil 0,07 (P 0,510, rappel par évidence 0,988) ; **0,95 retenu** (D-019).
+
+### Ce que j'ai compris
+<!-- Rédigé par Claude en fin de séance, relu et corrigé par Sara. -->
+- **Une API** expose des fonctions par des adresses web (`POST /contrats`, `GET /contrats/1/clauses`) ;
+  l'interface React les appelle ; FastAPI génère la documentation (`/docs`).
+- **Tester l'application de bout en bout** révèle des défauts que les tests unitaires ne voient pas
+  (un même fichier importé deux fois).
+- **Un modèle « thinking »** écrit une réflexion avant de répondre ; à température 0, il peut tourner
+  en boucle ; une graine fixe garde la reproductibilité avec une température non nulle.
+- **Une exception à une règle commune** est acceptable si elle est **écrite et justifiée** (D-019 :
+  le seuil est réglé sur des NDA, l'application lit des contrats commerciaux).
+- **Indicatif ou référence** : 20 questions donnent une tendance, pas un résultat ; on le dit.
+- *Relu par Sara : à faire*
+
+### Décisions
+- D-016 (correction et plan), D-018, D-019 acceptées.
+
+### Prochaine étape (règle habituelle : Sara exécute)
+- Fin du téléchargement de `qwen3-vl:8b-instruct`, puis évaluation de référence sur 200 questions.
+- Annotations F3 (Sara et Ilyas) et kappa ; 25 questions de F5.
+- Décision écrite pour ouvrir le test de F2 (une seule fois), puis de F4 et F5.
+- Ilyas : relecture des PR #2 à #13.
+
+---
+
 ## 2026-11-24 — Séance 4/5 (second mode) : F3, préparation de l'annotation humaine
 
 - **Qui** : Sara-hjd (avec Claude Code, second mode temporaire, séance **4/5**)

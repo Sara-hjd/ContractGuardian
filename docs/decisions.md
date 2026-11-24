@@ -819,6 +819,32 @@ Mode « réflexion » désactivé, température 0 (réponses reproductibles) ; l
 passages retrouvés ; chaque citation est vérifiée **mot pour mot** dans le segment cité, sinon
 **abstention** (D-017 à venir pour le détail du graphe).
 
+### Constat technique et correction (2026-11-24) — à valider par Sara
+- `qwen3-vl:8b` est la variante **« thinking »** de Qwen3-VL : il **réfléchit toujours**, même avec
+  `think: false` ou `/no_think` (3 essais). En **température 0**, sa réflexion **tourne en boucle**
+  (2 048 tokens, 9 350 caractères, aucune réponse).
+- **Correction** : réglages recommandés par Qwen pour ses modèles « thinking » — température 0,6,
+  top_p 0,95, top_k 20, **graine fixe (0)** pour rester reproductible, jusqu'à 4 096 tokens
+  (`cg.config`, variables `CG_LLM_*`). Essai : JSON valide, citation vérifiée, ≈ 73 s par question.
+- **Conséquence** : l'évaluation sur 200 questions prendrait ≈ 4 h ; une **évaluation indicative sur
+  20 questions** est faite ; la mesure de référence reste à faire avec **`qwen3:8b`** (cible), dont la
+  réflexion peut être vraiment désactivée, quand le réseau le permettra (≈ 53 Ko/s le 2026-11-24).
+- **Correction acceptée** (Sara, 2026-11-24) : réglages recommandés par Qwen (température 0,6,
+  top_p 0,95, top_k 20, graine fixe 0) ; l'évaluation sur 20 questions est présentée comme
+  **INDICATIVE**.
+
+### Plan : passer à un modèle sans réflexion obligatoire (Sara, 2026-11-24)
+- **Modèle** : `qwen3-vl:8b-instruct` (existe dans la bibliothèque Ollama, ≈ 6,2 Go ; fichier principal
+  5,0 Go) : variante « instruct » de Qwen3-VL, **sans réflexion obligatoire**, et qui **garde la
+  vision** (utile pour l'extension OCR du cahier des charges). Choisi plutôt que `qwen3:8b`.
+- **Téléchargement lancé le 2026-11-24 à 21:44**, en arrière-plan avec `caffeinate`
+  (`nohup caffeinate -i ollama pull qwen3-vl:8b-instruct > data/processed/ollama_pull.log 2>&1 &`) ;
+  ≈ 336 Ko/s, ≈ 4 h estimées. Ollama **reprend** un téléchargement interrompu (fichiers `-partial`).
+- **Dès qu'il est téléchargé** : le configurer (`CG_LLM_MODELE=qwen3-vl:8b-instruct` dans `.env`),
+  vérifier que la réflexion est bien coupée (température 0 possible), puis **refaire l'évaluation
+  complète sur les 200 questions** (`evaluation/evaluer_rag_llm_f5.py --seuil-extractif 0.71`,
+  sans `--taille`), qui deviendra la mesure de référence de F5.
+
 ---
 
 ## D-017 — Réglages de F5 : critère d'abstention et graphe RAG
@@ -860,7 +886,7 @@ actuelle (citation mot pour mot), sur les mêmes questions de validation.
 ## D-018 — Protocole de F3 (paires, annotation, kappa) et règle d'alerte v1
 
 - **Date** : 2026-11-24
-- **Statut** : **Proposée, à décider par Sara**
+- **Statut** : **Acceptée (Sara, 2026-11-24)**, à présenter à l'encadrant
 
 ### Contexte
 Le cahier des charges prévoit un mini-jeu de 30 à 50 paires de clauses annoté par Sara et Ilyas,
@@ -888,4 +914,50 @@ avec mesure du kappa de Cohen ; les alertes de F3 sont évaluées sur ces annota
    validation, références seulement (`docs/annotation/GUIDE_F5_QUESTIONS.md`).
 
 ### Décision
-*À prendre par Sara.*
+**Acceptée** (Sara, 2026-11-24), points 1 à 6 ci-dessus.
+
+### Lien avec le cahier des charges (risque n°1)
+La faiblesse de la règle v1 (41 alertes sur 47, R3 quasi partout) et le **non-transfert du NLI**
+(R1 ne se déclenche jamais) correspondent au **risque n°1 prévu par le cahier des charges** : « le NLI
+ne se transfère pas bien aux paires de clauses ». Son **plan de repli s'applique** : si les annotations
+de Sara et d'Ilyas confirment cette faiblesse, la **détection inter-clauses sera présentée comme une
+étude expérimentale**, **mesurée honnêtement** (précision, rappel, comparaison avec « toujours
+alerter »), et non comme une fonctionnalité fiable.
+
+---
+
+## D-019 — Seuil de la confidentialité selon le critère de D-012, et architecture de F6
+
+- **Date** : 2026-11-24
+- **Statut** : **Acceptée (Sara, 2026-11-24)**, à présenter à l'encadrant
+
+### Contexte
+D-012 prévoyait de fixer le seuil de la confidentialité « sous le même critère, sur le dev, avant le
+test ». Calcul (`evaluation/seuil_confidentialite.py`, dev ContractNLI, 2 872 segments, 1 198 phrases
+d'évidence ; test fermé) :
+
+| Seuil | Choisi par | Précision | Rappel (segments) | Rappel par évidence | F1 |
+|---|---|---|---|---|---|
+| **0,07** | critère D-012 (rappel par évidence max., précision ≥ 0,50) | 0,510 | 0,979 | **0,988** | 0,671 |
+| 0,95 | F1 maximal (entraînement, D-012) | **0,852** | 0,873 | — | **0,862** |
+
+### Options
+1. **0,07 (critère à la lettre)** : ➕ cohérent avec les autres familles ; presque aucune clause
+   manquée. ➖ une alerte sur deux fausse **dans des NDA** (18 % de segments positifs) ; dans un contrat
+   commercial, où la confidentialité est bien plus rare, la précision serait **encore plus basse**.
+2. **0,95 (F1 maximal)** : ➕ précision 0,85 pour un rappel de 0,87. ➖ s'écarte du critère commun.
+
+### Architecture de F6 (implémentée)
+API FastAPI (`src/cg/api/`) : importer un PDF, clauses (F2), questions (F5, RAG ou extractif),
+alertes (F3, **expérimental**), hypothèse (F4) ; avertissement dans chaque réponse ; provenance de
+chaque citation ; interface React (Vite) minimale (`frontend/`). Résultats de F2 enregistrés dans la
+table `resultats` avec le nom du modèle (F7).
+
+### Décision
+**Acceptée** (Sara, 2026-11-24) :
+- **Seuil de la confidentialité : 0,95.** C'est une **exception explicite au critère de D-012**,
+  justifiée par la **différence de domaine** : le seuil est réglé sur des **NDA** (18 % de segments
+  positifs), alors que l'application analyse des **contrats commerciaux**, où la confidentialité est
+  bien plus rare ; la précision mesurée à 0,07 (0,51) y serait donc **surestimée**. **Décidé sur le
+  dev, avant toute ouverture du test.**
+- **Architecture de F6 : acceptée telle qu'implémentée.**
