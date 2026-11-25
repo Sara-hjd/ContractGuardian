@@ -61,29 +61,21 @@ Sara est **en apprentissage**. Concrètement :
   - pourquoi,
   - comment le tester (commande exacte et résultat attendu).
 
-## Mode temporaire « Claude exécute tout » (5 séances) — ✅ TERMINÉ le 2026-11-24
+## ⚠️ Mode « Claude exécute tout » — SANS LIMITE DE SÉANCES (jusqu'à l'instruction « stop » de Sara)
 
-> **Ce mode est terminé.** La règle habituelle de la section « Qui exécute les commandes »
-> s'applique de nouveau : **Sara exécute toutes les commandes**. Section gardée pour l'historique ;
-> bilan : `docs/DIAGNOSTIC_2026-11-23_au_2026-11-24.md`.
+> **À lire en premier à chaque début de séance.** Tant que ce mode est actif, il **remplace**
+> la section « Qui exécute les commandes » ci-dessous. Il ne change **aucune règle absolue**.
 
-- **Décidé par** : Sara, le 2026-11-23 (mêmes règles et interdits que le premier mode).
-- **Historique** : un premier mode de 3 séances a eu lieu du 2026-11-22 au 2026-11-23 ; bilan dans
-  `docs/DIAGNOSTIC_2026-11-16_au_2026-11-23.md`.
-- **Début** : 2026-11-23, à la **première séance qui suit la validation du plan** par Sara
-  (la mise en place du mode, le 23/11, ne compte pas comme une séance).
-- **Compteur** (Claude le met à jour à la fin de chaque séance) :
+- **Décidé par** : Sara, le 2026-11-24 ; **début** : 2026-11-24 (séance du 25/11 = séance 1).
+- **Historique** : mode de 3 séances (22-23/11, bilan `docs/DIAGNOSTIC_2026-11-16_au_2026-11-23.md`) ;
+  mode de 5 séances (23-24/11, bilan `docs/DIAGNOSTIC_2026-11-23_au_2026-11-24.md`).
+- **Compteur** (Claude ajoute une ligne à la fin de chaque séance) :
 
-  | Séance | Date | État |
+  | Séance | Date | Contenu |
   |---|---|---|
-  | 0/5 | 2026-11-23 | mise en place du mode, plan proposé |
-  | 1/5 | 2026-11-23 | **terminée** (Transformer F2 : 2 modèles, 2 expériences ; D-012 et D-013 proposées) |
-  | 2/5 | 2026-11-23 | **terminée** (D-012 critère + calcul équitable, D-013 ; F4 NLI ; D-014 proposée) |
-  | 3/5 | 2026-11-23 | **terminée** (F5 : recherche hybride, extractif, RAG LangGraph en place ; évaluation LLM reportée à 5/5 ; D-015, D-016 acceptées, D-017 proposée) |
-  | 4/5 | 2026-11-24 | **terminée** (F3 : 47 paires, grille, kappa, alertes v1 figées ; format des 25 questions F5 ; D-017 acceptée, D-018 proposée) |
-  | 5/5 | 2026-11-24 | **terminée** (F6 API + interface, LLM indicatif, D-018, D-019 ; diagnostic complet) — **fin du mode** |
+  | 1 | 2026-11-25 | en cours |
 
-- **Fin** : **automatiquement à la fin de la séance 5/5**. Claude marque alors cette section
+- **Fin** : **uniquement sur instruction explicite de Sara** (« stop »). Claude marque alors cette section
   « terminée » et la règle habituelle « Sara exécute les commandes » reprend.
 - **Une séance** = une session de travail ouverte par Sara (en général « Début de séance »)
   et close par le résumé de fin de séance et la mise à jour de `docs/PROGRESS.md`.
@@ -96,26 +88,23 @@ fois** : installations, téléchargements documentés, scripts, tests, `git add`
 - `git push --force` (ou toute variante qui écrase l'historique distant) ;
 - réécrire l'historique de `main` (rebase, reset, amend de commits déjà poussés) ;
 - supprimer des données dans `data/raw/` ;
-- ouvrir le jeu de test sans **décision écrite** dans `docs/decisions.md` ;
+- ouvrir le jeu de test sans **décision écrite** de Sara dans `docs/decisions.md` ;
 - commiter des données, des modèles entraînés ou des secrets (règle absolue 5 et ses exceptions) ;
 - toute action **irréversible non prévue dans le plan de la séance**.
 
 **Décisions de fond** : Claude les **propose** (options, mesures, recommandation) ; elles ne sont
-notées « Acceptée » qu'après la décision de Sara.
+notées « Acceptée » qu'après la décision de Sara. **Annotations humaines** (F3, questions F5) : faites
+par Sara et Ilyas, **jamais par Claude**.
 
 **Obligations pendant ce mode** :
-- **Début de séance** : relire ce fichier et `docs/PROGRESS.md`, annoncer le numéro de séance
-  (n/5) et le plan.
+- **Début de séance** : relire ce fichier et `docs/PROGRESS.md`, annoncer le numéro de séance et le plan.
 - **Chaque action** est notée dans `docs/JOURNAL_ACTIONS.md` : heure, commande exacte,
   explication simple, pourquoi, résultat, fichiers touchés, commit.
 - **Fin de séance** :
   - un **résumé court et simple (10 lignes maximum)** : ce qui a été fait, les chiffres clés, et
-    ce que Sara doit savoir expliquer ;
+    ce que Sara doit savoir expliquer ; plus ce qu'Ilyas doit relire ;
   - mise à jour de `docs/PROGRESS.md` (avec « Ce que j'ai compris »), du `README.md` et de
-    `docs/FICHE_ENCADRANT.md` ; mise à jour du compteur ci-dessus.
-- **Après la séance 5/5** : un **nouveau diagnostic complet**, sur le modèle de
-  `docs/DIAGNOSTIC_2026-11-16_au_2026-11-23.md`, couvrant tout ce qui a été fait depuis le 23/11.
-  Le journal doit donc rester assez détaillé pour le rédiger.
+    `docs/FICHE_ENCADRANT.md` ; ajout d'une ligne au compteur ci-dessus.
 
 ## Qui exécute les commandes
 
