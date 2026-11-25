@@ -1629,3 +1629,30 @@ attendre sa validation.
   fin uniquement sur « stop » ; compteur ouvert) ; entrée en attente du journal (résultat de O13).
 - **Commandes** : `git add CLAUDE.md docs/JOURNAL_ACTIONS.md` ; `git commit` ; `git push -u origin docs/mode-sans-limite` ;
   `gh pr create` ; `gh pr merge <n> --merge --delete-branch` ; `git pull`.
+- **Résultat de P3** : PR #14 fusionnée (`6fd9297`).
+
+### P4 — 20:00 — Audit de conformité au cahier des charges
+
+- **Recherche du document** (lecture seule) : `find Documents Desktop Downloads -iname "*cahier*" …` →
+  deux cahiers distincts dans `~/Downloads` : « Cahier des charges ContractGuardian.pdf » (11 p., la
+  copie « (1) » est identique, MD5 `dc583dbd…`) et « CC_ContractGuardian_360.pdf » (EMSI, 10 p.).
+- Texte extrait avec PyMuPDF dans le dossier temporaire de la séance (hors dépôt), lu en entier.
+- **Fichier créé** : `docs/AUDIT_CONFORMITE_2026-11-25.md` (exigence → état → preuve → action ;
+  🔒 = à faire avant le gel). Points saillants : grille F3 non conforme (4 étiquettes au lieu de 3) ;
+  « BM25 » = classement texte intégral de PostgreSQL, pas BM25 ; manquent : corpus personnel, corpus
+  explicatif, section et statut d'extraction, surlignage, bouton « à vérifier », export, traçabilité
+  des réponses, dépendances figées, dictionnaire des variables ; comparaison V1/V2 obligatoire dans
+  le CDC 360 mais extension dans le cahier de référence.
+
+### P5 — Décisions de Sara ; grille F3 alignée
+
+- **Décisions** : grille alignée sur les 3 étiquettes (**D-020** acceptée) ; cahier de référence **en
+  attente de l'encadrant** (**D-021**), comparaison V1/V2 prévue en séance 4 ; plan mis à jour validé ;
+  corpus personnel : contrats EDGAR récents (Claude proposera **2022 et après**, car CUAD contient des
+  contrats déposés en 2020, et vérifiera qu'aucun titre n'est dans CUAD).
+- **Fichiers** : `src/cg/annotation/accord.py` (3 étiquettes ; alerte = `POTENTIELLEMENT_INCOMPATIBLE`),
+  `docs/annotation/GUIDE_F3_PAIRES.md` (version 2), `docs/decisions.md` (renvoi dans D-018 ; D-020 ;
+  D-021), `docs/FICHE_ENCADRANT.md`. Modèle de fichier vide inchangé (mêmes colonnes).
+  `pytest tests/test_annotations.py` → 5 passed.
+- **Commandes** : `git switch -c docs/audit-grille-f3` ; `git add` ; `git commit` ; `git push -u origin docs/audit-grille-f3` ;
+  `gh pr create` ; `gh pr merge <n> --merge --delete-branch` ; `git pull`.

@@ -18,8 +18,10 @@ import csv
 from collections import Counter
 from pathlib import Path
 
-ETIQUETTES_F3: tuple[str, ...] = ("COMPATIBLES", "A_VERIFIER", "CONTRADICTION_APPARENTE", "NON_COMPARABLE")
-ALERTE: frozenset[str] = frozenset({"A_VERIFIER", "CONTRADICTION_APPARENTE"})
+# Les trois étiquettes de F3 imposées par le cahier des charges (D-020).
+ETIQUETTES_F3: tuple[str, ...] = ("POTENTIELLEMENT_INCOMPATIBLE", "COMPATIBLE", "INFORMATION_INSUFFISANTE")
+# Une paire « mérite une alerte » si elle est potentiellement incompatible.
+ALERTE: frozenset[str] = frozenset({"POTENTIELLEMENT_INCOMPATIBLE"})
 
 
 def kappa_cohen(etiquettes_1: list[str], etiquettes_2: list[str]) -> float:
@@ -65,7 +67,7 @@ def lire_annotations(chemin: Path) -> dict[str, str]:
 
 
 def main() -> None:
-    """Compare deux fichiers : kappa (4 étiquettes et alerte oui/non), matrice, désaccords."""
+    """Compare deux fichiers : kappa (3 étiquettes et alerte oui/non), matrice, désaccords."""
     parseur = argparse.ArgumentParser(description="Kappa de Cohen entre deux annotateurs (F3).")
     parseur.add_argument("fichier_1", type=Path)
     parseur.add_argument("fichier_2", type=Path)
@@ -74,12 +76,12 @@ def main() -> None:
     communes = sorted(set(a) & set(b))
     print(f"Paires annotées par les deux : {len(communes)} (seulement 1 : {len(set(a) ^ set(b))})")
     e1, e2 = [a[i] for i in communes], [b[i] for i in communes]
-    print(f"Kappa (4 étiquettes)          : {kappa_cohen(e1, e2):.3f}")
+    print(f"Kappa (3 étiquettes)          : {kappa_cohen(e1, e2):.3f}")
     print(f"Kappa (alerte oui / non)      : {kappa_cohen([x in ALERTE for x in e1], [x in ALERTE for x in e2]):.3f}".replace("True", "oui"))
     print("\nMatrice (lignes : fichier 1 ; colonnes : fichier 2) :")
-    print(" " * 26 + "".join(f"{e[:12]:>14s}" for e in ETIQUETTES_F3))
+    print(" " * 30 + "".join(f"{e[:14]:>16s}" for e in ETIQUETTES_F3))
     for x in ETIQUETTES_F3:
-        print(f"{x:26s}" + "".join(f"{sum(1 for i in communes if a[i] == x and b[i] == y):14d}" for y in ETIQUETTES_F3))
+        print(f"{x:30s}" + "".join(f"{sum(1 for i in communes if a[i] == x and b[i] == y):16d}" for y in ETIQUETTES_F3))
     desaccords = [i for i in communes if a[i] != b[i]]
     print(f"\nDésaccords à discuter ({len(desaccords)}) : {', '.join(desaccords) or 'aucun'}")
 

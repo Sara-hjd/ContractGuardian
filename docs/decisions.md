@@ -899,7 +899,7 @@ avec mesure du kappa de Cohen ; les alertes de F3 sont évaluées sur ces annota
    non plafonné ; résiliation sans motif ↔ obligations après la fin), choisies grâce aux annotations
    CUAD alignées (indépendant de tout modèle) ; 12 par type au plus, 2 par contrat et par type au
    plus, graine 0. Références dans `data/annotations/f3_paires/paires_v1.csv`.
-2. **Grille** : `COMPATIBLES`, `A_VERIFIER`, `CONTRADICTION_APPARENTE`, `NON_COMPARABLE`
+2. **Grille** *(remplacée par D-020 : trois étiquettes du cahier des charges)* : `COMPATIBLES`, `A_VERIFIER`, `CONTRADICTION_APPARENTE`, `NON_COMPARABLE`
    (`docs/annotation/GUIDE_F3_PAIRES.md`) ; en cas de doute, `A_VERIFIER`. Annotation **indépendante**,
    puis kappa (4 étiquettes et « alerte oui/non »), discussion des désaccords, **étiquette de consensus**.
 3. **Règle d'alerte v1, figée avant les annotations** (`docs/analyses/f3_alertes_v1_predictions.csv`,
@@ -961,3 +961,41 @@ table `resultats` avec le nom du modèle (F7).
   bien plus rare ; la précision mesurée à 0,07 (0,51) y serait donc **surestimée**. **Décidé sur le
   dev, avant toute ouverture du test.**
 - **Architecture de F6 : acceptée telle qu'implémentée.**
+
+---
+
+## D-020 — Grille d'annotation F3 alignée sur les trois étiquettes du cahier des charges
+
+- **Date** : 2026-11-25
+- **Statut** : **Acceptée (Sara, 2026-11-25)**
+
+### Contexte
+L'audit de conformité (`docs/AUDIT_CONFORMITE_2026-11-25.md`) a montré que la grille de D-018
+(quatre étiquettes) ne suivait pas le cahier des charges, qui impose trois étiquettes pour F3 :
+« potentiellement incompatible », « compatible », « information insuffisante ». **Aucune annotation
+n'avait commencé.**
+
+### Décision
+Grille : `POTENTIELLEMENT_INCOMPATIBLE` (= alerte), `COMPATIBLE`, `INFORMATION_INSUFFISANTE`
+(`docs/annotation/GUIDE_F3_PAIRES.md`, version 2) ; script du kappa et tests mis à jour. Le reste de
+D-018 est inchangé (47 paires, annotation indépendante, kappa, consensus, règle v1 figée).
+
+---
+
+## D-021 — Cahier des charges de référence
+
+- **Date** : 2026-11-25
+- **Statut** : **En attente de l'encadrant** (question posée par Sara)
+
+### Contexte
+Deux documents existent : le **cahier des charges ContractGuardian** (11 pages, utilisé jusqu'ici) et
+le **cahier des charges technique « ContractGuardian 360 »** de l'EMSI (version de travail du
+03/11/2026). Ils diffèrent surtout sur la **comparaison de deux versions d'un contrat (V1/V2)** :
+**extension** dans le premier, **obligatoire** (MVP, recette, scénario de soutenance) dans le second.
+
+### Mesure conservatoire (Sara, 2026-11-25)
+En attendant la réponse, la comparaison V1/V2 est **prévue en séance 4** (elle ne modifie aucun
+modèle), pour être prête si elle est obligatoire.
+
+### Décision
+*En attente de l'encadrant.*
