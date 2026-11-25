@@ -105,8 +105,8 @@
 
 ## Alertes entre clauses (F3) — annotation humaine en cours
 
-- **47 paires** de clauses d'un même contrat (validation), en 4 types de tension ; grille de 4
-  étiquettes ; annotation **indépendante** par Sara et Ilyas, accord mesuré par le **kappa de Cohen**.
+- **47 paires** de clauses d'un même contrat (validation), en 4 types de tension ; grille des **3
+  étiquettes du cahier des charges** (D-020) ; annotation **indépendante** par Sara et Ilyas, accord mesuré par le **kappa de Cohen**.
 - **Règle d'alerte v1 figée avant les annotations** (preuve : date du commit) : 41 alertes sur 47,
   très peu sélective (les formules d'exception sont partout) ; le NLI de F4 ne se transfère pas.
 - Les annotations ne contiennent jamais de texte de contrat (test automatique).
@@ -141,6 +141,8 @@
 | **D-016** | LLM local (F5) | qwen3-vl:8b via Ollama (déjà présent), paramétrable ; qwen3:8b cible ; lien avec l'OCR (Sara) |
 | **D-017** | Réglages de F5 | Exactitude équilibrée (choisie après l'échec de l'exactitude, sur la validation seulement) ; 5 passages ; citations vérifiées mot pour mot, ≥ 15 caractères, sinon abstention (Sara) |
 | **D-018** | Protocole F3 et alertes v1 | 47 paires, grille, kappa, consensus ; règle v1 figée ; risque n°1 du cahier des charges → plan de repli : F3 présentée comme étude expérimentale si la faiblesse est confirmée (Sara) |
+| **D-020** | Grille F3 | 3 étiquettes du cahier des charges (Sara) |
+| **D-021** | Cahier des charges de référence | *En attente de l'encadrant* (comparaison V1/V2 : extension ou obligatoire) |
 | **D-019** | Seuil confidentialité ; architecture F6 | 0,95 (exception au critère de D-012, différence de domaine NDA → contrats commerciaux) ; API + interface (Sara) |
 | **D-009** | Confidentialité : segmentation, négatifs | Coupe aux lignes, sans nda-18, négatifs dans les NDA (Sara, 2026-11-23) ; annotation CUAD plus tard |
 
