@@ -1594,3 +1594,38 @@ et interface React ; piste « vérification par le NLI » ; clôture, fin du mod
   `gh pr merge <n> --merge --delete-branch` ; `git pull`.
 - **En cours au moment de la clôture** : téléchargement de `qwen3-vl:8b-instruct` (≈ 3 %, ≈ 4 h restantes).
 - **Après cette fusion, la règle habituelle reprend : Sara exécute les commandes.**
+- **Résultat de O13** : PR #13 fusionnée (`5238e1e`) ; 50 tests passent sur `main`. **Fin du second
+  mode (2026-11-24).** Ce paragraphe n'est pas commité par Claude : Sara le commitera.
+
+---
+
+## Mode sans limite de séances — séance 1 — 2026-11-25
+
+**Consignes de Sara** : relancer le mode « Claude exécute tout » sans limite, jusqu'à « stop », mêmes
+règles et interdits ; commiter l'entrée du journal en attente ; surveiller le téléchargement de
+`qwen3-vl:8b-instruct` et le relancer s'il s'arrête ; proposer le plan des prochaines séances et
+attendre sa validation.
+
+### P1 — 19:55 — Téléchargement arrêté dans la nuit ; diagnostic
+
+- **Constat** (`data/processed/ollama_pull.log`) : `Error: max retries exceeded … redirect target not
+  allowed: <serveur de stockage Cloudflare> resolves to non-public 172.31.255.254` : le serveur de
+  stockage était résolu vers une **adresse privée** (réseau filtré ou portail captif) ; Ollama refuse
+  par sécurité. Aucun processus `ollama pull` actif ; fichier partiel conservé
+  (`~/.ollama/models/blobs/sha256-a0c1…-partial`, place réservée de 5,0 Go).
+- **Vérification** (lecture seule) : `dscacheutil -q host -a name <serveur>` → adresses publiques
+  (172.64.66.1, 172.64.190.1) ; DNS 1.1.1.1 ; `ollama.com` répond (HTTP 200).
+
+### P2 — Surveillance et relance automatique du téléchargement
+
+- **Commande** (en arrière-plan) : boucle qui, toutes les 60 s, relance
+  `nohup caffeinate -i ollama pull qwen3-vl:8b-instruct > data/processed/ollama_pull.log 2>&1 &`
+  si aucun `ollama pull` ne tourne, jusqu'à ce que `ollama list` montre le modèle ; chaque relance est
+  notée dans `data/processed/ollama_pull_relances.log`.
+
+### P3 — `CLAUDE.md` : mode sans limite ; commit du journal en attente
+
+- `git switch -c docs/mode-sans-limite` ; section « Mode … SANS LIMITE DE SÉANCES » (mêmes interdits ;
+  fin uniquement sur « stop » ; compteur ouvert) ; entrée en attente du journal (résultat de O13).
+- **Commandes** : `git add CLAUDE.md docs/JOURNAL_ACTIONS.md` ; `git commit` ; `git push -u origin docs/mode-sans-limite` ;
+  `gh pr create` ; `gh pr merge <n> --merge --delete-branch` ; `git pull`.
