@@ -73,6 +73,57 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 
 ## Séances
 
+## 2026-11-25 → 26 — Séance 1 (mode sans limite) : audit, grille F3, RAG de référence
+
+- **Qui** : Claude (mode « Claude exécute tout »), décisions de Sara
+- **Branches** : `docs/mode-sans-limite` (PR #14), `docs/audit-grille-f3` (PR #15), `exp/rag-200-instruct`
+- **Objectif** : audit de conformité au cahier des charges ; grille F3 conforme ; mesure de référence du RAG.
+
+### Fait
+- **Audit de conformité** (`docs/AUDIT_CONFORMITE_2026-11-25.md`) : exigence → état → preuve → action ;
+  actions 🔒 à faire avant le gel des modèles.
+- **Grille F3 alignée** sur les 3 étiquettes du cahier des charges (D-020) : guide v2, script du kappa,
+  tests. **Prête pour l'annotation** par Sara et Ilyas.
+- **D-021** : cahier de référence en attente de l'encadrant ; comparaison V1/V2 prévue en séance 4.
+- **`qwen3-vl:8b-instruct`** téléchargé (5 relances automatiques, réseau lent) ; aucune réflexion.
+- **RAG de référence, 200 questions de validation** : extractif 0,477 ; RAG 0,529 ; RAG + vérification
+  NLI **0,561** (exactitude équilibrée) ; **8,1 s par question** (82 s avant). **D-022 proposée**.
+
+### Avancement
+
+| Fonctionnalité | Statut | Commentaire |
+|---|---|---|
+| F1 Ingestion PDF et provenance | En cours | Manquent section, statut d'extraction, rectangle du bloc (séance 3) |
+| F2 Extraction de clauses | En cours | Validation faite ; baseline BM25 et calibration (séance 3) ; test fermé |
+| F3 Comparaison de paires de clauses | En cours | Grille conforme ; annotation humaine à faire |
+| F4 NLI (ContractNLI) | En cours | Dev fait ; test fermé |
+| F5 Recherche hybride et RAG avec abstention | En cours | Mesure de référence faite ; abstention à améliorer (séance 2) |
+| F6 Interface analyste | En cours | Surlignage, bouton « à vérifier », export (séance 4) |
+| F7 Traçabilité | En cours | Traçabilité des réponses et alertes (séance 4) |
+
+- **Étape du planning** : séance 1 terminée ; prochaine : séance 2 🔒 (corpus explicatif, vrai BM25,
+  seuil d'abstention, fidélité).
+
+### Ce que j'ai compris
+- **Un audit de conformité** compare, exigence par exigence, ce que demande le cahier des charges et ce
+  qui existe, **avec une preuve** (fichier, décision, mesure). Il sert à ne rien oublier avant la fin.
+- **Pourquoi aligner la grille AVANT d'annoter** : si on change les étiquettes après, il faut tout
+  refaire, et le kappa mesuré ne correspondrait plus au cahier des charges.
+- **Modèle « thinking » contre « instruct »** : le premier écrit d'abord un long raisonnement caché
+  (lent, parfois sans fin) ; le second répond directement. Pour un outil qui doit répondre vite et en
+  JSON, l'instruct est plus adapté : 8 s au lieu de 82 s, et 3 fois moins de sorties illisibles.
+- **Un petit échantillon trompe** : sur 20 questions on mesurait 0,643 ; sur 200, 0,529. Avec peu de
+  questions, quelques cas chanceux changent tout ; c'est pour ça qu'on disait « indicatif ».
+- **Trouver plus de réponses ≠ être meilleur** : le LLM trouve 31 réponses sur 70 (extractif : 6), mais
+  il répond aussi à 50 questions qui n'ont pas de réponse annotée. Un outil prudent doit savoir
+  **se taire** ; c'est ce que mesurent les « bonnes abstentions ».
+- **La vérification NLI** est un second contrôle : le modèle de F4 vérifie que le passage cité
+  « implique » bien la réponse. Elle supprime surtout des réponses fausses (on passe de 70 % à 61 % de
+  réponses fausses parmi les réponses données) : c'est un compromis entre couverture et prudence.
+- **Validation, pas test** : tous ces choix se font sur la validation ; le test reste fermé.
+
+---
+
 ## 2026-11-24 — Séance 5/5 (second mode) : F6, LLM indicatif — fin du mode
 
 - **Qui** : Sara-hjd (avec Claude Code, second mode temporaire, séance **5/5**, la dernière)

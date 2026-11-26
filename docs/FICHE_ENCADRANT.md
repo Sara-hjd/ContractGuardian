@@ -119,6 +119,12 @@
 - **LLM local** (qwen3-vl:8b, 20 questions, **indicatif**) : exactitude équilibrée **0,643** contre 0,423
   pour l'extractif ; **0 réponse fausse** ; 13 abstentions correctes sur 13 ; mais 2 réponses trouvées
   sur 7 et 82 s par question. Mesure de référence à refaire avec `qwen3-vl:8b-instruct` (en téléchargement).
+- **Mesure de référence** (2026-11-26, `qwen3-vl:8b-instruct`, sans réflexion, **200 questions** de
+  validation) : exactitude équilibrée extractif 0,477 ; RAG 0,529 ; **RAG + vérification NLI 0,561**.
+  8,1 s par question. Le LLM trouve 31 réponses sur 70 (extractif : 6) mais **s'abstient trop peu**
+  (50 réponses sur 130 questions sans réponse). Les 20 questions indicatives (0,643) surestimaient.
+  Proposition **D-022** (modèle de référence, NLI dans le graphe) en attente de Sara ; seuil
+  d'abstention à régler avant le gel (séance 2).
 - **Bilan complet de la période : `docs/DIAGNOSTIC_2026-11-23_au_2026-11-24.md`**, avec la démonstration pas à pas.
 
 ## Décisions prises par Sara le 2026-11-22, à présenter pour validation

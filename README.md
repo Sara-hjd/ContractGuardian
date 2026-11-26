@@ -18,7 +18,7 @@ Projet de fin d'année (PFA), EMSI.
 | F2 | Extraction de clauses | Repérer les clauses (durée, résiliation, responsabilité, confidentialité) : d'abord une baseline classique, puis un modèle Transformer. | En cours (baselines mots-clés et TF-IDF sur la validation ; segments PDF ; confidentialité via ContractNLI) |
 | F3 | Comparaison de paires de clauses | Comparer deux clauses pour signaler, avec prudence, une incohérence possible. | En cours (47 paires et grille prêtes, annotation par Sara et Ilyas ; règle d'alerte v1 figée) |
 | F4 | NLI | Inférence en langage naturel (implication / contradiction / neutre), évaluée sur ContractNLI. | En cours (Transformer sur paires hypothèse-phrase, dev ; D-014 proposée) |
-| F5 | Recherche hybride et RAG avec abstention | Recherche par mots-clés + recherche vectorielle, puis réponse citant le texte exact, ou abstention. | En cours (recherche et extractif mesurés ; RAG LangGraph + LLM local mesuré à titre indicatif ; mesure de référence à faire avec qwen3-vl:8b-instruct) |
+| F5 | Recherche hybride et RAG avec abstention | Recherche par mots-clés + recherche vectorielle, puis réponse citant le texte exact, ou abstention. | En cours (recherche, extractif et RAG LangGraph + LLM local mesurés sur 200 questions de validation ; abstention à améliorer avant le gel) |
 | F6 | Interface analyste | Interface web (React) pour importer un contrat, consulter les clauses et poser des questions. | En cours (API FastAPI + interface React minimale, essai de bout en bout réussi ; voir le diagnostic pour la démonstration) |
 | F7 | Traçabilité | Chaque sortie renvoie au segment source (page, positions) ; chaque expérience est suivie dans MLflow. | En cours (test de traçabilité des segments) |
 
@@ -134,7 +134,8 @@ cd frontend && npm install && npm run dev                 # http://localhost:517
 | F4 NLI (ContractNLI) | **Dev** (61 NDA, 1 037 couples) | Exactitude · macro-F1 · évidences F1 | Classe majoritaire : 0,681 · 0,633 · — | Transformer (paires) : **0,778 · 0,717 · 0,630** | 2026-11-23 |
 | F5 Recherche (questions CUAD) | **Validation** (61 contrats, 809 questions avec réponse) | rappel@1 · @5 · @10 | Mots : 0,208 · 0,518 · 0,638 ; sens : 0,313 · 0,543 · 0,642 | Hybride : **0,323 · 0,586 · 0,682** | 2026-11-23 |
 | F5 Réponse avec abstention | **Validation** (2 492 questions) | Exactitude équilibrée | Toujours s'abstenir : 0,500 | Extractif : 0,521 | 2026-11-23 |
-| F5 RAG + LLM local (**indicatif**) | **Validation**, 20 questions | Exactitude équilibrée · réponses fausses | Extractif : 0,423 · 2 sur 2 | RAG qwen3-vl:8b : **0,643 · 0 sur 2** | 2026-11-24 |
+| F5 RAG + LLM local (**référence**) | **Validation**, 200 questions (70 avec réponse) | Exactitude équilibrée · réponses fausses / données | Extractif : 0,477 · 24 sur 30 | RAG qwen3-vl:8b-instruct : 0,529 · 71 sur 102 ; **+ vérification NLI : 0,561 · 35 sur 57** (8,1 s par question) | 2026-11-26 |
+| F5 RAG + LLM local (indicatif, remplacé) | Validation, 20 questions | Exactitude équilibrée · réponses fausses | Extractif : 0,423 · 2 sur 2 | RAG qwen3-vl:8b : 0,643 · 0 sur 2 | 2026-11-24 |
 | F2 · responsabilité | Validation | F1 (P / R) | Mots-clés 0,257 (0,16 / 0,71) · TF-IDF **0,758** (0,89 / 0,66) | — | 2026-11-22 |
 
 *Chiffres de **validation**, optimistes car les seuils y sont réglés (D-006). Le jeu de test n'a

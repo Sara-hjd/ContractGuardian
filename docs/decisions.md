@@ -999,3 +999,34 @@ modèle), pour être prête si elle est obligatoire.
 
 ### Décision
 *En attente de l'encadrant.*
+
+---
+
+## D-022 — LLM de référence de F5 et vérification NLI dans le graphe RAG
+
+- **Date** : 2026-11-26
+- **Statut** : **Proposée** (en attente de la décision de Sara)
+
+### Contexte
+L'évaluation de référence (200 questions de validation, `docs/analyses/qr_f5_val.md`) a été faite avec
+`qwen3-vl:8b-instruct`, comme prévu dans D-016. Résultats (exactitude équilibrée) : extractif 0,477 ;
+RAG + LLM 0,529 ; **RAG + LLM + vérification NLI 0,561**. Le modèle répond en 8,1 s par question
+(82 s pour `qwen3-vl:8b`), mais s'abstient trop peu (50 réponses sur 130 questions sans réponse).
+
+### Options envisagées
+1. **LLM de référence** : (a) `qwen3-vl:8b-instruct` ; (b) garder `qwen3-vl:8b` (« thinking »), 10 fois
+   plus lent, non mesuré sur 200 questions.
+2. **Vérification NLI dans le graphe** : (a) l'activer par défaut (étape « vérifier » : citation mot
+   pour mot **et** passage qui implique la réponse) ; (b) la laisser comme piste d'évaluation seulement.
+3. **Mode par défaut dans l'application** : (a) extractif (rapide) avec le LLM sur demande ; (b) LLM.
+
+### Proposition de Claude
+- **1(a)** : `qwen3-vl:8b-instruct` devient le LLM de référence (défaut de `CG_LLM_MODELE`).
+- **2(a)** : activer la vérification NLI dans le graphe, car c'est la meilleure variante mesurée sur la
+  validation (+0,032 d'exactitude équilibrée ; 61 % de réponses fausses au lieu de 70 %).
+- **3(a)** : rester en extractif par défaut, LLM sur demande, avec la mention « réponse à vérifier ».
+- Régler ensuite, **en séance 2 et avant le gel**, un seuil d'abstention par courbe couverture / erreur
+  (sur la validation), puis refaire la mesure sur les 200 questions.
+
+### Décision
+*À compléter par Sara.*

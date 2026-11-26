@@ -1656,3 +1656,57 @@ attendre sa validation.
   `pytest tests/test_annotations.py` → 5 passed.
 - **Commandes** : `git switch -c docs/audit-grille-f3` ; `git add` ; `git commit` ; `git push -u origin docs/audit-grille-f3` ;
   `gh pr create` ; `gh pr merge <n> --merge --delete-branch` ; `git pull`.
+- **Résultat de P5** : PR #15 fusionnée (`77fb79a`).
+
+### P6 — 2026-11-25 21:53 → 2026-11-26 09:25 — Fin du téléchargement de `qwen3-vl:8b-instruct`
+
+- **Constat** : le téléchargement s'est arrêté plusieurs fois (réseau lent : 190 à 320 Ko/s le soir) ;
+  à la relance n° 2 (21:40), Ollama est reparti de presque zéro (progression perdue).
+- **Surveillance** : 5 relances automatiques (19:55, 21:40, 23:28, 09:15, 09:16) ; modèle présent le
+  2026-11-26 à 09:25 (identifiant Ollama `70e58e37beb1`, 6,2 Go ; licence Apache 2.0 vérifiée avec
+  `ollama show qwen3-vl:8b-instruct --license`).
+
+### P7 — 09:26 → 18:02 — Essais de vitesse ; conflit avec un autre projet
+
+- **Commande** (essai) : `curl http://127.0.0.1:11434/api/chat` avec `"think": false`, `"format": "json"`,
+  température 0 → `{"answer": "Paris"}`, **aucune réflexion** (champ `thinking` absent), 7 jetons.
+- **Problème** : chargement de 342 s puis 459 s. **Cause** (`lsof -iTCP:11434`, journal d'Ollama) :
+  un autre projet de Sara (`~/RAG_MULTIMODAL_AGENT`, `scripts.build_dataset`, processus 32160)
+  utilisait en continu l'ancien `qwen3-vl:8b` ; 24 Go de mémoire ne suffisent pas pour les deux
+  modèles, Ollama alternait. Claude n'a **pas** touché à ce processus (hors projet) et a arrêté son
+  propre essai ; **Sara** a arrêté `build_dataset` et déchargé `qwen3-vl:8b`.
+- **Essai après libération** (réglages du projet : température 0,6, top_p 0,95, top_k 20, graine 0) :
+  chargement 5,6 s, réponse 0,2 s, sans réflexion.
+- **Essai sur une vraie question du RAG** :
+  `PYTHONPATH=src caffeinate -i .venv/bin/python -u evaluation/evaluer_rag_llm_f5.py --seuil-extractif 0.71 --modele qwen3-vl:8b-instruct --taille 1`
+  → réponse vérifiée et juste, **7,9 s** (contre 91,5 s avec `qwen3-vl:8b` sur la même question).
+  Cette réponse est gardée dans le fichier de reprise (même modèle, mêmes réglages) ; une exécution
+  MLflow « rag-qwen3-vl:8b-instruct-1 » a été créée par cet essai (une question, sans valeur de mesure).
+
+### P8 — 18:02 — Évaluation de référence du RAG sur 200 questions (validation)
+
+- **Commande** :
+  `MLFLOW_DISABLE_AGENT_HINT=1 PYTHONPATH=src nohup caffeinate -i .venv/bin/python -u evaluation/evaluer_rag_llm_f5.py --seuil-extractif 0.71 --modele qwen3-vl:8b-instruct > data/processed/progression_rag_llm_instruct.log 2>&1 &`
+- **Explication** : les 200 questions de validation (graine 0, D-017) ; pour chacune, réponse
+  extractive (seuil 0,71) et réponse du graphe RAG (5 passages, citations vérifiées mot pour mot),
+  puis piste « vérification NLI » ; résultats dans MLflow. `caffeinate -i` empêche la mise en veille.
+- **Pourquoi** : mesure de référence du RAG avec un modèle sans réflexion (D-016) ; les 20 questions
+  avec `qwen3-vl:8b` restent indicatives.
+- **Résultat de P8** : terminé à ≈ 18:30 (27 min ; 8,1 s par question). Exactitude équilibrée :
+  extractif 0,477 ; RAG + LLM 0,529 ; RAG + LLM + vérification NLI 0,561. MLflow :
+  `rag-qwen3-vl:8b-instruct-echantillon200`, `rag-qwen3-vl:8b-instruct-verification-nli-echantillon200`.
+
+### P9 — Analyse des erreurs et documentation
+
+- **Commande** : script d'analyse dans le dossier temporaire de la séance (hors dépôt), lancé avec
+  `PYTHONPATH=src .venv/bin/python …/analyse_rag.py` : il refait le même échantillon (graine 0) et
+  classe les réponses fausses. Résultat : 71 réponses fausses = 50 sur des questions sans réponse
+  annotée + 21 sur des questions avec réponse (4 à ≤ 2 segments d'un segment annoté ; 5 même page) ;
+  sur les 20 premières questions, instruct 0,742 contre 0,643 pour le modèle « thinking ».
+- **Fichiers** : `docs/analyses/qr_f5_val.md` (section « Évaluation de RÉFÉRENCE »), `docs/decisions.md`
+  (**D-022 proposée**, en attente de Sara), `README.md` (statut F5, tableau des résultats),
+  `docs/FICHE_ENCADRANT.md`, `docs/PROGRESS.md` (séance 1), `CLAUDE.md` (compteur).
+- `.env` (local, jamais commité) : `CG_LLM_MODELE=qwen3-vl:8b-instruct` (plan accepté de D-016). Le
+  défaut dans `src/cg/config.py` reste `qwen3-vl:8b` tant que D-022 n'est pas décidée.
+- **Commandes** : `git add` des 7 fichiers ; `git commit` ; `git push -u origin exp/rag-200-instruct` ;
+  `gh pr create` ; `gh pr merge <n> --merge --delete-branch` ; `git pull`.
