@@ -148,3 +148,42 @@ def test_bm25_formule() -> None:
     assert classement[0][0] == 1  # même mots que le 4, mais plus court
     assert {sid for sid, _ in classement} == {1, 2, 3, 4}
     assert index.classer(["inconnu"], 10) == []
+
+
+def test_graphe_rag_corpus_explicatif() -> None:
+    """D-023 : un extrait explicatif exact est rendu avec son attribution ; inventé → abstention ;
+    une réponse qui ne cite que l'explicatif (pas le contrat) → abstention."""
+    pytest.importorskip("langgraph")
+    from cg.explicatif.recherche import ResultatExplicatif
+    from cg.recherche.graphe import construire_graphe
+
+    passage = Resultat(segment_id=7, page=3, debut=100, fin=150,
+                       texte="Either party may terminate this Agreement upon 30 days notice.")
+    explicatif = ResultatExplicatif(
+        segment_id=90, source="Termination for convenience", url="https://en.wikipedia.org/wiki/Termination_for_convenience",
+        licence="CC BY-SA 4.0", attribution="Wikipedia contributors…", date_version="2025-07-13", page=None,
+        section="Use", debut=200, fin=280, texte="A termination for convenience ends a contract without any breach.")
+    vus: list[list[dict]] = []
+
+    def llm(extrait_e: str, citations: str = '[{"passage": 1, "extrait": "may terminate this Agreement upon 30 days"}]'):
+        def generer(messages):
+            vus.append(messages)
+            return ('{"abstention": false, "reponse": "Yes.", "citations": %s, '
+                    '"explications": [{"document": 1, "extrait": "%s"}]}' % (citations, extrait_e))
+        return generer
+
+    graphe = construire_graphe(lambda q: [passage], llm("ends a contract without any breach"),
+                               chercher_explicatif=lambda q: [explicatif])
+    r = graphe.invoke({"question": "?"})["resultat"]
+    assert not r.abstention and r.explications[0].licence == "CC BY-SA 4.0"
+    assert r.explications[0].debut == 200 + explicatif.texte.index("ends")
+    assert "[E1] (Termination for convenience)" in vus[-1][1]["content"]
+    invente = construire_graphe(lambda q: [passage], llm("ends a contract at any time for free"),
+                                chercher_explicatif=lambda q: [explicatif]).invoke({"question": "?"})["resultat"]
+    assert invente.abstention and "explicative" in invente.raison
+    sans_contrat = construire_graphe(lambda q: [passage], llm("ends a contract without any breach", "[]"),
+                                     chercher_explicatif=lambda q: [explicatif]).invoke({"question": "?"})["resultat"]
+    assert sans_contrat.abstention and sans_contrat.raison == "réponse sans citation"
+    # Sans corpus explicatif, le prompt est inchangé (intitulé « Passages: »).
+    construire_graphe(lambda q: [passage], llm("x" * 20)).invoke({"question": "?"})
+    assert "\nPassages:\n" in vus[-1][1]["content"] and "Explanatory" not in vus[-1][1]["content"]

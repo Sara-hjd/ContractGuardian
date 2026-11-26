@@ -89,7 +89,34 @@ class IndexBM25:
         return sorted(scores, key=lambda x: (-x[1], x[0]))[:k]
 
 
-_CACHE: dict[int, IndexBM25] = {}
+_CACHE: dict[object, IndexBM25] = {}
+
+
+def _index_depuis(connexion: psycopg.Connection, cle_cache: object, sql_ids: str, sql_mots: str,
+                  parametres: tuple) -> IndexBM25:
+    """Construit (une fois) un index BM25 à partir de deux requêtes : les segments, puis leurs mots.
+
+    Args:
+        connexion: Connexion à la base.
+        cle_cache: Clé sous laquelle garder l'index en mémoire.
+        sql_ids: Requête qui renvoie les identifiants des segments à indexer.
+        sql_mots: Requête qui renvoie (segment, lexème, nombre d'occurrences).
+        parametres: Paramètres des deux requêtes.
+
+    Returns:
+        L'index BM25.
+    """
+    if cle_cache not in _CACHE:
+        frequences: dict[int, Counter] = {}
+        with connexion.cursor() as curseur:
+            curseur.execute(sql_ids, parametres)
+            for (sid,) in curseur.fetchall():
+                frequences[int(sid)] = Counter()  # un segment sans mot reste dans N
+            curseur.execute(sql_mots, parametres)
+            for sid, mot, n in curseur.fetchall():
+                frequences[int(sid)][mot] = max(int(n or 0), 1)
+        _CACHE[cle_cache] = IndexBM25.construire(frequences)
+    return _CACHE[cle_cache]
 
 
 def index_contrat(connexion: psycopg.Connection, contrat_id: int) -> IndexBM25:
@@ -102,19 +129,25 @@ def index_contrat(connexion: psycopg.Connection, contrat_id: int) -> IndexBM25:
     Returns:
         L'index des segments du contrat (lexèmes de la colonne ``tsv``).
     """
-    if contrat_id not in _CACHE:
-        frequences: dict[int, Counter] = {}
-        with connexion.cursor() as curseur:
-            curseur.execute("SELECT id FROM segments WHERE contrat_id = %s", (contrat_id,))
-            for (sid,) in curseur.fetchall():
-                frequences[int(sid)] = Counter()  # un segment sans mot reste dans N
-            curseur.execute(
-                """SELECT s.id, u.lexeme, cardinality(u.positions)
-                   FROM segments s, unnest(s.tsv) u WHERE s.contrat_id = %s""", (contrat_id,))
-            for sid, mot, n in curseur.fetchall():
-                frequences[int(sid)][mot] = max(int(n or 0), 1)
-        _CACHE[contrat_id] = IndexBM25.construire(frequences)
-    return _CACHE[contrat_id]
+    return _index_depuis(
+        connexion, ("contrat", contrat_id), "SELECT id FROM segments WHERE contrat_id = %s",
+        """SELECT s.id, u.lexeme, cardinality(u.positions)
+           FROM segments s, unnest(s.tsv) u WHERE s.contrat_id = %s""", (contrat_id,))
+
+
+def index_explicatif(connexion: psycopg.Connection) -> IndexBM25:
+    """Index BM25 de tout le corpus explicatif (D-023), séparé des contrats.
+
+    Args:
+        connexion: Connexion à la base.
+
+    Returns:
+        L'index des segments de ``segments_explicatifs``.
+    """
+    return _index_depuis(
+        connexion, "explicatif", "SELECT id FROM segments_explicatifs",
+        """SELECT s.id, u.lexeme, cardinality(u.positions)
+           FROM segments_explicatifs s, unnest(s.tsv) u""", ())
 
 
 def mots_question(connexion: psycopg.Connection, question: str) -> list[str]:
