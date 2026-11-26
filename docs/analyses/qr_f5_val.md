@@ -72,3 +72,49 @@ la mesure de référence (200 questions, `qwen3-vl:8b-instruct`) reste à faire.
   abstenu à chaque question sans réponse ; mais il ne trouve que 2 réponses sur 7, et 1 sortie sur 4
   est inutilisable. La **vérification NLI** n'a rien changé ici (les 2 réponses vérifiées sont
   « impliquées » par leur passage) : trop peu de cas pour juger.
+
+## Évaluation de RÉFÉRENCE du RAG + LLM (2026-11-26, 200 questions)
+
+*`qwen3-vl:8b-instruct` (Ollama `70e58e37beb1`, Apache 2.0) : variante **sans réflexion** (vérifié :
+aucun champ `thinking`). Réglages inchangés (température 0,6, top_p 0,95, top_k 20, graine 0, 5 passages).
+Les 200 questions de validation (graine 0) : **70 avec réponse, 130 sans réponse**. Extractif au seuil
+0,71 (D-017). MLflow : `rag-qwen3-vl:8b-instruct-echantillon200` et `…-verification-nli-echantillon200`.*
+
+| Système | Exactitude équilibrée | Bonnes réponses (sur 70) | Bonnes abstentions (sur 130) | Réponses fausses / données |
+|---|---|---|---|---|
+| Extractif (seuil 0,71) | 0,477 | 6 | 113 | 24 sur 30 (0,80) |
+| RAG + LLM | 0,529 | **31** | 80 | 71 sur 102 (0,70) |
+| **RAG + LLM + vérification NLI** (piste D-017) | **0,561** | 22 | **105** | 35 sur 57 (0,61) |
+
+- **Vitesse** : **8,1 s par question** (contre 82 s avec `qwen3-vl:8b`), soit 27 min pour 200 questions.
+- **Issues du RAG** (200) : 102 réponses vérifiées ; 61 abstentions du LLM ; 17 citations mal formées ;
+  14 citations non retrouvées mot pour mot ; 5 réponses sans citation ; 1 passage inexistant.
+  Les sorties inutilisables tombent à **8,5 %** (25 % avec le modèle « thinking »).
+- **Mêmes 20 premières questions** que l'évaluation indicative : instruct **0,742** (5 sur 7 ; 10 sur 13)
+  contre 0,643 pour `qwen3-vl:8b` (2 sur 7 ; 13 sur 13). Sur 200 questions, le chiffre tombe à 0,529 :
+  **20 questions ne suffisaient pas** pour conclure (c'est pourquoi elles étaient « indicatives »).
+
+### Analyse des 71 réponses comptées fausses (RAG + LLM)
+
+- **50** portent sur des questions **sans réponse annotée** dans CUAD : le LLM a cité un passage alors
+  que l'annotation est vide. Catégories les plus fréquentes : Third Party Beneficiary (5), Price
+  Restrictions (4), Insurance (4), Exclusivity (3), Competitive Restriction Exception (3), Effective
+  Date (3). **Limite de la mesure** : les annotations CUAD ne sont pas exhaustives et la question
+  posée est générique ; une partie de ces citations peut être une lecture **défendable** d'un passage
+  voisin du sujet. La mesure reste stricte : sans segment annoté cité, c'est faux.
+- **21** portent sur des questions **avec réponse** mais citent un autre segment : 4 sont à 2 segments
+  ou moins d'un segment annoté, 5 sont sur la même page.
+
+### Lecture
+
+1. Le modèle instruct **trouve 4 à 5 fois plus de réponses** que l'extractif (31 contre 6 sur 70) et
+   est **10 fois plus rapide** que le modèle « thinking » : il devient utilisable dans l'application.
+2. **Mais il s'abstient trop peu** : 50 réponses sur 130 questions sans réponse. Pour un outil qui doit
+   « citer ou s'abstenir », c'est le point faible principal.
+3. La **vérification NLI** (garder une réponse seulement si le passage cité l'« implique » selon F4,
+   seuil 0,5 fixé d'avance) est **la meilleure variante** : +25 bonnes abstentions, −36 réponses
+   fausses, au prix de 9 bonnes réponses. Elle reste **insuffisante** : 61 % des réponses données ne
+   citent pas le segment annoté.
+4. Toutes ces mesures sont sur la **validation** (réglage autorisé) ; le test reste fermé.
+5. Pistes, **avant le gel** (séance 2, 🔒) : seuil d'abstention par **courbe couverture / erreur**,
+   mesure de la **fidélité**, Recall@3 et MRR. Les choix proposés sont dans **D-022** (en attente de Sara).
