@@ -87,7 +87,9 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 - **D-021** : cahier de référence en attente de l'encadrant ; comparaison V1/V2 prévue en séance 4.
 - **`qwen3-vl:8b-instruct`** téléchargé (5 relances automatiques, réseau lent) ; aucune réflexion.
 - **RAG de référence, 200 questions de validation** : extractif 0,477 ; RAG 0,529 ; RAG + vérification
-  NLI **0,561** (exactitude équilibrée) ; **8,1 s par question** (82 s avant). **D-022 proposée**.
+  NLI **0,561** (exactitude équilibrée) ; **8,1 s par question** (82 s avant). **D-022 acceptée** :
+  instruct par défaut, vérification NLI dans le graphe RAG, extractif par défaut dans l'application
+  (LLM sur demande, « à vérifier ») ; test ajouté (51 tests) ; essai réel par l'API.
 
 ### Avancement
 

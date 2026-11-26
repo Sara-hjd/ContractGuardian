@@ -41,7 +41,7 @@ def _fichier_env() -> dict[str, str]:
 
 
 # LLM local (D-016) : changer de modèle = changer cette valeur (ou CG_LLM_MODELE), pas le code.
-LLM_MODELE: str = parametre("CG_LLM_MODELE", "qwen3-vl:8b")
+LLM_MODELE: str = parametre("CG_LLM_MODELE", "qwen3-vl:8b-instruct")  # D-022
 LLM_URL: str = parametre("CG_LLM_URL", "http://127.0.0.1:11434")
 # Longueur maximale de la sortie du LLM (tokens). qwen3-vl:8b réfléchit toujours (variante « thinking »,
 # le réglage think=false est ignoré) : il lui faut de la place pour réfléchir PUIS répondre.

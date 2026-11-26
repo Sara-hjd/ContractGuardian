@@ -123,7 +123,7 @@
   validation) : exactitude équilibrée extractif 0,477 ; RAG 0,529 ; **RAG + vérification NLI 0,561**.
   8,1 s par question. Le LLM trouve 31 réponses sur 70 (extractif : 6) mais **s'abstient trop peu**
   (50 réponses sur 130 questions sans réponse). Les 20 questions indicatives (0,643) surestimaient.
-  Proposition **D-022** (modèle de référence, NLI dans le graphe) en attente de Sara ; seuil
+  **D-022 acceptée** (modèle de référence, NLI dans le graphe, extractif par défaut) ; seuil
   d'abstention à régler avant le gel (séance 2).
 - **Bilan complet de la période : `docs/DIAGNOSTIC_2026-11-23_au_2026-11-24.md`**, avec la démonstration pas à pas.
 
@@ -149,6 +149,7 @@
 | **D-018** | Protocole F3 et alertes v1 | 47 paires, grille, kappa, consensus ; règle v1 figée ; risque n°1 du cahier des charges → plan de repli : F3 présentée comme étude expérimentale si la faiblesse est confirmée (Sara) |
 | **D-020** | Grille F3 | 3 étiquettes du cahier des charges (Sara) |
 | **D-021** | Cahier des charges de référence | *En attente de l'encadrant* (comparaison V1/V2 : extension ou obligatoire) |
+| **D-022** | LLM de référence et vérification NLI (F5) | qwen3-vl:8b-instruct ; vérification NLI dans le graphe RAG ; extractif par défaut, LLM sur demande « à vérifier » (Sara) |
 | **D-019** | Seuil confidentialité ; architecture F6 | 0,95 (exception au critère de D-012, différence de domaine NDA → contrats commerciaux) ; API + interface (Sara) |
 | **D-009** | Confidentialité : segmentation, négatifs | Coupe aux lignes, sans nda-18, négatifs dans les NDA (Sara, 2026-11-23) ; annotation CUAD plus tard |
 

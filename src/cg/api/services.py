@@ -24,6 +24,7 @@ from cg.recherche.extractive import repondre
 from cg.recherche.graphe import construire_graphe
 from cg.recherche.hybride import rechercher
 from cg.recherche.llm import discuter
+from cg.recherche.verification_nli import SEUIL_NLI_RAG, creer_verificateur
 from cg.stockage.depot import compter_segments_non_tracables, enregistrer_document
 
 AVERTISSEMENT = ("ContractGuardian est une aide à la lecture : il ne donne pas d'avis juridique. "
@@ -149,10 +150,16 @@ class Services:
             r = rep.citation
             return {"abstention": False, "reponse": None, "citations": [
                 {"segment_id": r.segment_id, "page": r.page, "debut": r.debut, "fin": r.fin, "extrait": r.texte}]}
-        graphe = construire_graphe(lambda q: rechercher(connexion, self.encodeur, contrat_id, q, 5), discuter)
+        # D-022 : vérification mot pour mot puis vérification NLI (le passage cité doit impliquer la réponse).
+        graphe = construire_graphe(lambda q: rechercher(connexion, self.encodeur, contrat_id, q, 5), discuter,
+                                   creer_verificateur(*self.nli))
         resultat = graphe.invoke({"question": question})["resultat"]
         return {"abstention": resultat.abstention, "raison": resultat.raison, "reponse": resultat.reponse or None,
-                "citations": [asdict(c) for c in resultat.citations], "modele": config.LLM_MODELE}
+                "citations": [asdict(c) for c in resultat.citations], "modele": config.LLM_MODELE,
+                "verification": f"citations mot pour mot + NLI (seuil {SEUIL_NLI_RAG})",
+                # D-022 : la réponse générée reste à vérifier par le lecteur (61 % de réponses non
+                # confirmées par l'annotation sur la validation).
+                "a_verifier": not resultat.abstention}
 
     # --- F3 : alertes (expérimental) ----------------------------------------------------------------
     def alertes(self, connexion: psycopg.Connection, contrat_id: int) -> list[dict]:

@@ -1710,3 +1710,28 @@ attendre sa validation.
   défaut dans `src/cg/config.py` reste `qwen3-vl:8b` tant que D-022 n'est pas décidée.
 - **Commandes** : `git add` des 7 fichiers ; `git commit` ; `git push -u origin exp/rag-200-instruct` ;
   `gh pr create` ; `gh pr merge <n> --merge --delete-branch` ; `git pull`.
+- **Résultat de P9** : PR #16 fusionnée (`c65f34f`).
+
+### P10 — 2026-11-26 — Mise en œuvre de D-022 (acceptée par Sara telle que proposée)
+
+- **Branche** : `git switch -c feat/d022-rag-nli`.
+- **Fichiers** :
+  - `src/cg/recherche/verification_nli.py` (nouveau) : `creer_verificateur` (modèle NLI de F4, seuil 0,5) ;
+  - `src/cg/recherche/graphe.py` : paramètre facultatif `impliquer` ; abstention « réponse non impliquée
+    par les passages cités (NLI) » ;
+  - `src/cg/api/services.py` : le mode `rag` utilise la vérification NLI ; champs `verification` et `a_verifier` ;
+  - `src/cg/api/app.py` : mode par défaut `extractif` ;
+  - `frontend/src/App.jsx` : extractif par défaut, mention « à vérifier » sous une réponse du LLM ;
+  - `src/cg/config.py`, `.env.example` : défaut `qwen3-vl:8b-instruct` ;
+  - `tests/test_recherche.py` : `test_graphe_rag_verification_nli` ; `src/cg/recherche/README.md` ;
+  - documentation : `docs/decisions.md` (D-022 acceptée), fiche, PROGRESS, `qr_f5_val.md`, `CLAUDE.md`.
+- **Commandes et résultats** :
+  - `.venv/bin/python -m pytest -q` → **51 passed** ;
+  - `cd frontend && npm run build` → construit sans erreur ;
+  - `PYTHONPATH=src nohup .venv/bin/python -m uvicorn cg.api.app:app --port 8000 &`, puis
+    `curl -s localhost:8000/contrats/441/questions -d '{"question": …, "mode": …}'` sur le contrat de
+    démonstration : durée → extractif page 6 ; LLM « réponse vérifiée » page 6, `a_verifier: true` ;
+    « liquidated damages » → extractif s'abstient ; LLM **abstention par la vérification NLI** ;
+    sans `mode` → extractif. API arrêtée ensuite (`pkill -f "uvicorn cg.api.app:app"`).
+- **Commandes Git** : `git add` ; `git commit` ; `git push -u origin feat/d022-rag-nli` ; `gh pr create` ;
+  `gh pr merge <n> --merge --delete-branch` ; `git pull`.

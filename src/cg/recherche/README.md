@@ -13,6 +13,7 @@ Rôle : répondre à une question sur **un** contrat en **citant exactement** le
 | `extractive.py` | `repondre` : citer le meilleur segment tel quel, ou s'abstenir sous un seuil de similarité. |
 | `llm.py` | Client du LLM local Ollama (D-016) : température 0, sans « réflexion », réponse JSON ; modèle = `CG_LLM_MODELE`. |
 | `graphe.py` | RAG LangGraph : chercher → générer → **vérifier chaque citation mot pour mot** → répondre ou s'abstenir ; positions exactes des extraits. |
+| `verification_nli.py` | Second contrôle (D-022) : le modèle NLI de F4 vérifie qu'un passage cité **implique** la réponse (seuil 0,5), sinon abstention. |
 | `questions_cuad.py` | Jeu d'évaluation : questions CUAD posées aux contrats de la base, avec leurs segments de réponse. |
 
 Base : `db/init/002_recherche.sql` (colonnes `tsv` et `embedding`, index GIN et HNSW).
