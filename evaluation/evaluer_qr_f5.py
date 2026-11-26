@@ -2,7 +2,10 @@
 
 Lancement, depuis la racine du projet, avec le .venv et la base démarrée (vecteurs calculés) :
 
-    PYTHONPATH=src .venv/bin/python -u evaluation/evaluer_qr_f5.py
+    PYTHONPATH=src .venv/bin/python -u evaluation/evaluer_qr_f5.py [--recherche hybride_bm25]
+
+``--recherche`` : recherche utilisée par la réponse extractive (défaut : ``hybride_bm25``, D-024 ;
+``hybride`` = texte intégral PostgreSQL + embeddings, celle du réglage d'origine à 0,71).
 
 Questions : les 41 questions de CUAD (une par catégorie), posées à chaque contrat. La requête est
 « <catégorie>. <description> » (la formule « Highlight the parts… » est retirée). Bonne réponse :
@@ -16,6 +19,7 @@ Protocole (fixé avant de lancer) :
 - les mesures sont rapportées sur les **61 contrats de validation** ; le test reste fermé.
 """
 
+import argparse
 import random
 from pathlib import Path
 
@@ -25,18 +29,22 @@ import pandas as pd
 from cg.datasets.splits import lire_splits
 from cg.recherche.embeddings import Encodeur
 from cg.recherche.extractive import repondre
-from cg.recherche.hybride import rechercher
+from cg.recherche.hybride import RECHERCHE_PAR_DEFAUT, rechercher
 from cg.recherche.questions_cuad import questions
 from cg.stockage.connexion import connecter
 
 RACINE = Path(__file__).resolve().parents[1]
 SEUILS = np.round(np.arange(0.30, 0.951, 0.01), 2)
-MODES = ("mots", "sens", "hybride")
+MODES = ("mots", "bm25", "sens", "hybride", "hybride_bm25")
 K = (1, 5, 10)
 
 
 def main() -> None:
     """Construit les questions, mesure la recherche, règle l'abstention sur le train, évalue sur la validation."""
+    parseur = argparse.ArgumentParser(description="Recherche et réponse extractive (F5).")
+    parseur.add_argument("--recherche", default=RECHERCHE_PAR_DEFAUT, choices=("hybride", "hybride_bm25"))
+    recherche = parseur.parse_args().recherche
+    print(f"Réponse extractive avec la recherche : {recherche}")
     jeu_de = lire_splits(RACINE / "data" / "splits" / "cuad_v1_splits.json")
     with connecter() as connexion, connexion.cursor() as curseur:
         curseur.execute("SELECT titre, id FROM contrats WHERE source = 'cuad'")
@@ -73,7 +81,7 @@ def main() -> None:
     def mesurer(nom: str, qs: list[dict], seuil: float) -> dict[str, float]:
         bonnes = repondu = fausses = abst_ok = sans = avec_ok = avec = 0
         for i, q in enumerate(qs):
-            rep = repondre(resultats[(nom, i)]["hybride"], seuil)
+            rep = repondre(resultats[(nom, i)][recherche], seuil)
             if q["avec_reponse"]:
                 avec += 1
                 juste = (not rep.abstention) and rep.citation.segment_id in q["or"]

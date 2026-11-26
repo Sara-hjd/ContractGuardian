@@ -3,12 +3,13 @@
 Place dans le projet : second contrôle de l'étape « vérifier » du graphe RAG (``cg.recherche.graphe``),
 après la vérification mot pour mot des citations. Il réutilise le modèle NLI de F4 (D-014) : une
 réponse n'est gardée que si **au moins un** passage cité l'implique (probabilité « Entailment »
-≥ 0,5, seuil fixé d'avance dans D-017 et mesuré sur la validation dans D-022) ; sinon, abstention.
+≥ 0,85, seuil réglé sur 200 questions du **train** avec le critère A de D-025 ; 0,5 avant) ; sinon,
+abstention.
 """
 
 from collections.abc import Callable
 
-SEUIL_NLI_RAG: float = 0.5  # fixé avant la mesure (D-017), retenu par D-022 ; pas réglé sur le test
+SEUIL_NLI_RAG: float = 0.85  # D-025 : critère A sur 200 questions de réglage du train (0,5 avant) ; jamais le test
 LONGUEUR_MAX: int = 256  # même longueur que pour F4
 
 

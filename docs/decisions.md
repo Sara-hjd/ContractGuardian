@@ -1044,7 +1044,7 @@ RAG + LLM 0,529 ; **RAG + LLM + vérification NLI 0,561**. Le modèle répond en
 ## D-023 — Corpus documentaire explicatif : sources (F5, cahier des charges section 5)
 
 - **Date** : 2026-11-26
-- **Statut** : **Proposée** (en attente de la validation de la liste par Sara ; **rien n'est indexé**)
+- **Statut** : **Acceptée (Sara, 2026-11-26)**, sans les sources 19 et 20, avec attribution affichée
 
 ### Contexte
 Le cahier des charges prévoit un **petit corpus documentaire explicatif** (sources ouvertes, datées)
@@ -1108,14 +1108,19 @@ sert seulement de base au RAG.
   explicatif » avec sa source.
 
 ### Décision
-*À compléter par Sara.*
+**Acceptée** (Sara, 2026-11-26) :
+- **18 sources** : les sources **19 (Common Paper) et 20 (Bonterms) sont retirées** (clauses types, pas
+  des guides explicatifs).
+- **Attribution obligatoire affichée dans les réponses** pour les sources CC BY-SA (Wikipédia) — et,
+  par cohérence, pour toutes : titre, éditeur ou auteurs (« Wikipedia contributors »), date de la
+  version, licence et URL, à côté de chaque passage explicatif cité.
 
 ---
 
 ## D-024 — Vrai BM25 pour la recherche par les mots (F5)
 
 - **Date** : 2026-11-26
-- **Statut** : **Proposée** (méthode fixée avant la mesure ; choix de la recherche à décider après)
+- **Statut** : **Acceptée (Sara, 2026-11-26)** : option (a)
 
 ### Contexte
 L'audit a montré que la recherche « par les mots » utilisait `ts_rank_cd` de PostgreSQL, qui **n'est pas
@@ -1137,15 +1142,37 @@ BM25**, alors que le cahier des charges demande BM25 + embeddings (F5, ablations
 (a) remplacer le texte intégral par BM25 dans l'hybride ; (b) garder l'hybride actuel et présenter BM25
 comme ablation.
 
+### Résultats (validation, 809 questions avec réponse ; `docs/analyses/recherche_bm25_val.md`)
+| Recherche | rappel@1 | rappel@3 | rappel@5 | rappel@10 | MRR |
+|---|---|---|---|---|---|
+| Texte intégral PostgreSQL | 0,208 | 0,417 | 0,518 | 0,638 | 0,334 |
+| BM25 | 0,347 | 0,519 | 0,585 | 0,672 | 0,447 |
+| Embeddings | 0,313 | 0,468 | 0,543 | 0,642 | 0,411 |
+| Hybride actuel (PostgreSQL + embeddings) | 0,323 | 0,503 | 0,586 | 0,682 | 0,433 |
+| **Hybride BM25 + embeddings** | **0,368** | **0,532** | **0,602** | **0,696** | **0,469** |
+
+### Proposition de Claude
+**Option (a)** : l'hybride BM25 + embeddings devient la recherche par défaut. Conséquence : le seuil
+extractif (0,71) et la collecte de D-025 ont été faits avec l'hybride actuel ; il faudra les **refaire
+sur le train** avec la nouvelle recherche avant la mesure sur la validation (environ 30 min de LLM).
+
 ### Décision
-*À compléter par Sara.*
+**Acceptée** (Sara, 2026-11-26) : **option (a)**, l'hybride **BM25 + embeddings** devient la recherche
+par défaut ; le **seuil extractif est re-réglé sur le train** (60 contrats, graine 0, critère
+d'exactitude équilibrée de D-017) avec la nouvelle recherche.
+
+### Mise en œuvre (2026-11-26)
+- `RECHERCHE_PAR_DEFAUT = "hybride_bm25"` (`src/cg/recherche/hybride.py`) : API et graphe RAG l'utilisent.
+- **Seuil extractif re-réglé sur le train** (`evaluation/evaluer_qr_f5.py --recherche hybride_bm25`) :
+  **0,71, inchangé**. Validation (2 492 questions) : exactitude équilibrée **0,524** (0,521 avec
+  l'ancienne recherche) ; bonnes réponses 14,8 % (12,0 %) ; bonnes abstentions 90,0 % (92,2 %).
 
 ---
 
 ## D-025 — Seuil d'abstention du RAG par courbe couverture / erreur (F5, amélioration 2)
 
 - **Date** : 2026-11-26
-- **Statut** : **Proposée** — **critère écrit AVANT tout calcul** (preuve : date du commit)
+- **Statut** : **Acceptée (Sara, 2026-11-26)** : critère A (critère écrit avant le calcul, commit `03e88b0`)
 
 ### Contexte
 Sur la validation, le RAG s'abstient trop peu (D-022). L'audit prévoit de régler le seuil d'abstention
@@ -1184,14 +1211,27 @@ graine 0) ; **200 questions tirées avec la graine 0**, comme pour la validation
    courbe. 4. Mesurer sur la validation (étape 3 de la séance, avec le corpus explicatif).
 
 ### Décision
-*À compléter par Sara.*
+**Acceptée** (Sara, 2026-11-26) : **critère A** (maximiser l'exactitude équilibrée sur les 200 questions
+de réglage du train ; égalité → seuil le plus élevé), appliqué aux réponses collectées avec la
+recherche retenue par D-024 (hybride BM25).
+
+### Résultat (2026-11-26, train uniquement)
+- Collecte : 200 questions de réglage (60 contrats du train, graine 0 ; 65 avec réponse), recherche
+  hybride BM25, `qwen3-vl:8b-instruct`. *Incident* : deux collectes identiques ont tourné en même
+  temps et écrit dans le même fichier (198 paires identiques, 2 différentes) ; règle fixée **avant**
+  le calcul du seuil : garder la **première** réponse de chaque question (fichier brut conservé).
+- **Seuil choisi : 0,85** (exactitude équilibrée 0,571 ; couverture 19,5 % ; erreur 59 % ; contre 0,491,
+  44 % et 75 % sans NLI, et 0,546 au seuil 0,5). Courbe : `docs/analyses/courbe_abstention_rag_train_hybride_bm25.png`.
+- **Prudence** : entre 0,35 et 0,95, l'exactitude équilibrée varie peu (0,546 à 0,571) ; sur 200 questions,
+  une partie de ces écarts est due au hasard. Le seuil est appliqué tel quel à la validation.
+- Appliqué dans `src/cg/recherche/verification_nli.py` (`SEUIL_NLI_RAG = 0.85`).
 
 ---
 
 ## D-026 — Mesure de la fidélité des réponses du RAG (F5, section 9)
 
 - **Date** : 2026-11-26
-- **Statut** : **Proposée** (méthode seulement ; **rien n'est implémenté avant l'accord de Sara**)
+- **Statut** : **Acceptée (Sara, 2026-11-26)**
 
 ### Ce qu'on mesure
 Une réponse est **fidèle** si **tout** ce qu'elle affirme est contenu dans les passages qu'elle cite.
@@ -1225,4 +1265,5 @@ un autre LLM demanderait un nouveau téléchargement et ne serait pas validé).
   (comme pour F3).
 
 ### Décision
-*À compléter par Sara.*
+**Acceptée** (Sara, 2026-11-26) : les trois niveaux (référence humaine sur 50 réponses, contrôle des
+éléments critiques, score NLI indicatif), avec leurs limites.

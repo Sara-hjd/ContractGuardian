@@ -9,8 +9,9 @@ positions : règle 1).
   exiger que tous les mots d'une longue question soient présents.
 - **Par le sens** : distance cosinus entre le vecteur de la question et ceux des segments (pgvector).
 - **Fusion RRF** (*Reciprocal Rank Fusion*) : score = somme de 1 / (60 + rang) dans chaque classement.
-- **Variante BM25** (D-024, en évaluation) : modes ``"bm25"`` et ``"hybride_bm25"``, où le classement
-  par les mots est un vrai BM25 (``cg.recherche.bm25``) au lieu de ``ts_rank_cd``.
+- **Variante BM25** (D-024, **acceptée** : recherche par défaut) : modes ``"bm25"`` et ``"hybride_bm25"``,
+  où le classement par les mots est un vrai BM25 (``cg.recherche.bm25``) au lieu de ``ts_rank_cd``.
+  Les modes ``"mots"`` et ``"hybride"`` (texte intégral PostgreSQL) restent pour les ablations.
 """
 
 from dataclasses import dataclass
@@ -22,6 +23,7 @@ from cg.recherche.bm25 import par_bm25
 from cg.recherche.embeddings import Encodeur, vers_pgvector
 
 K_RRF: int = 60
+RECHERCHE_PAR_DEFAUT: str = "hybride_bm25"  # D-024
 
 
 @dataclass
@@ -97,7 +99,7 @@ def par_sens(connexion: psycopg.Connection, contrat_id: int, vecteur: str, k: in
 
 def rechercher(
     connexion: psycopg.Connection, encodeur: Encodeur, contrat_id: int, question: str,
-    k: int = 10, mode: str = "hybride", vecteur_requete: np.ndarray | None = None,
+    k: int = 10, mode: str = RECHERCHE_PAR_DEFAUT, vecteur_requete: np.ndarray | None = None,
 ) -> list[Resultat]:
     """Recherche dans un contrat : ``"mots"``, ``"sens"``, ``"hybride"`` (fusion RRF), ``"bm25"`` ou ``"hybride_bm25"``.
 

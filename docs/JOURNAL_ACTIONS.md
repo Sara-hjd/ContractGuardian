@@ -1735,3 +1735,105 @@ attendre sa validation.
     sans `mode` → extractif. API arrêtée ensuite (`pkill -f "uvicorn cg.api.app:app"`).
 - **Commandes Git** : `git add` ; `git commit` ; `git push -u origin feat/d022-rag-nli` ; `gh pr create` ;
   `gh pr merge <n> --merge --delete-branch` ; `git pull`.
+- **Résultat de P10** : PR #17 fusionnée (`73f4824`).
+
+---
+
+## Séance 2 (mode sans limite) — 2026-11-26 — 🔒 avant le gel : corpus explicatif, BM25, abstention, fidélité
+
+**Plan annoncé** (demande de Sara) : (1) proposer les sources du corpus explicatif **sans rien indexer** ;
+(2) pendant la validation : vrai BM25 comparé sur la validation ; seuil d'abstention du RAG par courbe
+couverture / erreur sur le **train**, critère écrit **avant** le calcul ; méthode de mesure de la
+fidélité **proposée seulement** ; (3) après validation des sources : indexation séparée, nouvelle
+mesure sur les 200 questions de validation. Chaque choix = décision « Proposée ». Test fermé.
+
+### Q1 — Recherche et vérification des licences des sources (lecture seule)
+
+- **Commandes** : recherches web ; consultation des pages (GOV.UK, acquisition.gov, WIPO, Common Paper,
+  Bonterms, Cornell LII) pour lire la **mention de licence** et la date ; requête à l'API de Wikipédia
+  (`curl "https://en.wikipedia.org/w/api.php?action=query&prop=info|revisions…"`) pour vérifier que
+  chaque article existe et lire la date de sa dernière révision.
+  *Écart à signaler* : la réponse de cette requête a été lue avec `python3` (Python 3.9 du Mac) au lieu
+  de `.venv/bin/python`, contrairement à la règle de `CLAUDE.md` ; lecture seule, sans effet sur le
+  projet ; corrigé pour la suite.
+- **Résultat** : 20 sources retenues (12 articles Wikipédia CC BY-SA 4.0 ; 4 guides GOV.UK sous OGL v3.0 ;
+  FAR Part 49, domaine public américain ; guide WIPO CC BY 4.0 ; 2 jeux de clauses types CC BY 4.0) ;
+  écartées : Wex de Cornell (licence floue), blogs et sites commerciaux (tous droits réservés), textes
+  de loi. Tableau complet dans **D-023 (proposée)**. **Rien n'est téléchargé ni indexé.**
+
+### Q2 — Décisions écrites avant tout calcul (D-023 à D-026, « Proposée »)
+
+- **Fichier** : `docs/decisions.md`. D-024 (méthode BM25 : mots de PostgreSQL, k1 = 1,2, b = 0,75, non
+  réglés) ; **D-025 (critère du seuil d'abstention, options A et B, écrit avant le calcul)** ; D-026
+  (méthode de fidélité, limites ; rien n'est implémenté).
+- **Commande** : `git commit` (`03e88b0`, 2026-11-26 21:00 UTC) : **preuve de l'antériorité** du critère.
+
+### Q3 — Vrai BM25 et comparaison sur la validation
+
+- **Fichiers** : `src/cg/recherche/bm25.py` (nouveau) ; `src/cg/recherche/hybride.py` (modes `bm25` et
+  `hybride_bm25` ; le mode par défaut ne change pas) ; `tests/test_recherche.py` (test de la formule) ;
+  `evaluation/evaluer_recherche_bm25.py` (nouveau).
+- **Explication simple** : BM25 donne à chaque mot de la question un poids d'autant plus grand qu'il est
+  **rare** dans le contrat, compte combien de fois il apparaît dans le segment (avec un plafond), et
+  pénalise les segments **longs**. Le texte intégral de PostgreSQL (`ts_rank_cd`) ne fait pas cela.
+- **Commande** : `PYTHONPATH=src nohup caffeinate -i .venv/bin/python -u evaluation/evaluer_recherche_bm25.py > data/processed/recherche_bm25.log 2>&1 &`
+- **Résultat** (809 questions de validation avec réponse) : rappel@5 / MRR — PostgreSQL 0,518 / 0,334 ;
+  **BM25 0,585 / 0,447** ; embeddings 0,543 / 0,411 ; hybride actuel 0,586 / 0,433 ; **hybride BM25
+  0,602 / 0,469** (meilleur sur toutes les mesures). Contrôle : l'hybride actuel retrouve le rappel@5
+  de 0,586 déjà publié. Analyse : `docs/analyses/recherche_bm25_val.md` ; résultats ajoutés à D-024.
+
+### Q4 — Collecte des réponses du RAG sur les 200 questions de réglage du train (D-025, étape 1)
+
+- **Fichier** : `evaluation/collecter_reglage_abstention_rag.py` (nouveau) : pour chaque question, la
+  réponse du RAG (vérification mot pour mot seulement), sa justesse et la probabilité « implique » du
+  NLI. **Aucun seuil n'est choisi.** Questions : 60 contrats du train (graine 0, les mêmes que pour
+  l'extractif), 200 questions (graine 0) ; 65 avec réponse.
+- **Commandes** :
+  `PYTHONPATH=src nohup caffeinate -i .venv/bin/python -u evaluation/collecter_reglage_abstention_rag.py > data/processed/reglage_abstention_rag.log 2>&1 &`
+  puis, à la suite (file d'attente), la même avec `--recherche hybride_bm25`
+  (`data/processed/reglage_abstention_rag_bm25.log`) : ainsi les réponses sont prêtes quelle que soit la
+  décision D-024.
+- **Pourquoi** : la partie longue (≈ 27 min par collecte) ne dépend pas du critère ; le choix du seuil,
+  lui, attend l'accord de Sara.
+
+### Q5 — Script de choix du seuil (prêt, non lancé)
+
+- **Fichiers** : `evaluation/regler_seuil_abstention_rag.py` (critères A et B exactement comme écrits dans
+  D-025 ; courbe couverture / erreur ; MLflow) ; `tests/test_seuil_abstention.py` (exemple inventé de
+  4 questions, aucune donnée) → `2 passed`.
+- **Résultat de Q4 (première collecte)** : 200 questions sur 200 (21:01 → 21:19), fichier
+  `data/processed/rag_reglage_train.jsonl` (jamais commité). Aucun seuil calculé.
+- **Incident** : la file d'attente (`bash -c 'while pgrep -f "collecter_reglage…" …'`) se trouvait
+  elle-même (sa propre ligne de commande contenait le motif cherché) et aurait attendu indéfiniment.
+  Arrêtée (`kill`) ; seconde collecte lancée directement à 21:19 :
+  `PYTHONPATH=src nohup caffeinate -i .venv/bin/python -u evaluation/collecter_reglage_abstention_rag.py --recherche hybride_bm25 > data/processed/reglage_abstention_rag_bm25.log 2>&1 &`
+- **Correction de l'incident** : en réalité, la file d'attente avait **déjà lancé** sa collecte BM25 avant
+  d'être arrêtée ; deux collectes identiques ont donc tourné en même temps (21:19 → 21:39) et écrit dans
+  le même fichier (400 lignes : chaque question deux fois ; 198 paires identiques, 2 différentes — le
+  calcul n'est pas parfaitement reproductible quand deux processus se partagent la puce graphique).
+  **Règle fixée avant tout calcul de seuil** : garder la première réponse de chaque question ; fichier
+  brut conservé (`data/processed/rag_reglage_train_hybride_bm25_brut_doublons.jsonl`, jamais commité).
+
+### Q6 — Décisions de Sara (2026-11-26)
+- **D-023 acceptée** sans les sources 19 et 20, avec attribution affichée dans les réponses ;
+  **D-024 acceptée** (hybride BM25, seuil extractif re-réglé sur le train) ; **D-025 : critère A** ;
+  **D-026 acceptée**. Fichier : `docs/decisions.md`.
+
+### Q7 — D-024 : hybride BM25 par défaut ; seuil extractif re-réglé sur le train
+- **Fichiers** : `src/cg/recherche/hybride.py` (`RECHERCHE_PAR_DEFAUT = "hybride_bm25"`) ;
+  `evaluation/evaluer_qr_f5.py` (option `--recherche`).
+- **Commande** : `PYTHONPATH=src caffeinate -i .venv/bin/python -u evaluation/evaluer_qr_f5.py --recherche hybride_bm25 > data/processed/qr_f5_bm25.log 2>&1`
+- **Résultat** : seuil réglé sur les 60 contrats du train = **0,71 (inchangé)** ; validation :
+  exactitude équilibrée 0,524 (0,521 avant), bonnes réponses 14,8 % (12,0 %).
+
+### Q8 — D-025 : choix du seuil d'abstention (critère A, train)
+- **Commande** : `PYTHONPATH=src .venv/bin/python -u evaluation/regler_seuil_abstention_rag.py --critere A --recherche hybride_bm25`
+- **Explication** : pour chaque seuil s (0,05 à 0,95), on garde une réponse seulement si le NLI dit que
+  le passage cité l'implique avec une probabilité ≥ s ; on calcule la couverture (part de questions
+  auxquelles on répond) et l'erreur (part de réponses fausses) ; le critère A prend le seuil qui donne
+  la meilleure exactitude équilibrée.
+- **Résultat** : **seuil 0,85** (exactitude équilibrée 0,571 ; couverture 19,5 % ; erreur 59 %) contre
+  0,491 sans NLI et 0,546 au seuil 0,5. Écarts faibles entre 0,35 et 0,95 (bruit possible sur 200
+  questions). Figure : `docs/analyses/courbe_abstention_rag_train_hybride_bm25.png`. MLflow :
+  `seuil-abstention-rag-train-hybride_bm25-critereA`.
+- **Fichier** : `src/cg/recherche/verification_nli.py` (`SEUIL_NLI_RAG = 0.85`).

@@ -74,6 +74,7 @@ Sara est **en apprentissage**. Concrètement :
   | Séance | Date | Contenu |
   |---|---|---|
   | 1 | 2026-11-25 → 26 | Audit de conformité ; grille F3 à 3 étiquettes (D-020) ; D-021 en attente ; RAG de référence sur 200 questions avec qwen3-vl:8b-instruct ; D-022 acceptée et mise en œuvre |
+  | 2 | 2026-11-26 | en cours |
 
 - **Fin** : **uniquement sur instruction explicite de Sara** (« stop »). Claude marque alors cette section
   « terminée » et la règle habituelle « Sara exécute les commandes » reprend.
