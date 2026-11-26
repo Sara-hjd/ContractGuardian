@@ -129,3 +129,22 @@ def test_graphe_rag_verification_nli() -> None:
     assert non.abstention and "NLI" in non.raison
     # Sans vérification NLI (impliquer=None), le comportement est inchangé.
     assert not construire_graphe(lambda q: [passage], llm).invoke({"question": "?"})["resultat"].abstention
+
+
+def test_bm25_formule() -> None:
+    """BM25 (D-024) : un mot rare pèse plus qu'un mot fréquent ; un segment long est pénalisé."""
+    from collections import Counter
+
+    from cg.recherche.bm25 import IndexBM25
+
+    index = IndexBM25.construire({
+        1: Counter({"termin": 1, "agreement": 1}),
+        2: Counter({"agreement": 2}),
+        3: Counter({"agreement": 1, "parti": 1}),
+        4: Counter({"termin": 1, "agreement": 1, "parti": 3, "notic": 3}),
+    })
+    assert index.idf("termin") > index.idf("agreement")  # « termin » est dans 2 segments sur 4, « agreement » dans 4
+    classement = index.classer(["termin", "agreement"], 10)
+    assert classement[0][0] == 1  # même mots que le 4, mais plus court
+    assert {sid for sid, _ in classement} == {1, 2, 3, 4}
+    assert index.classer(["inconnu"], 10) == []

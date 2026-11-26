@@ -1038,3 +1038,191 @@ RAG + LLM 0,529 ; **RAG + LLM + vérification NLI 0,561**. Le modèle répond en
   avec la mention « réponse générée par un LLM local : à vérifier dans le texte cité » (`a_verifier`) et
   le type de vérification appliqué (`verification`).
 - **Suite** : seuil d'abstention par courbe couverture / erreur (validation) en séance 2, avant le gel.
+
+---
+
+## D-023 — Corpus documentaire explicatif : sources (F5, cahier des charges section 5)
+
+- **Date** : 2026-11-26
+- **Statut** : **Proposée** (en attente de la validation de la liste par Sara ; **rien n'est indexé**)
+
+### Contexte
+Le cahier des charges prévoit un **petit corpus documentaire explicatif** (sources ouvertes, datées)
+indexé **séparément** des contrats, pour expliquer les termes et les clauses (durée, résiliation,
+responsabilité, confidentialité). Ce corpus **n'est pas** une donnée d'entraînement (règle 3) : il
+sert seulement de base au RAG.
+
+### Critères de sélection (fixés avant la recherche)
+1. Licence **explicite et ouverte**, vérifiée sur la page de la source : CC BY 4.0, CC BY-SA 4.0,
+   Open Government Licence v3.0 (OGL), ou œuvre du gouvernement fédéral américain (domaine public,
+   17 U.S.C. § 105). 2. Gratuite, sans compte. 3. Datée (date de publication, de mise à jour ou de
+   révision). 4. Explicative (glossaire, guide, notice), pas un avis sur un cas particulier.
+
+### Sources proposées (20 ; licences vérifiées le 2026-11-26)
+
+| # | Titre | URL | Éditeur | Date | Licence | Raison |
+|---|---|---|---|---|---|---|
+| 1 | Non-disclosure agreement | https://en.wikipedia.org/wiki/Non-disclosure_agreement | Wikipédia | révision du 2026-11-18 | CC BY-SA 4.0 | Définition de l'accord de confidentialité, types (unilatéral, mutuel) |
+| 2 | Confidentiality | https://en.wikipedia.org/wiki/Confidentiality | Wikipédia | révision du 2026-11-11 | CC BY-SA 4.0 | Notion générale de confidentialité |
+| 3 | Trade secret | https://en.wikipedia.org/wiki/Trade_secret | Wikipédia | révision du 2026-11-25 | CC BY-SA 4.0 | Ce que protège une clause de confidentialité, durée de protection |
+| 4 | Breach of contract (dont *material breach*) | https://en.wikipedia.org/wiki/Breach_of_contract | Wikipédia | révision du 2026-10-04 | CC BY-SA 4.0 | Manquement, manquement grave : motifs de résiliation |
+| 5 | Termination for convenience | https://en.wikipedia.org/wiki/Termination_for_convenience | Wikipédia | révision du 2025-07-13 | CC BY-SA 4.0 | Résiliation sans faute |
+| 6 | Fundamental breach | https://en.wikipedia.org/wiki/Fundamental_breach | Wikipédia | révision du 2026-10-10 | CC BY-SA 4.0 | Manquement fondamental et clauses limitatives |
+| 7 | Rescission (contract law) | https://en.wikipedia.org/wiki/Rescission_(contract_law) | Wikipédia | révision du 2026-08-28 | CC BY-SA 4.0 | Distinguer résolution et résiliation |
+| 8 | Exclusion clause | https://en.wikipedia.org/wiki/Exclusion_clause | Wikipédia | révision du 2024-10-17 | CC BY-SA 4.0 | Clauses d'exclusion et de limitation de responsabilité |
+| 9 | Indemnity | https://en.wikipedia.org/wiki/Indemnity | Wikipédia | révision du 2026-06-05 | CC BY-SA 4.0 | Indemnisation (souvent liée au plafond de responsabilité) |
+| 10 | Liquidated damages | https://en.wikipedia.org/wiki/Liquidated_damages | Wikipédia | révision du 2026-06-24 | CC BY-SA 4.0 | Pénalités et dommages forfaitaires |
+| 11 | Consequential damages | https://en.wikipedia.org/wiki/Consequential_damages | Wikipédia | révision du 2026-05-22 | CC BY-SA 4.0 | Dommages indirects, souvent exclus par les contrats |
+| 12 | Force majeure | https://en.wikipedia.org/wiki/Force_majeure | Wikipédia | révision du 2026-09-29 | CC BY-SA 4.0 | Exonération de responsabilité, suspension, résiliation |
+| 13 | Non-disclosure agreements (guidance) | https://www.gov.uk/government/publications/non-disclosure-agreements/non-disclosure-agreements | UK Intellectual Property Office (GOV.UK) | 2015-03-12 | OGL v3.0 | Guide public : objet d'un NDA, durée usuelle de confidentialité (3 à 5 ans) |
+| 14 | Managing intellectual property and confidentiality | https://www.gov.uk/government/publications/managing-intellectual-property-and-confidentiality | UK government (GOV.UK) | 2023 | OGL v3.0 | Guide pratique de la confidentialité |
+| 15 | Risk allocation and pricing approaches guidance note | https://www.gov.uk/government/publications/the-sourcing-and-consultancy-playbooks/risk-allocation-and-pricing-approaches-guidance-note-html | Cabinet Office / Government Commercial Function | mise à jour 2026-11-05 | OGL v3.0 | Plafonds de responsabilité (limites spécifiques et générale) |
+| 16 | Model Services Contract — Guidance for buyers (v2.2A) | https://www.gov.uk/government/publications/guidance-on-the-model-services-contract | Cabinet Office, Government Legal Department | mise à jour 2025-09-01 | OGL v3.0 | Guide commenté d'un contrat type : durée, résiliation, responsabilité, confidentialité |
+| 17 | FAR Part 49 — Termination of Contracts | https://www.acquisition.gov/far/part-49 | US General Services Administration | FAC 2026-01, en vigueur le 2026-03-13 | Domaine public (œuvre fédérale, 17 U.S.C. § 105) | Résiliation pour convenance et pour faute, préavis écrit |
+| 18 | WIPO Guide to Trade Secrets and Innovation | https://www.wipo.int/publications/en/details.jsp?id=4748 | WIPO (OMPI) | 2024 | CC BY 4.0 | Secrets d'affaires et accords de confidentialité, vue internationale |
+| 19 | Common Paper Mutual NDA — Standard Terms v1.0 | https://commonpaper.com/standards/mutual-nda/1.0/ | Common Paper | 2021-07-19 | CC BY 4.0 | Clauses types annotées (exceptions, durée, restitution) |
+| 20 | Bonterms Cloud Terms v1.0 | https://bonterms.com/forms/bonterms-cloud-terms-v1/ | Bonterms | 2022 | CC BY 4.0 | Clauses types de durée, résiliation, plafond de responsabilité, confidentialité |
+
+### Sources écartées
+- **Wex (Cornell LII)** : licence CC BY-NC-SA dans une version ancienne (2.5) et conditions générales
+  différentes selon les pages : **licence floue**.
+- Blogs de cabinets d'avocats, Investopedia, Law Insider : contenus protégés (tous droits réservés).
+- Textes de loi nationaux (par exemple l'Unfair Contract Terms Act) : ce sont des règles de droit d'un
+  pays, pas des explications ; risque de laisser croire à un avis juridique.
+
+### Limites à connaître
+- Sources **anglo-saxonnes** (Royaume-Uni, États-Unis) et en partie **marchés publics** (15 à 17) :
+  elles expliquent des notions, elles ne disent pas le droit applicable à un contrat donné.
+- 19 et 20 sont des **clauses types**, pas des guides : utiles comme exemples de rédaction ; à retirer
+  si Sara préfère un corpus purement explicatif.
+- CC BY-SA et CC BY imposent de **citer l'auteur et la licence** : l'interface affichera la source,
+  la date et la licence de chaque passage explicatif.
+
+### Mise en œuvre proposée (après validation)
+- Téléchargement dans `data/raw/explicatif/` (**jamais commité**), avec la date de consultation ;
+  provenance et licences dans `docs/data_provenance.md`.
+- Index **séparé** des contrats : tables `sources_explicatives` et `segments_explicatifs` (texte,
+  section, embeddings, `tsv`), jamais mélangées avec `segments`.
+- Dans le RAG : les passages explicatifs sont montrés au LLM dans un **bloc séparé** ; une réponse sur
+  le contrat doit toujours citer le **contrat** ; un passage explicatif est cité comme « document
+  explicatif » avec sa source.
+
+### Décision
+*À compléter par Sara.*
+
+---
+
+## D-024 — Vrai BM25 pour la recherche par les mots (F5)
+
+- **Date** : 2026-11-26
+- **Statut** : **Proposée** (méthode fixée avant la mesure ; choix de la recherche à décider après)
+
+### Contexte
+L'audit a montré que la recherche « par les mots » utilisait `ts_rank_cd` de PostgreSQL, qui **n'est pas
+BM25**, alors que le cahier des charges demande BM25 + embeddings (F5, ablations section 9).
+
+### Méthode (fixée avant la mesure)
+- **Mots** : ceux de PostgreSQL (lexèmes de `to_tsvector('english', …)`, colonne `tsv`), pour que la
+  comparaison ne mesure que la **formule de classement**.
+- **BM25 Okapi**, idf = ln(1 + (N − n + 0,5) / (n + 0,5)), calculé sur les segments **du contrat
+  interrogé** (la recherche se fait dans un seul contrat) ; **k1 = 1,2 et b = 0,75**, valeurs usuelles,
+  **non réglées**.
+- Code : `src/cg/recherche/bm25.py` ; modes `bm25` et `hybride_bm25` de `rechercher` (le mode par défaut
+  ne change pas tant que la décision n'est pas prise).
+- **Comparaison** sur les mêmes questions de validation avec réponse (809), 10 premiers résultats :
+  rappel@1, @3, @5, @10 et MRR, pour : texte intégral PostgreSQL, BM25, embeddings, hybride actuel,
+  hybride BM25 (`evaluation/evaluer_recherche_bm25.py`).
+
+### Options après la mesure (à décider par Sara)
+(a) remplacer le texte intégral par BM25 dans l'hybride ; (b) garder l'hybride actuel et présenter BM25
+comme ablation.
+
+### Décision
+*À compléter par Sara.*
+
+---
+
+## D-025 — Seuil d'abstention du RAG par courbe couverture / erreur (F5, amélioration 2)
+
+- **Date** : 2026-11-26
+- **Statut** : **Proposée** — **critère écrit AVANT tout calcul** (preuve : date du commit)
+
+### Contexte
+Sur la validation, le RAG s'abstient trop peu (D-022). L'audit prévoit de régler le seuil d'abstention
+avec une **courbe couverture / erreur**, sur des questions de **réglage du train** (jamais la validation
+pour régler, jamais le test).
+
+### Ce qui est seuillé
+La **probabilité « implique »** du modèle NLI de F4 : p = max, sur les passages cités, de
+P(Entailment | passage, réponse). Une réponse vérifiée mot pour mot est gardée si p ≥ s, sinon
+abstention. Seuils essayés : s = 0,05 ; 0,10 ; … ; 0,95, plus « sans NLI ». Aujourd'hui s = 0,5 (fixé
+d'avance, D-017).
+
+### Questions de réglage
+Les questions des **60 contrats du train** déjà utilisés pour régler l'extractif (`evaluer_qr_f5.py`,
+graine 0) ; **200 questions tirées avec la graine 0**, comme pour la validation. Mêmes réglages du LLM
+(`qwen3-vl:8b-instruct`, 5 passages, recherche hybride actuelle).
+
+### Définitions
+- **Couverture** = réponses données / questions.
+- **Erreur** = réponses fausses / réponses données (fausse = aucun segment annoté cité, y compris une
+  réponse à une question sans réponse).
+- **Exactitude équilibrée** = (bonnes réponses / questions avec réponse + bonnes abstentions /
+  questions sans réponse) / 2.
+
+### Critère proposé (à accepter AVANT le choix du seuil)
+- **Option A (recommandée)** : le seuil qui **maximise l'exactitude équilibrée** sur les 200 questions
+  de réglage ; en cas d'égalité, le **plus élevé** (le plus prudent). Cohérent avec D-017.
+- **Option B** : le seuil le plus bas dont l'**erreur ≤ 30 %** (couverture maximale sous contrainte
+  d'erreur) ; si aucun seuil n'y arrive, repli sur l'option A.
+- Dans les deux cas : la courbe couverture / erreur est tracée et publiée ; le seuil choisi est
+  ensuite **appliqué tel quel** aux 200 questions de validation (mêmes questions, même graine).
+
+### Déroulement prévu
+1. Collecter les réponses du LLM sur les 200 questions de réglage et leur probabilité NLI (ne dépend
+   pas du critère). 2. **Attendre l'accord de Sara sur le critère.** 3. Choisir le seuil, tracer la
+   courbe. 4. Mesurer sur la validation (étape 3 de la séance, avec le corpus explicatif).
+
+### Décision
+*À compléter par Sara.*
+
+---
+
+## D-026 — Mesure de la fidélité des réponses du RAG (F5, section 9)
+
+- **Date** : 2026-11-26
+- **Statut** : **Proposée** (méthode seulement ; **rien n'est implémenté avant l'accord de Sara**)
+
+### Ce qu'on mesure
+Une réponse est **fidèle** si **tout** ce qu'elle affirme est contenu dans les passages qu'elle cite.
+Ce n'est **pas** l'exactitude : une réponse peut être fidèle à un passage qui ne répond pas à la question
+(c'est déjà mesuré par l'exactitude), ou juste mais ajouter des éléments absents du passage (infidèle).
+
+### Méthode proposée (trois niveaux)
+1. **Référence humaine (mesure principale)** : Sara et Ilyas annotent **indépendamment** un échantillon
+   de **50 réponses données** par le RAG sur la validation (tirées avec la graine 0), avec trois
+   étiquettes : `FIDELE` (tout est dans le passage cité), `PARTIELLEMENT_FIDELE` (un élément n'y est
+   pas, ou est généralisé), `NON_FIDELE` (contredit ou invente). Kappa de Cohen, puis référence par
+   consensus. Fichiers d'annotation **sans texte** (identifiants seulement, règle 5), comme pour F3.
+2. **Contrôle automatique des éléments critiques** (indépendant des modèles) : on extrait de la réponse
+   les **nombres, durées, montants, pourcentages et dates** (« 30 days », « two years », « $1,000,000 »)
+   et on vérifie que chacun figure dans les passages cités (en reconnaissant « thirty (30) » = « 30 »).
+   Mesure : part des réponses dont tous les éléments critiques sont retrouvés.
+3. **Score NLI** (modèle de F4) : probabilité que les passages cités impliquent la réponse. Rapporté
+   **à titre indicatif seulement**.
+
+Écarté : **un LLM juge** (le même LLM local jugerait ses propres réponses : biais d'auto-évaluation ;
+un autre LLM demanderait un nouveau téléchargement et ne serait pas validé).
+
+### Limites
+- **50 réponses** : intervalle de confiance large (environ ± 14 points à 95 %) ; c'est une estimation,
+  pas une preuve. Coût : environ 1 heure d'annotation chacun.
+- Le contrôle des éléments critiques **ignore les paraphrases et les négations** (« may » contre
+  « may not ») : il ne détecte que les chiffres et dates inventés.
+- Le score NLI **n'est pas indépendant** : le même modèle filtre déjà les réponses (D-022), donc il
+  surestime la fidélité ; et il a été entraîné sur des NDA (ContractNLI), pas sur des réponses de RAG.
+- Les annotateurs connaissent le système : risque de complaisance ; le guide fixera des règles écrites
+  (comme pour F3).
+
+### Décision
+*À compléter par Sara.*

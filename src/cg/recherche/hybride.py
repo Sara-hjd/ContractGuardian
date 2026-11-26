@@ -9,6 +9,8 @@ positions : règle 1).
   exiger que tous les mots d'une longue question soient présents.
 - **Par le sens** : distance cosinus entre le vecteur de la question et ceux des segments (pgvector).
 - **Fusion RRF** (*Reciprocal Rank Fusion*) : score = somme de 1 / (60 + rang) dans chaque classement.
+- **Variante BM25** (D-024, en évaluation) : modes ``"bm25"`` et ``"hybride_bm25"``, où le classement
+  par les mots est un vrai BM25 (``cg.recherche.bm25``) au lieu de ``ts_rank_cd``.
 """
 
 from dataclasses import dataclass
@@ -16,6 +18,7 @@ from dataclasses import dataclass
 import numpy as np
 import psycopg
 
+from cg.recherche.bm25 import par_bm25
 from cg.recherche.embeddings import Encodeur, vers_pgvector
 
 K_RRF: int = 60
@@ -96,7 +99,7 @@ def rechercher(
     connexion: psycopg.Connection, encodeur: Encodeur, contrat_id: int, question: str,
     k: int = 10, mode: str = "hybride", vecteur_requete: np.ndarray | None = None,
 ) -> list[Resultat]:
-    """Recherche dans un contrat : ``"mots"``, ``"sens"`` ou ``"hybride"`` (fusion RRF).
+    """Recherche dans un contrat : ``"mots"``, ``"sens"``, ``"hybride"`` (fusion RRF), ``"bm25"`` ou ``"hybride_bm25"``.
 
     Args:
         connexion: Connexion à la base.
@@ -112,8 +115,15 @@ def rechercher(
     """
     vecteur = vers_pgvector(vecteur_requete if vecteur_requete is not None else encodeur.encoder_requete(question))
     profondeur = max(50, k)  # on fusionne sur des listes plus longues que k
-    mots = par_mots(connexion, contrat_id, question, profondeur) if mode in ("mots", "hybride") else []
-    sens = par_sens(connexion, contrat_id, vecteur, profondeur) if mode in ("sens", "hybride") else []
+    if mode not in ("mots", "sens", "hybride", "bm25", "hybride_bm25"):
+        raise ValueError(f"mode de recherche inconnu : {mode}")
+    if mode in ("mots", "hybride"):
+        mots = par_mots(connexion, contrat_id, question, profondeur)
+    elif mode in ("bm25", "hybride_bm25"):
+        mots = par_bm25(connexion, contrat_id, question, profondeur)
+    else:
+        mots = []
+    sens = par_sens(connexion, contrat_id, vecteur, profondeur) if mode in ("sens", "hybride", "hybride_bm25") else []
     scores: dict[int, float] = {}
     rangs_mots = {sid: r for r, (sid, _) in enumerate(mots, start=1)}
     rangs_sens = {sid: r for r, (sid, _) in enumerate(sens, start=1)}
