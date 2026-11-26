@@ -9,7 +9,9 @@ Le graphe (LangGraph) a trois étapes :
    en JSON, avec des citations copiées mot pour mot, ou s'abstenir ;
 3. **vérifier** : chaque citation doit exister **mot pour mot** dans le passage cité (seuls les
    espaces et sauts de ligne sont normalisés). Une seule citation fausse → **abstention**. Chaque
-   citation vérifiée reçoit ses positions exactes dans le contrat (règle 1).
+   citation vérifiée reçoit ses positions exactes dans le contrat (règle 1). Si une fonction
+   ``impliquer`` est fournie (vérification NLI, D-022, ``cg.recherche.verification_nli``), la réponse
+   n'est gardée que si au moins un passage cité l'**implique** ; sinon, **abstention**.
 """
 
 import json
@@ -136,13 +138,17 @@ def analyser_sortie(sortie: str, passages: list[Resultat]) -> ReponseRag:
 
 
 def construire_graphe(
-    chercher: Callable[[str], list[Resultat]], generer: Callable[[list[dict[str, str]]], str]
+    chercher: Callable[[str], list[Resultat]],
+    generer: Callable[[list[dict[str, str]]], str],
+    impliquer: Callable[[str, list[str]], bool] | None = None,
 ):
     """Assemble le graphe LangGraph.
 
     Args:
         chercher: Fonction question → passages (par exemple la recherche hybride dans un contrat).
         generer: Fonction messages → texte du LLM (par exemple ``cg.recherche.llm.discuter``).
+        impliquer: Vérification NLI facultative ``(reponse, textes des passages cités) -> bool``
+            (D-022). ``None`` : vérification mot pour mot seulement.
 
     Returns:
         Le graphe compilé ; ``graphe.invoke({"question": …})["resultat"]`` donne la réponse.
@@ -164,7 +170,13 @@ def construire_graphe(
         return {"sortie_llm": generer(messages)}
 
     def etape_verifier(etat: Etat) -> Etat:
-        return {"resultat": analyser_sortie(etat["sortie_llm"], etat["passages"])}
+        resultat = analyser_sortie(etat["sortie_llm"], etat["passages"])
+        if impliquer is not None and not resultat.abstention:
+            cites = {c.segment_id for c in resultat.citations}
+            textes = [p.texte for p in etat["passages"] if p.segment_id in cites]
+            if not impliquer(resultat.reponse, textes):
+                resultat = ReponseRag(abstention=True, raison="réponse non impliquée par les passages cités (NLI)")
+        return {"resultat": resultat}
 
     graphe = StateGraph(Etat)
     graphe.add_node("chercher", etape_chercher)

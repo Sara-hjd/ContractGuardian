@@ -105,3 +105,27 @@ def test_graphe_rag_verifie_les_citations() -> None:
     assert vide.invoke({"question": "?"})["resultat"].raison == "aucun passage trouvé"
     abstient = construire_graphe(lambda q: [passage], lambda m: '{"abstention": true}')
     assert abstient.invoke({"question": "?"})["resultat"].abstention
+
+
+def test_graphe_rag_verification_nli() -> None:
+    """D-022 : une réponse aux citations exactes est gardée seulement si le passage cité l'implique."""
+    pytest.importorskip("langgraph")
+    from cg.recherche.graphe import construire_graphe
+
+    passage = Resultat(segment_id=7, page=3, debut=100, fin=150,
+                       texte="Either party may terminate this Agreement upon 30 days notice.")
+    llm = lambda m: ('{"abstention": false, "reponse": "Yes, with 30 days notice.", "citations": '
+                     '[{"passage": 1, "extrait": "may terminate this Agreement upon 30 days"}]}')
+    vus: list[tuple[str, list[str]]] = []
+
+    def oui(reponse: str, textes: list[str]) -> bool:
+        vus.append((reponse, textes))
+        return True
+
+    r = construire_graphe(lambda q: [passage], llm, oui).invoke({"question": "?"})["resultat"]
+    assert not r.abstention
+    assert vus == [("Yes, with 30 days notice.", [passage.texte])]  # seuls les passages cités sont vérifiés
+    non = construire_graphe(lambda q: [passage], llm, lambda rep, t: False).invoke({"question": "?"})["resultat"]
+    assert non.abstention and "NLI" in non.raison
+    # Sans vérification NLI (impliquer=None), le comportement est inchangé.
+    assert not construire_graphe(lambda q: [passage], llm).invoke({"question": "?"})["resultat"].abstention

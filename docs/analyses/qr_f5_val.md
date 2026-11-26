@@ -117,4 +117,4 @@ Les 200 questions de validation (graine 0) : **70 avec réponse, 130 sans répon
    citent pas le segment annoté.
 4. Toutes ces mesures sont sur la **validation** (réglage autorisé) ; le test reste fermé.
 5. Pistes, **avant le gel** (séance 2, 🔒) : seuil d'abstention par **courbe couverture / erreur**,
-   mesure de la **fidélité**, Recall@3 et MRR. Les choix proposés sont dans **D-022** (en attente de Sara).
+   mesure de la **fidélité**, Recall@3 et MRR. **D-022 acceptée** : instruct par défaut, vérification NLI intégrée au graphe, extractif par défaut.

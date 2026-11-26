@@ -1005,7 +1005,7 @@ modèle), pour être prête si elle est obligatoire.
 ## D-022 — LLM de référence de F5 et vérification NLI dans le graphe RAG
 
 - **Date** : 2026-11-26
-- **Statut** : **Proposée** (en attente de la décision de Sara)
+- **Statut** : **Acceptée (Sara, 2026-11-26)**, telle que proposée
 
 ### Contexte
 L'évaluation de référence (200 questions de validation, `docs/analyses/qr_f5_val.md`) a été faite avec
@@ -1028,5 +1028,13 @@ RAG + LLM 0,529 ; **RAG + LLM + vérification NLI 0,561**. Le modèle répond en
 - Régler ensuite, **en séance 2 et avant le gel**, un seuil d'abstention par courbe couverture / erreur
   (sur la validation), puis refaire la mesure sur les 200 questions.
 
-### Décision
-*À compléter par Sara.*
+### Décision (Sara, 2026-11-26 : acceptée telle que proposée)
+- **`qwen3-vl:8b-instruct`** est le LLM de référence : défaut de `CG_LLM_MODELE` (`src/cg/config.py`,
+  `.env.example`).
+- **Vérification NLI dans le graphe** : `src/cg/recherche/verification_nli.py` (modèle de F4, seuil 0,5
+  fixé d'avance) ; l'étape « vérifier » garde une réponse seulement si au moins un passage cité
+  l'implique, sinon abstention (« réponse non impliquée par les passages cités (NLI) »).
+- **Application** : mode **extractif par défaut** (API et interface) ; le mode LLM est proposé sur demande,
+  avec la mention « réponse générée par un LLM local : à vérifier dans le texte cité » (`a_verifier`) et
+  le type de vérification appliqué (`verification`).
+- **Suite** : seuil d'abstention par courbe couverture / erreur (validation) en séance 2, avant le gel.

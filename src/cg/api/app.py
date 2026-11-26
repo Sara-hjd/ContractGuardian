@@ -49,7 +49,7 @@ class Question(BaseModel):
     """Question posée sur un contrat."""
 
     question: str = Field(min_length=3, max_length=500)
-    mode: str = Field(default="rag", pattern="^(rag|extractif)$")
+    mode: str = Field(default="extractif", pattern="^(rag|extractif)$")  # D-022 : extractif par défaut
 
 
 class Hypothese(BaseModel):

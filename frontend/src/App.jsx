@@ -42,7 +42,7 @@ function Clauses({ contratId }) {
 
 function Questions({ contratId }) {
   const [question, setQuestion] = useState('')
-  const [mode, setMode] = useState('rag')
+  const [mode, setMode] = useState('extractif')  // D-022 : extractif par défaut
   const [reponse, setReponse] = useState(null)
   const [attente, setAttente] = useState(false)
   async function envoyer(e) {
@@ -60,8 +60,8 @@ function Questions({ contratId }) {
       <form onSubmit={envoyer} className="question">
         <input value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Question en anglais, par ex. What is the notice period to terminate?" />
         <select value={mode} onChange={(e) => setMode(e.target.value)}>
-          <option value="rag">LLM local + citations vérifiées</option>
-          <option value="extractif">Extractif (segment cité)</option>
+          <option value="extractif">Extractif (segment cité, immédiat)</option>
+          <option value="rag">LLM local + citations vérifiées (≈ 10 s, à vérifier)</option>
         </select>
         <button disabled={attente || question.length < 3}>{attente ? 'Recherche…' : 'Demander'}</button>
       </form>
@@ -69,6 +69,7 @@ function Questions({ contratId }) {
       {reponse && !reponse.erreur && (reponse.abstention
         ? <p className="abstention">Pas de réponse fiable dans ce contrat ({reponse.raison}).</p>
         : <div>
+            {reponse.a_verifier && <p className="experimental">Réponse générée par un LLM local : à vérifier dans le texte cité.</p>}
             {reponse.reponse && <p><strong>Réponse :</strong> {reponse.reponse}</p>}
             {reponse.citations.map((c, i) => <Citation key={i} page={c.page} debut={c.debut} fin={c.fin} texte={c.extrait} />)}
           </div>)}
