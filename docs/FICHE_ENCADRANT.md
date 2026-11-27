@@ -127,6 +127,20 @@
   d'abstention à régler avant le gel (séance 2).
 - **Bilan complet de la période : `docs/DIAGNOSTIC_2026-11-23_au_2026-11-24.md`**, avec la démonstration pas à pas.
 
+## Séance 2 (2026-11-26) : BM25, seuil d'abstention, corpus explicatif, fidélité
+
+- **Vrai BM25** (D-024) : même découpage en mots que PostgreSQL, seule la formule change. Validation
+  (809 questions) : rappel@5 / MRR — texte intégral PostgreSQL 0,518 / 0,334 ; BM25 0,585 / 0,447 ;
+  **hybride BM25 + embeddings 0,602 / 0,469** (adopté) ; seuil extractif re-réglé sur le train : 0,71.
+- **Seuil d'abstention du RAG** (D-025) : critère écrit **avant** le calcul (commit `03e88b0`), courbe
+  couverture / erreur sur 200 questions du **train** → seuil NLI **0,85**. Validation : exactitude
+  équilibrée **0,560**, 23 réponses fausses sur 40 (contre 35 sur 57), 4,2 s par question.
+- **Corpus explicatif** (D-023) : 18 sources ouvertes (Wikipédia CC BY-SA, GOV.UK OGL, FAR domaine
+  public, OMPI CC BY), 6 349 segments, index séparé, attribution affichée. Sur les questions CUAD, il
+  n'aide pas (2 réponses sur 105 le citent ; 0,548) : **D-027 proposée** (mode « Expliquer un terme » séparé).
+- **Fidélité** (D-026) : les 6 réponses avec un chiffre absent du passage cité sont toutes rejetées par
+  le filtre NLI ; 50 réponses tirées pour l'annotation humaine (Sara et Ilyas).
+
 ## Décisions prises par Sara le 2026-11-22, à présenter pour validation
 
 | | Sujet | Décision |
@@ -150,6 +164,11 @@
 | **D-020** | Grille F3 | 3 étiquettes du cahier des charges (Sara) |
 | **D-021** | Cahier des charges de référence | *En attente de l'encadrant* (comparaison V1/V2 : extension ou obligatoire) |
 | **D-022** | LLM de référence et vérification NLI (F5) | qwen3-vl:8b-instruct ; vérification NLI dans le graphe RAG ; extractif par défaut, LLM sur demande « à vérifier » (Sara) |
+| **D-023** | Corpus explicatif (F5) | 18 sources ouvertes, index séparé, attribution affichée (Sara) |
+| **D-024** | Vrai BM25 (F5) | Hybride BM25 + embeddings ; seuil extractif re-réglé sur le train (Sara) |
+| **D-025** | Seuil d'abstention du RAG | Critère A (exactitude équilibrée, train) → seuil NLI 0,85 (Sara) |
+| **D-026** | Mesure de la fidélité | Référence humaine (50 réponses) + éléments critiques + NLI indicatif (Sara) |
+| **D-027** | Place du corpus explicatif | *Proposée* : deux modes séparés (contrat / expliquer un terme) |
 | **D-019** | Seuil confidentialité ; architecture F6 | 0,95 (exception au critère de D-012, différence de domaine NDA → contrats commerciaux) ; API + interface (Sara) |
 | **D-009** | Confidentialité : segmentation, négatifs | Coupe aux lignes, sans nda-18, négatifs dans les NDA (Sara, 2026-11-23) ; annotation CUAD plus tard |
 

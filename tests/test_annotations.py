@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cg.annotation.accord import ETIQUETTES_F3, kappa_cohen
+from cg.annotation.accord import ETIQUETTES_F3, ETIQUETTES_F5, kappa_cohen
 
 RACINE = Path(__file__).resolve().parents[1]
 DOSSIER = RACINE / "data" / "annotations"
@@ -20,8 +20,12 @@ COLONNES = {
                                 "page_b", "debut_b", "fin_b", "categories_b"},
     "f3_paires/": {"id_paire", "annotateur", "etiquette", "date"},
     "f5_questions/": {"id_question", "titre", "question", "avec_reponse", "page", "debut", "fin", "auteur", "date"},
+    # Fidélité des réponses du RAG (D-026) : identifiants seulement, jamais la réponse ni les passages.
+    "f5_fidelite/reponses_v1.csv": {"id_reponse", "configuration", "titre", "categorie", "segments_cites"},
+    "f5_fidelite/": {"id_reponse", "annotateur", "etiquette", "date"},
 }
-LONGUEUR_MAX = {"question": 300, "titre": 200, "categories_a": 200, "categories_b": 200}
+LONGUEUR_MAX = {"question": 300, "titre": 200, "categories_a": 200, "categories_b": 200, "configuration": 80,
+                "categorie": 60, "segments_cites": 80}
 
 
 def _colonnes_attendues(chemin: Path) -> set[str]:
@@ -44,7 +48,8 @@ def test_annotations_sans_texte_de_contrat(chemin: Path) -> None:
             for cle, valeur in ligne.items():
                 assert len(valeur or "") <= LONGUEUR_MAX.get(cle, 40), f"{chemin.name} : {cle} trop long"
             if "etiquette" in ligne:
-                assert ligne["etiquette"] in ETIQUETTES_F3, f"{chemin.name} : étiquette hors grille"
+                grille = ETIQUETTES_F5 if "f5_fidelite" in chemin.as_posix() else ETIQUETTES_F3
+                assert ligne["etiquette"] in grille, f"{chemin.name} : étiquette hors grille"
 
 
 def test_kappa_valeurs_connues() -> None:

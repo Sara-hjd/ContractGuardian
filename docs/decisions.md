@@ -1267,3 +1267,45 @@ un autre LLM demanderait un nouveau téléchargement et ne serait pas validé).
 ### Décision
 **Acceptée** (Sara, 2026-11-26) : les trois niveaux (référence humaine sur 50 réponses, contrôle des
 éléments critiques, score NLI indicatif), avec leurs limites.
+
+### Mise en œuvre et premiers résultats (2026-11-27)
+- Code : `src/cg/recherche/fidelite.py` (niveau 2), `evaluation/mesurer_fidelite_f5.py` (niveaux 2 et 3,
+  tirage du niveau 1), `cg.annotation.accord --grille f5`, guide `docs/annotation/GUIDE_F5_FIDELITE.md`.
+- **Précision de méthode** (choisie avant le tirage) : les 50 réponses sont tirées parmi **toutes les
+  réponses vérifiées mot pour mot** (98), qu'elles soient gardées ou rejetées par le NLI, pour pouvoir
+  aussi juger le filtre NLI ; l'information « gardée / rejetée » n'est pas montrée aux annotateurs.
+- Niveau 2 : 78,6 % des réponses avec un élément critique le retrouvent dans le passage cité ; **100 %
+  (7 sur 7) parmi les réponses gardées** par le NLI ; les 6 réponses fautives ont toutes été rejetées.
+  Détail : `docs/analyses/qr_f5_val.md`.
+- Niveau 1 : **en attente de l'annotation** par Sara et Ilyas.
+
+---
+
+## D-027 — Place du corpus explicatif dans l'application (F5)
+
+- **Date** : 2026-11-27
+- **Statut** : **Proposée** (en attente de la décision de Sara)
+
+### Contexte
+D-023 a ajouté le corpus explicatif au RAG (bloc séparé). Mesure sur les 200 questions de validation
+(`docs/analyses/qr_f5_val.md`) : **2 réponses sur 105** citent un document explicatif ; exactitude
+équilibrée 0,548 contre 0,560 sans corpus (écart de quelques questions) ; temps de réponse **doublé**
+(9,8 s contre 4,2 s). Les questions CUAD portent sur le contenu du contrat ; le corpus sert à
+**expliquer des termes**, ce que ces questions ne mesurent pas. Le cahier des charges demande pourtant
+des questions-réponses « sur le contrat **et** sur un petit corpus documentaire explicatif ».
+
+### Options
+1. **(a) Deux modes séparés** : « Question sur le contrat » (RAG contrat seul, la meilleure
+   configuration mesurée) et « Expliquer un terme » (recherche et réponse dans le corpus explicatif
+   seul, avec attribution, présentée comme information générale, **pas** comme lecture du contrat).
+2. **(b) Garder le bloc explicatif** dans chaque réponse sur le contrat (état actuel de l'API).
+3. **(c) Retirer** le corpus de l'application (le garder seulement pour une évaluation).
+
+### Proposition de Claude
+**(a)** : le contrat reste la seule preuve des réponses sur le contrat, la réponse est deux fois plus
+rapide, et le corpus garde une place claire. Le mode « Expliquer un terme » sera évalué sur des
+**questions de définition** ajoutées aux 25 questions annotées par Sara et Ilyas (par exemple 5 sur 25).
+En attendant la décision, l'API garde l'état actuel (option b).
+
+### Décision
+*À compléter par Sara.*

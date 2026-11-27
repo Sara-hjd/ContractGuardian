@@ -20,3 +20,5 @@ nav button.actif { background: #2b59c3; color: white; border-color: #2b59c3; }
 .experimental { background: #fde8e8; padding: 8px 12px; border-left: 4px solid #c0392b; }
 .erreur { color: #c0392b; }
 .message { font-size: 0.9em; }
+.citation.explicatif { border-left-color: #8e44ad; background: #f7f2fa; }
+.attribution { margin-top: 6px; font-size: 0.8em; color: #555; }

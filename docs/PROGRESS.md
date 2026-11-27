@@ -73,6 +73,62 @@ Un bilan hebdomadaire est rédigé pour l'encadrant.
 
 ## Séances
 
+## 2026-11-26 → 27 — Séance 2 (mode sans limite) : BM25, seuil d'abstention, corpus explicatif, fidélité
+
+- **Qui** : Claude (mode « Claude exécute tout »), décisions de Sara (D-023 à D-026)
+- **Branche** : `exp/seance2-bm25-abstention` (PR à relire par Ilyas)
+- **Objectif** : tout ce qui modifie la recherche et le RAG, **avant le gel**, sur le train et la
+  validation seulement. Test fermé.
+
+### Fait
+- **Vrai BM25** (D-024) : rappel@5 0,585 seul ; **hybride BM25 + embeddings 0,602, MRR 0,469**
+  (meilleur sur toutes les mesures) → recherche par défaut ; seuil extractif re-réglé sur le train : 0,71.
+- **Seuil d'abstention** (D-025) : critère écrit avant le calcul ; courbe couverture / erreur sur 200
+  questions du train ; **seuil NLI 0,85**.
+- **Corpus explicatif** (D-023) : 18 sources ouvertes, 6 349 segments, tables séparées, attribution
+  affichée dans l'interface.
+- **Nouvelle mesure, 200 questions de validation** : RAG + NLI 0,85 → exactitude équilibrée **0,560**,
+  23 réponses fausses sur 40, 4,2 s par question ; avec le corpus explicatif : 0,548, 9,8 s → **D-027
+  proposée** (mode « Expliquer un terme » séparé).
+- **Fidélité** (D-026) : contrôle des chiffres et des dates ; les 6 réponses fautives sont rejetées par le
+  NLI ; 50 réponses tirées pour l'annotation humaine ; guide `GUIDE_F5_FIDELITE.md`.
+
+### Avancement
+
+| Fonctionnalité | Statut | Commentaire |
+|---|---|---|
+| F1 Ingestion PDF et provenance | En cours | Section, statut d'extraction, rectangle du bloc (séance 3) |
+| F2 Extraction de clauses | En cours | Baseline BM25 et calibration (séance 3) ; test fermé |
+| F3 Comparaison de paires de clauses | En cours | Grille conforme ; annotation humaine à faire |
+| F4 NLI (ContractNLI) | En cours | Dev fait ; test fermé |
+| F5 Recherche hybride et RAG avec abstention | En cours | BM25, seuil réglé, corpus explicatif ; D-027 et annotation de la fidélité à faire |
+| F6 Interface analyste | En cours | Extraits explicatifs avec attribution ; reste la séance 4 |
+| F7 Traçabilité | En cours | Séance 4 |
+
+- **Étape du planning** : séance 2 terminée (sauf annotation humaine) ; prochaine : séance 3 🔒.
+
+### Ce que j'ai compris
+- **BM25** classe les segments par les mots, mais pas tous les mots se valent : un mot **rare** dans le
+  contrat (« indemnify ») pèse plus qu'un mot présent partout (« agreement ») ; un mot répété compte
+  plus, mais avec un plafond ; un segment **long** est un peu pénalisé. Le classement de PostgreSQL ne
+  fait pas cela, d'où l'écart (rappel@1 0,347 contre 0,208) **avec exactement les mêmes mots**.
+- **Rappel@k et MRR** : le rappel@5 dit « la bonne réponse est-elle dans les 5 premiers ? » (c'est ce que
+  voit le LLM) ; le MRR dit « à quel rang arrive-t-elle en moyenne ? » (1 / rang).
+- **Courbe couverture / erreur** : plus on exige de preuves (seuil NLI haut), moins on répond
+  (couverture) et moins on se trompe (erreur). Le seuil se choisit **sur le train**, avec un critère
+  **écrit avant** le calcul, puis on l'applique tel quel à la validation : sinon on « triche » sans le
+  vouloir en choisissant le seuil qui arrange.
+- **Un corpus en plus n'aide pas forcément** : les questions CUAD portent sur le contrat, pas sur des
+  définitions ; le corpus explicatif a doublé le temps sans améliorer les réponses. Il faut l'évaluer
+  sur les questions pour lesquelles il est fait (des questions de définition).
+- **Fidélité ≠ exactitude** : une réponse fidèle dit seulement ce qu'il y a dans le passage cité, même si
+  ce passage n'est pas le bon. On la mesure par des humains (référence), et par des contrôles
+  automatiques qui ne voient qu'une partie des erreurs (les chiffres, pas les négations).
+- **Licences** : CC BY-SA oblige à citer les auteurs et la licence, d'où l'attribution affichée sous
+  chaque extrait explicatif.
+
+---
+
 ## 2026-11-25 → 26 — Séance 1 (mode sans limite) : audit, grille F3, RAG de référence
 
 - **Qui** : Claude (mode « Claude exécute tout »), décisions de Sara

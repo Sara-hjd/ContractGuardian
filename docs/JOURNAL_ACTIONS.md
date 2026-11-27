@@ -1837,3 +1837,77 @@ mesure sur les 200 questions de validation. Chaque choix = décision « Proposé
   questions). Figure : `docs/analyses/courbe_abstention_rag_train_hybride_bm25.png`. MLflow :
   `seuil-abstention-rag-train-hybride_bm25-critereA`.
 - **Fichier** : `src/cg/recherche/verification_nli.py` (`SEUIL_NLI_RAG = 0.85`).
+
+### Q9 — D-023 : corpus explicatif téléchargé, découpé et indexé séparément
+
+- **Fichiers** : `src/cg/explicatif/` (nouveau : `sources.py`, `collecte.py`, `texte.py`, `indexer.py`,
+  `recherche.py`, `README.md`) ; `db/init/003_explicatif.sql` (tables `sources_explicatives` et
+  `segments_explicatifs`) ; `src/cg/recherche/bm25.py` (index BM25 réutilisable pour le corpus
+  explicatif) ; `requirements.txt` (`beautifulsoup4`, pour lire le HTML) ; `docs/data_provenance.md`.
+- **Commandes et résultats** :
+  - `PYTHONPATH=src .venv/bin/python -m cg.explicatif.collecte` → 18 sources téléchargées dans
+    `data/raw/explicatif/` (jamais commité) ; Wikipédia a d'abord répondu « 429 : trop de requêtes » :
+    ajout d'une pause de 3 s et de nouvelles tentatives ; manifeste avec empreintes SHA-256 et
+    numéros de révision Wikipédia ;
+  - `docker exec -i cg-postgres psql -U … -d … < db/init/003_explicatif.sql` → 2 tables créées ;
+  - `PYTHONPATH=src caffeinate -i .venv/bin/python -m cg.explicatif.indexer` → **6 349 segments**
+    (positions vérifiées : `texte[debut:fin] == segment` pour chacun) ;
+  - essai de recherche : « termination for convenience » → FAR 49 ; « how long does confidentiality
+    last » → guide GOV.UK (3 à 5 ans) ; « cap on liability » → guide MSC p. 117 ; « liquidated
+    damages » → Wikipédia.
+- **Explication simple** : le corpus explicatif est une petite bibliothèque de définitions et de guides.
+  Le RAG peut y piocher 3 passages pour **expliquer un terme**, mais la réponse doit toujours citer
+  **le contrat** ; et chaque extrait explicatif est affiché avec sa source et sa licence.
+
+### Q10 — RAG : bloc explicatif séparé ; API et interface avec attribution
+
+- **Fichiers** : `src/cg/recherche/graphe.py` (paramètre `chercher_explicatif` ; bloc « Explanatory
+  documents (NOT part of the contract) » ; extraits explicatifs vérifiés mot pour mot ; **sans corpus
+  explicatif, le prompt est exactement celui d'avant**) ; `src/cg/api/services.py` (champ
+  `explications` avec attribution) ; `frontend/src/App.jsx`, `App.css` (encadré violet « Document
+  explicatif (ne fait pas partie du contrat) » + ligne « Source : … licence … ») ;
+  `tests/test_recherche.py` (`test_graphe_rag_corpus_explicatif`).
+- `pytest` → 58 passed ; `npm run build` → OK.
+
+### Q11 — Nouvelle mesure du RAG sur les 200 questions de validation (mêmes questions, graine 0)
+
+- **Fichier** : `evaluation/evaluer_rag_llm_f5.py` (options `--recherche`, `--explicatif`, `--seuil-nli` ;
+  chaque réponse enregistrée porte sa **configuration**, pour qu'une reprise ne mélange jamais deux
+  réglages ; les anciennes réponses sont reconnues comme « hybride, contrat seul »).
+- **Essai** sur 2 questions (`--explicatif --taille 2`) : 2 réponses vérifiées, 6,2 s par question.
+- **Commandes** (l'une **après** l'autre, jamais en parallèle sur la puce graphique) :
+  `nohup caffeinate -i bash -c '… evaluer_rag_llm_f5.py --seuil-extractif 0.71 > data/processed/rag200_bm25_contrat.log ; … evaluer_rag_llm_f5.py --seuil-extractif 0.71 --explicatif > data/processed/rag200_bm25_explicatif.log' &`
+- **Pourquoi deux mesures** : la première (contrat seul) isole l'effet de BM25 et du seuil 0,85 ; la
+  seconde ajoute le corpus explicatif. La différence entre les deux mesure l'apport du corpus.
+
+### Q12 — D-026 : mesure de la fidélité (préparée)
+
+- **Fichiers** : `src/cg/recherche/fidelite.py` (contrôle des éléments critiques : nombres en chiffres
+  ou en lettres, montants, pourcentages, mois — « may » verbe n'est pas un mois) ; `tests/test_fidelite.py`
+  (3 tests) ; `evaluation/mesurer_fidelite_f5.py` (contrôles automatiques + tirage unique de 50 réponses
+  à annoter, graine 0) ; `src/cg/annotation/accord.py` (option `--grille f5`) ; `tests/test_annotations.py`
+  (fichiers de fidélité : identifiants seulement) ; `docs/annotation/GUIDE_F5_FIDELITE.md` (3 étiquettes,
+  règles de décision, exemples inventés).
+
+### Q13 — 2026-11-26 21:46 → 2026-11-27 — Résultats des deux mesures sur la validation
+- **Contrat seul (hybride BM25)** : RAG sans NLI 0,555 ; **RAG + NLI 0,85 : 0,560** (17 bonnes réponses
+  sur 70, 114 bonnes abstentions sur 130, 23 réponses fausses sur 40) ; extractif BM25 0,480 ; 4,2 s.
+- **Avec corpus explicatif** : RAG + NLI 0,85 : 0,548 ; 2 réponses sur 105 citent un document
+  explicatif ; 9,8 s par question. → **D-027 proposée** (deux modes séparés).
+- MLflow : `rag-qwen3-vl:8b-instruct-hybride_bm25-echantillon200`, `…-hybride_bm25-explicatif-echantillon200`
+  et les exécutions « verification-nli0.85 » correspondantes. Analyse : `docs/analyses/qr_f5_val.md`.
+
+### Q14 — D-026 : contrôles automatiques et tirage des 50 réponses à annoter
+- **Commande** : `PYTHONPATH=src .venv/bin/python -u evaluation/mesurer_fidelite_f5.py --configuration "qwen3-vl:8b-instruct|hybride_bm25|contrat seul"`
+- **Résultat** : 98 réponses vérifiées ; 28 avec un élément critique, 78,6 % entièrement retrouvés ;
+  **100 % (7 sur 7) parmi les réponses gardées par le NLI** ; les 6 réponses fautives sont toutes
+  rejetées. Échantillon : `data/annotations/f5_fidelite/reponses_v1.csv` (50 lignes, identifiants
+  seulement ; test « sans texte » OK) et `MODELE_annotations.csv` ; texte à lire :
+  `data/processed/f5_fidelite_a_lire.md` (jamais commité).
+- `pytest` → **60 passed**.
+
+### Q15 — Fin de séance 2
+- Fichiers : `docs/PROGRESS.md`, `README.md`, `docs/FICHE_ENCADRANT.md`, `CLAUDE.md` (compteur),
+  `docs/decisions.md` (D-026 résultats, D-027 proposée).
+- **Commandes Git** : `git add` ; `git commit` ; `git push -u origin exp/seance2-bm25-abstention` ;
+  `gh pr create` (Ilyas mentionné pour la relecture). **La PR reste ouverte** pour la relecture d'Ilyas.

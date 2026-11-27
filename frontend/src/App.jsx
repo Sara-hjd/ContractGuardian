@@ -21,6 +21,18 @@ function Citation({ page, debut, fin, texte }) {
   )
 }
 
+// D-023 : un extrait d'un document explicatif (PAS le contrat), toujours avec son attribution.
+function Explication({ e }) {
+  const ou = e.page ? `page ${e.page}` : (e.section ? `section « ${e.section} »` : 'introduction')
+  return (
+    <blockquote className="citation explicatif">
+      <div className="provenance">Document explicatif (ne fait pas partie du contrat) · {e.source} · {ou}</div>
+      {e.extrait}
+      <div className="attribution">Source : {e.attribution}</div>
+    </blockquote>
+  )
+}
+
 function Clauses({ contratId }) {
   const [clauses, setClauses] = useState(null)
   useEffect(() => { appeler(`/contrats/${contratId}/clauses`).then((d) => setClauses(d.clauses)) }, [contratId])
@@ -72,6 +84,7 @@ function Questions({ contratId }) {
             {reponse.a_verifier && <p className="experimental">Réponse générée par un LLM local : à vérifier dans le texte cité.</p>}
             {reponse.reponse && <p><strong>Réponse :</strong> {reponse.reponse}</p>}
             {reponse.citations.map((c, i) => <Citation key={i} page={c.page} debut={c.debut} fin={c.fin} texte={c.extrait} />)}
+            {(reponse.explications || []).map((e, i) => <Explication key={`e${i}`} e={e} />)}
           </div>)}
     </div>
   )
