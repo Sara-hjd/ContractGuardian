@@ -12,17 +12,26 @@ Le graphe (LangGraph) a trois étapes :
    citation vérifiée reçoit ses positions exactes dans le contrat (règle 1). Si une fonction
    ``impliquer`` est fournie (vérification NLI, D-022, ``cg.recherche.verification_nli``), la réponse
    n'est gardée que si au moins un passage cité l'**implique** ; sinon, **abstention**.
+
+**Corpus explicatif** (D-023, facultatif : ``chercher_explicatif``) : quelques passages de documents
+explicatifs (glossaires, guides publics) sont montrés au LLM dans un **bloc séparé** (E1, E2…), comme
+contexte général, **jamais** comme preuve de ce que dit le contrat. Une réponse doit toujours citer au
+moins un passage du **contrat** ; les extraits explicatifs cités sont vérifiés mot pour mot de la même
+façon et renvoyés avec leur **attribution** (source, licence, page ou section).
 """
 
 import json
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 from langgraph.graph import END, StateGraph
 
 from cg.ingestion.alignement import aligner, normaliser
 from cg.recherche.hybride import Resultat
+
+if TYPE_CHECKING:
+    from cg.explicatif.recherche import ResultatExplicatif
 
 LONGUEUR_MIN_CITATION: int = 15  # une citation de 2 ou 3 mots (« the Company ») ne prouve rien
 
@@ -33,6 +42,14 @@ CONSIGNES = (
     "Otherwise reply in JSON: {\"abstention\": false, \"reponse\": \"<one short sentence>\", "
     "\"citations\": [{\"passage\": <passage number>, \"extrait\": \"<words copied EXACTLY from that passage>\"}]}. "
     "Every extrait must be copied word for word from the passage (no paraphrase, no ellipsis)."
+)
+
+CONSIGNES_EXPLICATIF = (
+    " You may also receive EXPLANATORY DOCUMENTS (E1, E2, ...): general background from glossaries and "
+    "public guides. They are NOT part of the contract: never use them as evidence of what the contract "
+    "says, and always cite at least one numbered contract passage. If an explanatory document helps to "
+    "explain a term, you may add to the JSON: \"explications\": [{\"document\": <E number without the E>, "
+    "\"extrait\": \"<words copied EXACTLY from that document>\"}]."
 )
 
 
@@ -55,6 +72,35 @@ class Citation:
     extrait: str
 
 
+@dataclass(frozen=True)
+class CitationExplicative:
+    """Un extrait vérifié d'un document explicatif, avec sa provenance et son attribution (D-023).
+
+    Attributes:
+        segment_id: Segment explicatif cité.
+        source: Titre de la source.
+        url: Page de la source.
+        licence: Licence de la source.
+        attribution: Texte d'attribution à afficher.
+        page: Page (PDF) ou ``None``.
+        section: Section, ou ``None``.
+        debut: Position de début de l'extrait dans le texte de la source.
+        fin: Position de fin.
+        extrait: Texte de l'extrait.
+    """
+
+    segment_id: int
+    source: str
+    url: str
+    licence: str
+    attribution: str
+    page: int | None
+    section: str | None
+    debut: int
+    fin: int
+    extrait: str
+
+
 @dataclass
 class ReponseRag:
     """Réponse générative, ou abstention, avec la raison.
@@ -63,13 +109,15 @@ class ReponseRag:
         abstention: Vrai si le système ne répond pas.
         raison: Pourquoi on s'abstient (aucun passage, choix du LLM, citation non vérifiée…).
         reponse: Phrase de réponse du LLM (vide en cas d'abstention).
-        citations: Citations vérifiées (vide en cas d'abstention).
+        citations: Citations vérifiées du contrat (vide en cas d'abstention).
+        explications: Extraits explicatifs vérifiés, avec attribution (D-023).
     """
 
     abstention: bool
     raison: str = ""
     reponse: str = ""
     citations: list[Citation] = field(default_factory=list)
+    explications: list[CitationExplicative] = field(default_factory=list)
 
 
 class Etat(TypedDict, total=False):
@@ -77,6 +125,7 @@ class Etat(TypedDict, total=False):
 
     question: str
     passages: list[Resultat]
+    explicatifs: list
     sortie_llm: str
     resultat: ReponseRag
 
@@ -102,12 +151,27 @@ def verifier_citation(passage: Resultat, extrait: str) -> Citation | None:
                     fin=passage.debut + f, extrait=passage.texte[d:f])
 
 
-def analyser_sortie(sortie: str, passages: list[Resultat]) -> ReponseRag:
+def _verifier_explication(passage: "ResultatExplicatif", extrait: str) -> CitationExplicative | None:
+    """Vérifie un extrait explicatif mot pour mot, comme pour le contrat, et ajoute l'attribution."""
+    if len(" ".join(extrait.split())) < LONGUEUR_MIN_CITATION:
+        return None
+    position = aligner(extrait, normaliser(passage.texte, "espaces"), "espaces")
+    if position is None:
+        return None
+    d, f = position
+    return CitationExplicative(passage.segment_id, passage.source, passage.url, passage.licence,
+                               passage.attribution, passage.page, passage.section, passage.debut + d,
+                               passage.debut + f, passage.texte[d:f])
+
+
+def analyser_sortie(sortie: str, passages: list[Resultat],
+                    explicatifs: list["ResultatExplicatif"] | None = None) -> ReponseRag:
     """Transforme la réponse JSON du LLM en réponse vérifiée, ou en abstention.
 
     Args:
         sortie: Texte renvoyé par le LLM.
         passages: Passages qui lui ont été montrés, dans l'ordre de leur numéro (1, 2, …).
+        explicatifs: Passages explicatifs montrés (E1, E2, …), s'il y en a.
 
     Returns:
         La réponse avec citations vérifiées, ou une abstention motivée.
@@ -134,13 +198,28 @@ def analyser_sortie(sortie: str, passages: list[Resultat]) -> ReponseRag:
         if verifiee is None:
             return ReponseRag(abstention=True, raison="citation non retrouvée mot pour mot")
         citations.append(verifiee)
-    return ReponseRag(abstention=False, reponse=str(donnees.get("reponse", "")), citations=citations)
+    explications: list[CitationExplicative] = []
+    for c in donnees.get("explications") or []:
+        try:
+            numero = int(str(c.get("document")).lstrip("Ee"))
+            extrait = str(c.get("extrait", ""))
+        except (TypeError, ValueError, AttributeError):
+            return ReponseRag(abstention=True, raison="citation explicative mal formée")
+        if not explicatifs or not 1 <= numero <= len(explicatifs):
+            return ReponseRag(abstention=True, raison="citation d'un document explicatif inexistant")
+        verifiee_e = _verifier_explication(explicatifs[numero - 1], extrait)
+        if verifiee_e is None:
+            return ReponseRag(abstention=True, raison="citation explicative non retrouvée mot pour mot")
+        explications.append(verifiee_e)
+    return ReponseRag(abstention=False, reponse=str(donnees.get("reponse", "")), citations=citations,
+                      explications=explications)
 
 
 def construire_graphe(
     chercher: Callable[[str], list[Resultat]],
     generer: Callable[[list[dict[str, str]]], str],
     impliquer: Callable[[str, list[str]], bool] | None = None,
+    chercher_explicatif: Callable[[str], list["ResultatExplicatif"]] | None = None,
 ):
     """Assemble le graphe LangGraph.
 
@@ -149,13 +228,16 @@ def construire_graphe(
         generer: Fonction messages → texte du LLM (par exemple ``cg.recherche.llm.discuter``).
         impliquer: Vérification NLI facultative ``(reponse, textes des passages cités) -> bool``
             (D-022). ``None`` : vérification mot pour mot seulement.
+        chercher_explicatif: Recherche facultative dans le corpus explicatif (D-023). ``None`` : le
+            LLM ne voit que les passages du contrat.
 
     Returns:
         Le graphe compilé ; ``graphe.invoke({"question": …})["resultat"]`` donne la réponse.
     """
 
     def etape_chercher(etat: Etat) -> Etat:
-        return {"passages": chercher(etat["question"])}
+        explicatifs = chercher_explicatif(etat["question"]) if chercher_explicatif else []
+        return {"passages": chercher(etat["question"]), "explicatifs": explicatifs}
 
     def apres_recherche(etat: Etat) -> str:
         return "generer" if etat["passages"] else "rien_trouve"
@@ -165,12 +247,19 @@ def construire_graphe(
 
     def etape_generer(etat: Etat) -> Etat:
         texte = "\n\n".join(f"[{i}] {p.texte}" for i, p in enumerate(etat["passages"], start=1))
-        messages = [{"role": "system", "content": CONSIGNES},
-                    {"role": "user", "content": f"Question: {etat['question']}\n\nPassages:\n{texte}"}]
+        explicatifs = etat.get("explicatifs") or []
+        # Sans corpus explicatif, le prompt reste exactement celui de D-017 (mesures comparables).
+        consignes, intitule, bloc = CONSIGNES, "Passages", ""
+        if explicatifs:
+            consignes, intitule = CONSIGNES + CONSIGNES_EXPLICATIF, "Contract passages"
+            bloc = "\n\nExplanatory documents (NOT part of the contract):\n" + "\n\n".join(
+                f"[E{i}] ({e.source}) {e.texte}" for i, e in enumerate(explicatifs, start=1))
+        messages = [{"role": "system", "content": consignes},
+                    {"role": "user", "content": f"Question: {etat['question']}\n\n{intitule}:\n{texte}{bloc}"}]
         return {"sortie_llm": generer(messages)}
 
     def etape_verifier(etat: Etat) -> Etat:
-        resultat = analyser_sortie(etat["sortie_llm"], etat["passages"])
+        resultat = analyser_sortie(etat["sortie_llm"], etat["passages"], etat.get("explicatifs"))
         if impliquer is not None and not resultat.abstention:
             cites = {c.segment_id for c in resultat.citations}
             textes = [p.texte for p in etat["passages"] if p.segment_id in cites]

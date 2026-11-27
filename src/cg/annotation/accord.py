@@ -1,7 +1,8 @@
-"""Accord entre deux annotateurs : kappa de Cohen (F3, cahier des charges).
+"""Accord entre deux annotateurs : kappa de Cohen (F3 et fidélité de F5, cahier des charges).
 
-Place dans le projet : avant d'évaluer les alertes de F3 sur les annotations de Sara et d'Ilyas,
-on mesure si les deux annotateurs sont d'accord. Si ce n'est pas le cas, la grille est trop floue.
+Place dans le projet : avant d'évaluer les alertes de F3 (ou la fidélité des réponses de F5, D-026)
+sur les annotations de Sara et d'Ilyas, on mesure si les deux annotateurs sont d'accord. Si ce n'est
+pas le cas, la grille est trop floue.
 
 **Kappa de Cohen** : ``κ = (p_o − p_e) / (1 − p_e)``, où ``p_o`` est la part de paires où les deux
 annotateurs ont mis la même étiquette, et ``p_e`` la part attendue **par hasard** (si chacun
@@ -10,7 +11,7 @@ hasard. Repères usuels (Landis et Koch) : 0,41–0,60 modéré, 0,61–0,80 sub
 
 Lancement :
 
-    PYTHONPATH=src .venv/bin/python -m cg.annotation.accord FICHIER_1.csv FICHIER_2.csv
+    PYTHONPATH=src .venv/bin/python -m cg.annotation.accord FICHIER_1.csv FICHIER_2.csv [--grille f5]
 """
 
 import argparse
@@ -22,6 +23,16 @@ from pathlib import Path
 ETIQUETTES_F3: tuple[str, ...] = ("POTENTIELLEMENT_INCOMPATIBLE", "COMPATIBLE", "INFORMATION_INSUFFISANTE")
 # Une paire « mérite une alerte » si elle est potentiellement incompatible.
 ALERTE: frozenset[str] = frozenset({"POTENTIELLEMENT_INCOMPATIBLE"})
+
+# Fidélité des réponses du RAG (D-026) ; « fidèle oui / non » = FIDELE contre le reste.
+ETIQUETTES_F5: tuple[str, ...] = ("FIDELE", "PARTIELLEMENT_FIDELE", "NON_FIDELE")
+FIDELE: frozenset[str] = frozenset({"FIDELE"})
+
+# Grille -> (étiquettes, étiquettes « positives » du kappa binaire, nom du binaire, colonne identifiant).
+GRILLES: dict[str, tuple[tuple[str, ...], frozenset[str], str, str]] = {
+    "f3": (ETIQUETTES_F3, ALERTE, "alerte oui / non", "id_paire"),
+    "f5": (ETIQUETTES_F5, FIDELE, "fidèle oui / non", "id_reponse"),
+}
 
 
 def kappa_cohen(etiquettes_1: list[str], etiquettes_2: list[str]) -> float:
@@ -46,42 +57,47 @@ def kappa_cohen(etiquettes_1: list[str], etiquettes_2: list[str]) -> float:
     return 1.0 if p_e == 1 else (p_o - p_e) / (1 - p_e)
 
 
-def lire_annotations(chemin: Path) -> dict[str, str]:
-    """Lit un fichier d'annotations F3 (``id_paire, annotateur, etiquette, date``).
+def lire_annotations(chemin: Path, grille: str = "f3") -> dict[str, str]:
+    """Lit un fichier d'annotations (``id_paire`` ou ``id_reponse``, ``annotateur``, ``etiquette``, ``date``).
 
     Args:
         chemin: Fichier CSV d'un annotateur.
+        grille: ``"f3"`` (paires de clauses) ou ``"f5"`` (fidélité des réponses, D-026).
 
     Returns:
-        ``id_paire -> étiquette``.
+        ``identifiant -> étiquette``.
 
     Raises:
         ValueError: Si une étiquette n'appartient pas à la grille.
     """
     with open(chemin, encoding="utf-8", newline="") as f:
         lignes = list(csv.DictReader(f))
-    inconnues = {l["etiquette"] for l in lignes if l["etiquette"] not in ETIQUETTES_F3}
+    etiquettes, _, _, colonne = GRILLES[grille]
+    inconnues = {l["etiquette"] for l in lignes if l["etiquette"] not in etiquettes}
     if inconnues:
         raise ValueError(f"Étiquettes hors grille dans {chemin.name} : {sorted(inconnues)}")
-    return {l["id_paire"]: l["etiquette"] for l in lignes}
+    return {l[colonne]: l["etiquette"] for l in lignes}
 
 
 def main() -> None:
-    """Compare deux fichiers : kappa (3 étiquettes et alerte oui/non), matrice, désaccords."""
-    parseur = argparse.ArgumentParser(description="Kappa de Cohen entre deux annotateurs (F3).")
+    """Compare deux fichiers : kappa (3 étiquettes et binaire), matrice, désaccords."""
+    parseur = argparse.ArgumentParser(description="Kappa de Cohen entre deux annotateurs (F3 ou F5).")
     parseur.add_argument("fichier_1", type=Path)
     parseur.add_argument("fichier_2", type=Path)
+    parseur.add_argument("--grille", default="f3", choices=tuple(GRILLES))
     arguments = parseur.parse_args()
-    a, b = lire_annotations(arguments.fichier_1), lire_annotations(arguments.fichier_2)
+    etiquettes, positives, nom_binaire, _ = GRILLES[arguments.grille]
+    a = lire_annotations(arguments.fichier_1, arguments.grille)
+    b = lire_annotations(arguments.fichier_2, arguments.grille)
     communes = sorted(set(a) & set(b))
-    print(f"Paires annotées par les deux : {len(communes)} (seulement 1 : {len(set(a) ^ set(b))})")
+    print(f"Éléments annotés par les deux : {len(communes)} (seulement 1 : {len(set(a) ^ set(b))})")
     e1, e2 = [a[i] for i in communes], [b[i] for i in communes]
     print(f"Kappa (3 étiquettes)          : {kappa_cohen(e1, e2):.3f}")
-    print(f"Kappa (alerte oui / non)      : {kappa_cohen([x in ALERTE for x in e1], [x in ALERTE for x in e2]):.3f}".replace("True", "oui"))
+    print(f"Kappa ({nom_binaire:20s}): {kappa_cohen([x in positives for x in e1], [x in positives for x in e2]):.3f}")
     print("\nMatrice (lignes : fichier 1 ; colonnes : fichier 2) :")
-    print(" " * 30 + "".join(f"{e[:14]:>16s}" for e in ETIQUETTES_F3))
-    for x in ETIQUETTES_F3:
-        print(f"{x:30s}" + "".join(f"{sum(1 for i in communes if a[i] == x and b[i] == y):16d}" for y in ETIQUETTES_F3))
+    print(" " * 30 + "".join(f"{e[:14]:>16s}" for e in etiquettes))
+    for x in etiquettes:
+        print(f"{x:30s}" + "".join(f"{sum(1 for i in communes if a[i] == x and b[i] == y):16d}" for y in etiquettes))
     desaccords = [i for i in communes if a[i] != b[i]]
     print(f"\nDésaccords à discuter ({len(desaccords)}) : {', '.join(desaccords) or 'aucun'}")
 

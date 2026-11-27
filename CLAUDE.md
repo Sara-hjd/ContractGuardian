@@ -74,6 +74,7 @@ Sara est **en apprentissage**. Concrètement :
   | Séance | Date | Contenu |
   |---|---|---|
   | 1 | 2026-11-25 → 26 | Audit de conformité ; grille F3 à 3 étiquettes (D-020) ; D-021 en attente ; RAG de référence sur 200 questions avec qwen3-vl:8b-instruct ; D-022 acceptée et mise en œuvre |
+  | 2 | 2026-11-26 → 27 | Vrai BM25 (D-024) ; seuil NLI 0,85 réglé sur le train (D-025) ; corpus explicatif 18 sources (D-023) ; fidélité préparée (D-026) ; D-027 proposée |
 
 - **Fin** : **uniquement sur instruction explicite de Sara** (« stop »). Claude marque alors cette section
   « terminée » et la règle habituelle « Sara exécute les commandes » reprend.

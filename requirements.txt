@@ -47,3 +47,6 @@ langgraph>=0.2
 fastapi>=0.110
 uvicorn>=0.29
 python-multipart>=0.0.9
+
+# Corpus explicatif (F5, D-023) : lecture des pages HTML (GOV.UK, FAR) en texte.
+beautifulsoup4>=4.12

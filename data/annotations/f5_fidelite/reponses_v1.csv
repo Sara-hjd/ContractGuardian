@@ -1,0 +1,51 @@
+id_reponse,configuration,titre,categorie,segments_cites
+R01,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,ANIXABIOSCIENCESINC_06_09_2020-EX-10.1-COLLABORATION AGREEMENT,Liquidated Damages,2759|2789|2788
+R02,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,EtonPharmaceuticalsInc_20191114_10-Q_EX-10.1_11893941_EX-10.1_Development Agreement,Minimum Commitment,35472
+R03,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,"VISIUMTECHNOLOGIES,INC_10_20_2004-EX-10.20-DISTRIBUTOR AGREEMENT",Price Restrictions,88887
+R04,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,"IOVANCEBIOTHERAPEUTICS,INC_08_03_2017-EX-10.1-STRATEGIC ALLIANCE AGREEMENT",Notice Period To Terminate Renewal,48699
+R05,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,BEYONDCOMCORP_08_03_2000-EX-10.2-CO-HOSTING AGREEMENT,Change Of Control,13825
+R06,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,PharmagenInc_20120803_8-KA_EX-10.1_7693204_EX-10.1_Endorsement Agreement,Affiliate License-Licensor,70927
+R07,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,TodosMedicalLtd_20190328_20-F_EX-4.10_11587157_EX-4.10_Marketing Agreement_ Reseller Agreement,Non-Compete,85626
+R08,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,WELLSFARGOMORTGAGEBACKEDSECURITIES2006-6TRUST_05_11_2006-EX-10.3-Yield Maintenance Agreement,Revenue/Profit Sharing,91218
+R09,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,FIBROGENINC_10_01_2014-EX-10.11-COLLABORATION AGREEMENT,Agreement Date,37021
+R10,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,ANIXABIOSCIENCESINC_06_09_2020-EX-10.1-COLLABORATION AGREEMENT,No-Solicit Of Employees,2795
+R11,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,ReynoldsConsumerProductsInc_20191115_S-1_EX-10.18_11896469_EX-10.18_Supply Agreement,Third Party Beneficiary,76172
+R12,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,BIOFRONTERAAG_04_29_2019-EX-4.17-SUPPLY AGREEMENT,Renewal Term,14727
+R13,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,TcPipelinesLp_20160226_10-K_EX-99.12_9454048_EX-99.12_Transportation Agreement,Volume Restriction,85392
+R14,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,GluMobileInc_20070319_S-1A_EX-10.09_436630_EX-10.09_Content License Agreement2,Parties,41958
+R15,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,"KIROMICBIOPHARMA,INC_05_11_2020-EX-10.23-CONSULTING AGREEMENT",Competitive Restriction Exception,53062
+R16,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,ReynoldsConsumerProductsInc_20191115_S-1_EX-10.18_11896469_EX-10.18_Supply Agreement,Expiration Date,76103
+R17,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,BLACKSTONEGSOLONG-SHORTCREDITINCOMEFUND_05_11_2020-EX-99.(K)(1)-SERVICE AGREEMENT,Effective Date,14846
+R18,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,FIBROGENINC_10_01_2014-EX-10.11-COLLABORATION AGREEMENT,Effective Date,36928
+R19,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,UnionDentalHoldingsInc_20050204_8-KA_EX-10_3345577_EX-10_Affiliate Agreement,No-Solicit Of Customers,86702
+R20,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,WELLSFARGOMORTGAGEBACKEDSECURITIES2006-6TRUST_05_11_2006-EX-10.3-Yield Maintenance Agreement,Post-Termination Services,91274
+R21,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,BLACKSTONEGSOLONG-SHORTCREDITINCOMEFUND_05_11_2020-EX-99.(K)(1)-SERVICE AGREEMENT,Notice Period To Terminate Renewal,14846
+R22,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,BANUESTRAFINANCIALCORP_09_08_2006-EX-10.16-AGENCY AGREEMENT,Exclusivity,12422
+R23,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,TodosMedicalLtd_20190328_20-F_EX-4.10_11587157_EX-4.10_Marketing Agreement_ Reseller Agreement,Liquidated Damages,85659
+R24,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,SPORTHALEYINC_09_29_1997-EX-10.2-10-ENDORSEMENT AGREEMENT,Change Of Control,79238
+R25,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,"GRIDIRONBIONUTRIENTS,INC_02_05_2020-EX-10.3-SUPPLY AGREEMENT",Agreement Date,40410|40410
+R26,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,WARNERCHILCOTTPLC_12_31_2003-EX-4.36-DEVELOPMENT AGREEMENT,Post-Termination Services,91037
+R27,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,BNLFINANCIALCORP_03_30_2007-EX-10.8-OUTSOURCING AGREEMENT,Unlimited/All-You-Can-Eat-License,16033
+R28,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,TcPipelinesLp_20160226_10-K_EX-99.12_9454048_EX-99.12_Transportation Agreement,Agreement Date,85388
+R29,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,BNLFINANCIALCORP_03_30_2007-EX-10.8-OUTSOURCING AGREEMENT,Irrevocable Or Perpetual License,16033
+R30,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,MACROGENICSINC_08_02_2013-EX-10-COLLABORATION AGREEMENT,Post-Termination Services,55950
+R31,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,"VISIUMTECHNOLOGIES,INC_10_20_2004-EX-10.20-DISTRIBUTOR AGREEMENT",Warranty Duration,88994
+R32,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,RUBIOSRESTAURANTSINC_03_31_2008-EX-10.75-SPONSORSHIP AGREEMENT,Cap On Liability,73845
+R33,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,WARNERCHILCOTTPLC_12_31_2003-EX-4.36-DEVELOPMENT AGREEMENT,Uncapped Liability,91059
+R34,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,"KIROMICBIOPHARMA,INC_04_08_2020-EX-10.28-JOINT VENTURE AGREEMENT",Revenue/Profit Sharing,52945
+R35,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,"GRIDIRONBIONUTRIENTS,INC_02_05_2020-EX-10.3-SUPPLY AGREEMENT",Effective Date,40410|40410
+R36,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,ImpresseCorp_20000322_S-1A_EX-10.11_5199234_EX-10.11_Co-Branding Agreement,Termination For Convenience,49988
+R37,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,"VIRGINGALACTICHOLDINGS,INC_04_08_2020-EX-99.1-JOINT FILING STATEMENT",Effective Date,88733
+R38,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,ALLISONTRANSMISSIONHOLDINGSINC_12_15_2014-EX-99.1-COOPERATION AGREEMENT,Non-Transferable License,2482
+R39,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,TodosMedicalLtd_20190328_20-F_EX-4.10_11587157_EX-4.10_Marketing Agreement_ Reseller Agreement,Warranty Duration,85644
+R40,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,BNLFINANCIALCORP_03_30_2007-EX-10.8-OUTSOURCING AGREEMENT,License Grant,16033
+R41,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,NmfSlfIInc_20200115_10-12GA_EX-10.5_11946987_EX-10.5_Trademark License Agreement,Ip Ownership Assignment,65742
+R42,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,RaeSystemsInc_20001114_10-Q_EX-10.57_2631790_EX-10.57_Co-Branding Agreement,Cap On Liability,73920
+R43,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,GluMobileInc_20070319_S-1A_EX-10.09_436630_EX-10.09_Content License Agreement2,Document Name,41959|41944
+R44,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,"KIROMICBIOPHARMA,INC_05_11_2020-EX-10.23-CONSULTING AGREEMENT",License Grant,53051
+R45,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,CardlyticsInc_20180112_S-1_EX-10.16_11002987_EX-10.16_Maintenance Agreement1,Exclusivity,26250
+R46,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,BNLFINANCIALCORP_03_30_2007-EX-10.8-OUTSOURCING AGREEMENT,Third Party Beneficiary,16096|16097
+R47,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,BIOAMBERINC_04_10_2013-EX-10.34-DEVELOPMENT AGREEMENT - First Amendment,Parties,14421
+R48,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,ANIXABIOSCIENCESINC_06_09_2020-EX-10.1-COLLABORATION AGREEMENT,Affiliate License-Licensor,2778
+R49,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,"ETELOS,INC_03_09_2004-EX-10.8-DISTRIBUTOR AGREEMENT",Cap On Liability,34426
+R50,qwen3-vl:8b-instruct|hybride_bm25|contrat seul,"VISIUMTECHNOLOGIES,INC_10_20_2004-EX-10.20-DISTRIBUTOR AGREEMENT",Cap On Liability,88941

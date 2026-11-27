@@ -118,3 +118,54 @@ Les 200 questions de validation (graine 0) : **70 avec réponse, 130 sans répon
 4. Toutes ces mesures sont sur la **validation** (réglage autorisé) ; le test reste fermé.
 5. Pistes, **avant le gel** (séance 2, 🔒) : seuil d'abstention par **courbe couverture / erreur**,
    mesure de la **fidélité**, Recall@3 et MRR. **D-022 acceptée** : instruct par défaut, vérification NLI intégrée au graphe, extractif par défaut.
+
+## Séance 2 : BM25, seuil NLI réglé sur le train, corpus explicatif (2026-11-26, 200 questions)
+
+*Mêmes 200 questions de validation (graine 0 ; 70 avec réponse), `qwen3-vl:8b-instruct`. Recherche
+hybride **BM25** + embeddings (D-024) ; seuil NLI **0,85** réglé sur le **train** (D-025, critère A) ;
+corpus explicatif de 18 sources (D-023). Test fermé. Journaux : `data/processed/rag200_bm25_*.log`.*
+
+| Système | Exactitude équilibrée | Bonnes réponses (sur 70) | Bonnes abstentions (sur 130) | Réponses fausses / données | Temps |
+|---|---|---|---|---|---|
+| Séance 1 : extractif (hybride PostgreSQL) | 0,477 | 6 | 113 | 24 sur 30 (0,80) | < 1 s |
+| Séance 1 : RAG + NLI 0,5 (hybride PostgreSQL) | 0,561 | 22 | 105 | 35 sur 57 (0,61) | 8,1 s |
+| Extractif (hybride BM25, seuil 0,71) | 0,480 | 9 | 108 | 32 sur 41 (0,78) | < 1 s |
+| RAG sans NLI (hybride BM25) | 0,555 | **32** | 85 | 66 sur 98 (0,67) | 4,2 s |
+| **RAG + NLI 0,85 (hybride BM25, contrat seul)** | **0,560** | 17 | **114** | **23 sur 40 (0,575)** | 4,2 s |
+| RAG + NLI 0,85 + corpus explicatif | 0,548 | 17 | 111 | 25 sur 42 (0,595) | 9,8 s |
+
+### Lecture
+1. **BM25** améliore le RAG **sans** NLI (0,529 → 0,555 ; 31 → 32 bonnes réponses, 80 → 85 bonnes
+   abstentions) : le LLM voit plus souvent le bon passage.
+2. **Le seuil NLI 0,85** rend le système **plus prudent** : il répond à 20 % des questions (contre 28,5 %
+   au seuil 0,5) et se trompe moins quand il répond (57,5 % de réponses fausses contre 61 %) ; mais il
+   garde moins de bonnes réponses (17 contre 22). L'exactitude équilibrée reste **au même niveau**
+   (0,560 contre 0,561) : le gain de prudence est payé en couverture. C'est le comportement attendu
+   d'un outil qui doit « citer ou s'abstenir ».
+3. **Le corpus explicatif n'apporte rien sur ces questions** : seules **2 réponses sur 105** citent un
+   document explicatif, l'exactitude équilibrée baisse légèrement (0,548 ; écart de quelques questions,
+   compatible avec le hasard) et le temps de réponse **double** (9,8 s). Ce n'est pas surprenant : les
+   questions CUAD portent sur le **contenu du contrat**, pas sur la définition des termes. Le corpus
+   devra être évalué sur des **questions de définition** (les 25 questions de Sara et Ilyas). Choix
+   proposé : **D-027**.
+4. Rappel : la mesure est stricte (citer un segment **annoté** par CUAD) et faite sur 200 questions ;
+   des écarts de 0,01 ne sont pas significatifs.
+
+## Fidélité (D-026, niveaux 2 et 3 ; configuration « hybride BM25, contrat seul »)
+
+`evaluation/mesurer_fidelite_f5.py` sur les **98 réponses vérifiées mot pour mot** :
+
+| Réponses | Nombre | Avec un élément critique (nombre, durée, montant, mois) | … tous retrouvés dans les passages cités | Score NLI moyen (indicatif) |
+|---|---|---|---|---|
+| Toutes | 98 | 28 | 78,6 % (22 sur 28) | 0,587 |
+| **Gardées** par le NLI (≥ 0,85) | 40 | 7 | **100 % (7 sur 7)** | 0,962 |
+| Rejetées par le NLI | 58 | 21 | 71,4 % (15 sur 21) | 0,328 |
+
+- **Les 6 réponses qui contenaient un chiffre absent du passage cité ont toutes été rejetées par la
+  vérification NLI** : sur ce point, le filtre fait ce qu'on attend. Mais seulement 7 réponses gardées
+  contiennent un élément critique : c'est un **petit nombre**, pas une preuve.
+- Le score NLI des réponses gardées est forcément élevé (c'est le critère de sélection) : il **ne mesure
+  pas** la fidélité de façon indépendante (limite écrite dans D-026).
+- **Niveau 1 (référence humaine)** : 50 réponses tirées (graine 0) parmi les 98 ;
+  `data/annotations/f5_fidelite/reponses_v1.csv` (identifiants seulement). **À annoter par Sara et
+  Ilyas** avec `docs/annotation/GUIDE_F5_FIDELITE.md`.

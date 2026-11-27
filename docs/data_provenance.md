@@ -313,9 +313,43 @@ localement) et ne sont **jamais commités** (`models/`, cache Hugging Face, cach
 | `nlpaueb/legal-bert-small-uncased` | F2 (extraction), F4 (NLI) — D-012, D-014 | Hugging Face | CC BY-SA 4.0 | 2026-11-23 |
 | `BAAI/bge-small-en-v1.5` | F5 (embeddings) — D-015 | Hugging Face | MIT | 2026-11-23 |
 | `qwen3-vl:8b` (Qwen3-VL 8B Instruct, 8,2 milliards de paramètres, quantification Q4_K_M) | F5 (réponse générative) — D-016 | Ollama (déjà présent localement, téléchargé hors du projet le 2026-11-22) ; modèle d'origine `Qwen/Qwen3-VL-8B-Instruct` | **Apache 2.0** (licence affichée par `ollama show qwen3-vl:8b --license` et fiche Hugging Face officielle) | vérifiée le 2026-11-23 |
+| `qwen3-vl:8b-instruct` (variante sans réflexion, LLM de référence depuis D-022) | F5 (réponse générative) — D-016, D-022 | Ollama, téléchargé le 2026-11-26 (identifiant `70e58e37beb1`) | **Apache 2.0** (`ollama show qwen3-vl:8b-instruct --license`) | vérifiée le 2026-11-26 |
 
 **Limites** :
 - Legal-BERT a été préentraîné sur des textes juridiques incluant des contrats EDGAR : certains
   contrats de CUAD (eux aussi issus d'EDGAR) ont pu y figurer (pas leurs étiquettes).
 - `qwen3-vl:8b` a été obtenu en dehors du projet (déjà sur la machine) : sa provenance exacte est
   celle de la bibliothèque Ollama ; empreinte locale : identifiant Ollama `9cf69da2b16d`.
+
+---
+
+## Corpus documentaire explicatif (F5, D-023)
+
+Documents publics sous licence ouverte, **pas** des données d'entraînement (règle 3) : contexte du RAG,
+index séparé des contrats. Texte téléchargé dans `data/raw/explicatif/` (**jamais commité**) par
+`python -m cg.explicatif.collecte` ; empreintes SHA-256 dans `data/raw/explicatif/manifeste.json`.
+
+| Clé | Source | Éditeur | Version téléchargée | Consultée le | Licence |
+|---|---|---|---|---|---|
+| `wp-nda` | [Non-disclosure agreement](https://en.wikipedia.org/wiki/Non-disclosure_agreement) | Wikipedia contributors | [2026-11-18](https://en.wikipedia.org/w/index.php?oldid=1386416490) | 2026-11-26 | CC BY-SA 4.0 |
+| `wp-confidentiality` | [Confidentiality](https://en.wikipedia.org/wiki/Confidentiality) | Wikipedia contributors | [2026-11-11](https://en.wikipedia.org/w/index.php?oldid=1384997896) | 2026-11-26 | CC BY-SA 4.0 |
+| `wp-trade-secret` | [Trade secret](https://en.wikipedia.org/wiki/Trade_secret) | Wikipedia contributors | [2026-11-25](https://en.wikipedia.org/w/index.php?oldid=1387891842) | 2026-11-26 | CC BY-SA 4.0 |
+| `wp-breach` | [Breach of contract](https://en.wikipedia.org/wiki/Breach_of_contract) | Wikipedia contributors | [2026-10-04](https://en.wikipedia.org/w/index.php?oldid=1378375962) | 2026-11-26 | CC BY-SA 4.0 |
+| `wp-termination-convenience` | [Termination for convenience](https://en.wikipedia.org/wiki/Termination_for_convenience) | Wikipedia contributors | [2025-07-13](https://en.wikipedia.org/w/index.php?oldid=1300322512) | 2026-11-26 | CC BY-SA 4.0 |
+| `wp-fundamental-breach` | [Fundamental breach](https://en.wikipedia.org/wiki/Fundamental_breach) | Wikipedia contributors | [2026-10-10](https://en.wikipedia.org/w/index.php?oldid=1379572170) | 2026-11-26 | CC BY-SA 4.0 |
+| `wp-rescission` | [Rescission (contract law)](https://en.wikipedia.org/wiki/Rescission_(contract_law)) | Wikipedia contributors | [2026-08-28](https://en.wikipedia.org/w/index.php?oldid=1371730176) | 2026-11-26 | CC BY-SA 4.0 |
+| `wp-exclusion-clause` | [Exclusion clause](https://en.wikipedia.org/wiki/Exclusion_clause) | Wikipedia contributors | [2024-10-17](https://en.wikipedia.org/w/index.php?oldid=1251629804) | 2026-11-26 | CC BY-SA 4.0 |
+| `wp-indemnity` | [Indemnity](https://en.wikipedia.org/wiki/Indemnity) | Wikipedia contributors | [2026-06-05](https://en.wikipedia.org/w/index.php?oldid=1357973998) | 2026-11-26 | CC BY-SA 4.0 |
+| `wp-liquidated-damages` | [Liquidated damages](https://en.wikipedia.org/wiki/Liquidated_damages) | Wikipedia contributors | [2026-06-24](https://en.wikipedia.org/w/index.php?oldid=1360872692) | 2026-11-26 | CC BY-SA 4.0 |
+| `wp-consequential-damages` | [Consequential damages](https://en.wikipedia.org/wiki/Consequential_damages) | Wikipedia contributors | [2026-05-22](https://en.wikipedia.org/w/index.php?oldid=1355581679) | 2026-11-26 | CC BY-SA 4.0 |
+| `wp-force-majeure` | [Force majeure](https://en.wikipedia.org/wiki/Force_majeure) | Wikipedia contributors | [2026-09-29](https://en.wikipedia.org/w/index.php?oldid=1377383867) | 2026-11-26 | CC BY-SA 4.0 |
+| `govuk-nda` | [Non-disclosure agreements](https://www.gov.uk/government/publications/non-disclosure-agreements/non-disclosure-agreements) | UK Intellectual Property Office | [2015-03-12](https://www.gov.uk/government/publications/non-disclosure-agreements/non-disclosure-agreements) | 2026-11-26 | Open Government Licence v3.0 |
+| `govuk-ip-confidentiality` | [Managing Intellectual Property and Confidentiality](https://www.gov.uk/government/publications/managing-intellectual-property-and-confidentiality) | UK Government (GOV.UK) | [2023-04-17](https://www.gov.uk/government/publications/managing-intellectual-property-and-confidentiality) | 2026-11-26 | Open Government Licence v3.0 |
+| `govuk-risk-allocation` | [Risk Allocation and Pricing Approaches guidance note](https://www.gov.uk/government/publications/the-sourcing-and-consultancy-playbooks/risk-allocation-and-pricing-approaches-guidance-note-html) | Cabinet Office / Government Commercial Function | [2026-11-05](https://www.gov.uk/government/publications/the-sourcing-and-consultancy-playbooks/risk-allocation-and-pricing-approaches-guidance-note-html) | 2026-11-26 | Open Government Licence v3.0 |
+| `govuk-msc-guidance` | [Model Services Contract – Guidance for Buyers (v2.2A)](https://www.gov.uk/government/publications/guidance-on-the-model-services-contract) | Cabinet Office, Government Legal Department | [2025-09-01](https://www.gov.uk/government/publications/guidance-on-the-model-services-contract) | 2026-11-26 | Open Government Licence v3.0 |
+| `far-part-49` | [FAR Part 49 — Termination of Contracts](https://www.acquisition.gov/far/part-49) | U.S. General Services Administration | [2026-03-13 (FAC 2026-01)](https://www.acquisition.gov/far/part-49) | 2026-11-26 | Domaine public |
+| `wipo-trade-secrets` | [WIPO Guide to Trade Secrets and Innovation](https://www.wipo.int/publications/en/details.jsp?id=4748) | World Intellectual Property Organization (WIPO) | [2024](https://www.wipo.int/publications/en/details.jsp?id=4748) | 2026-11-26 | CC BY 4.0 |
+
+**Attribution** : affichée dans l'interface sous chaque extrait explicatif cité (obligatoire en
+CC BY-SA et CC BY). Les sources 19 (Common Paper) et 20 (Bonterms) proposées dans D-023 ont été
+retirées par Sara (clauses types, pas des guides).

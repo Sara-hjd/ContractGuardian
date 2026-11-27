@@ -19,6 +19,7 @@ from cg import config
 from cg.comparison.alertes import decider_alerte
 from cg.extraction.pipeline import ExtracteurClauses
 from cg.ingestion.pdf import extraire_pdf, segmenter_pdf
+from cg.explicatif.recherche import rechercher_explicatif
 from cg.recherche.embeddings import Encodeur, vers_pgvector
 from cg.recherche.extractive import repondre
 from cg.recherche.graphe import construire_graphe
@@ -151,11 +152,15 @@ class Services:
             return {"abstention": False, "reponse": None, "citations": [
                 {"segment_id": r.segment_id, "page": r.page, "debut": r.debut, "fin": r.fin, "extrait": r.texte}]}
         # D-022 : vérification mot pour mot puis vérification NLI (le passage cité doit impliquer la réponse).
+        # D-023 : le LLM voit aussi 3 passages du corpus explicatif, dans un bloc séparé ; les extraits
+        # explicatifs cités sont renvoyés avec leur attribution (obligatoire en CC BY-SA).
         graphe = construire_graphe(lambda q: rechercher(connexion, self.encodeur, contrat_id, q, 5), discuter,
-                                   creer_verificateur(*self.nli))
+                                   creer_verificateur(*self.nli),
+                                   lambda q: rechercher_explicatif(connexion, self.encodeur, q, 3))
         resultat = graphe.invoke({"question": question})["resultat"]
         return {"abstention": resultat.abstention, "raison": resultat.raison, "reponse": resultat.reponse or None,
-                "citations": [asdict(c) for c in resultat.citations], "modele": config.LLM_MODELE,
+                "citations": [asdict(c) for c in resultat.citations],
+                "explications": [asdict(e) for e in resultat.explications], "modele": config.LLM_MODELE,
                 "verification": f"citations mot pour mot + NLI (seuil {SEUIL_NLI_RAG})",
                 # D-022 : la réponse générée reste à vérifier par le lecteur (61 % de réponses non
                 # confirmées par l'annotation sur la validation).
